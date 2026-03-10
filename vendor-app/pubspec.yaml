@@ -1,0 +1,26 @@
+name: vendor_app
+description: "Vendor Portal - Mobile App for K12 Techno Services"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.10.8
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  provider: ^6.1.1
+  http: ^1.2.0
+  image_picker: ^1.0.7
+  shared_preferences: ^2.2.2
+  intl: ^0.19.0
+  google_fonts: ^6.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
