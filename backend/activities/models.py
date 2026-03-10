@@ -70,6 +70,12 @@ class ActivityOccurrence(models.Model):
 
 
 class WorkLog(models.Model):
+    APPROVAL_STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    ]
+
     occurrence = models.ForeignKey(ActivityOccurrence, on_delete=models.CASCADE, related_name='work_logs')
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     before_photo = models.ImageField(upload_to='work_logs/before/', blank=True, null=True)
@@ -77,6 +83,12 @@ class WorkLog(models.Model):
     after_photo = models.ImageField(upload_to='work_logs/after/', blank=True, null=True)
     after_photo_taken_at = models.DateTimeField(null=True, blank=True)
     description = models.TextField(blank=True)
+    approval_status = models.CharField(max_length=20, choices=APPROVAL_STATUS_CHOICES, default='pending')
+    rejection_reason = models.TextField(blank=True, null=True)
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='reviewed_logs'
+    )
+    reviewed_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

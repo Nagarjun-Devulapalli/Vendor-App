@@ -349,11 +349,33 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
               Text('By: ${log.userName ?? 'Unknown'}', style: GoogleFonts.nunito(
                 fontSize: 12, fontWeight: FontWeight.w800, color: AppColors.text,
               )),
-              Text(log.createdAt.split('T').first, style: GoogleFonts.nunito(
-                fontSize: 11, color: AppColors.muted, fontWeight: FontWeight.w600,
-              )),
+              Row(
+                children: [
+                  if (log.approvalStatus != null) ...[
+                    _approvalBadge(log.approvalStatus!),
+                    const SizedBox(width: 8),
+                  ],
+                  Text(log.createdAt.split('T').first, style: GoogleFonts.nunito(
+                    fontSize: 11, color: AppColors.muted, fontWeight: FontWeight.w600,
+                  )),
+                ],
+              ),
             ],
           ),
+          if (log.approvalStatus == 'rejected' && log.rejectionReason != null && log.rejectionReason!.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              'Rejected: ${log.rejectionReason}',
+              style: GoogleFonts.nunito(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.red),
+            ),
+          ],
+          if (log.approvalStatus == 'approved' && log.reviewedByName != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              'Approved by ${log.reviewedByName}',
+              style: GoogleFonts.nunito(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.green),
+            ),
+          ],
           if (log.description.isNotEmpty) ...[
             const SizedBox(height: 6),
             Text(log.description, style: GoogleFonts.nunito(
@@ -374,6 +396,33 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
           ],
         ],
       ),
+    );
+  }
+
+  Widget _approvalBadge(String status) {
+    final Color bg;
+    final Color fg;
+    final String label;
+    switch (status) {
+      case 'approved':
+        bg = AppColors.greenLight;
+        fg = AppColors.green;
+        label = '✓ Approved';
+        break;
+      case 'rejected':
+        bg = AppColors.redLight;
+        fg = AppColors.red;
+        label = '✗ Rejected';
+        break;
+      default:
+        bg = AppColors.amberLight;
+        fg = AppColors.amber;
+        label = '● Pending';
+    }
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(10)),
+      child: Text(label, style: GoogleFonts.nunito(fontSize: 10, fontWeight: FontWeight.w800, color: fg)),
     );
   }
 

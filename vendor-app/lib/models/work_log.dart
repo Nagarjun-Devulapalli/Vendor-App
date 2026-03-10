@@ -8,6 +8,9 @@ class WorkLog {
   final String description;
   final String createdAt;
   final String? userName;
+  final String? approvalStatus;
+  final String? rejectionReason;
+  final String? reviewedByName;
 
   WorkLog({
     required this.id,
@@ -19,6 +22,9 @@ class WorkLog {
     required this.description,
     required this.createdAt,
     this.userName,
+    this.approvalStatus,
+    this.rejectionReason,
+    this.reviewedByName,
   });
 
   factory WorkLog.fromJson(Map<String, dynamic> json) => WorkLog(
@@ -33,6 +39,9 @@ class WorkLog {
         description: json['description'] ?? '',
         createdAt: json['created_at'] ?? '',
         userName: json['user_name'] ?? json['user']?.toString(),
+        approvalStatus: json['approval_status'],
+        rejectionReason: json['rejection_reason'],
+        reviewedByName: json['reviewed_by_name'],
       );
 
   String? get formattedBeforeTime => _formatTimestamp(beforePhotoTakenAt);

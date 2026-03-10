@@ -10,14 +10,22 @@ const statusStyles = {
   cancelled: 'bg-[#fdecea] text-[#c0392b]',
 }
 
+const approvalStyles = {
+  pending: 'bg-[#fef3e0] text-[#b07200]',
+  approved: 'bg-[#e8f5ee] text-[#1a6b4a]',
+  rejected: 'bg-[#fdecea] text-[#c0392b]',
+}
+
 export default function ActivityDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [activity, setActivity] = useState(null)
   const [occurrences, setOccurrences] = useState([])
   const [loading, setLoading] = useState(true)
+  const [rejectingLogId, setRejectingLogId] = useState(null)
+  const [rejectReason, setRejectReason] = useState('')
 
-  useEffect(() => {
+  const fetchData = () => {
     Promise.all([
       api.get(`/activities/${id}/`),
       api.get(`/activities/${id}/occurrences/`),
@@ -28,7 +36,27 @@ export default function ActivityDetail() {
       })
       .catch(console.error)
       .finally(() => setLoading(false))
+  }
+
+  useEffect(() => {
+    fetchData()
   }, [id])
+
+  const handleApprove = (logId) => {
+    api.patch(`/work-logs/${logId}/review/`, { approval_status: 'approved' })
+      .then(() => fetchData())
+      .catch(console.error)
+  }
+
+  const handleReject = (logId, reason) => {
+    api.patch(`/work-logs/${logId}/review/`, { approval_status: 'rejected', rejection_reason: reason })
+      .then(() => {
+        setRejectingLogId(null)
+        setRejectReason('')
+        fetchData()
+      })
+      .catch(console.error)
+  }
 
   if (loading) return <div className="flex items-center justify-center h-64 text-[#6b7280]">Loading...</div>
   if (!activity) return <div className="text-center text-[#6b7280]">Activity not found</div>
@@ -118,7 +146,12 @@ export default function ActivityDetail() {
                 <div key={log.id} className="border border-[#e4e8ed] rounded-xl p-4">
                   <div className="flex justify-between text-[13px] text-[#6b7280] mb-2">
                     <span>Date: {occ.scheduled_date}</span>
-                    <span>By: {log.user_name || log.user}</span>
+                    <div className="flex items-center gap-2">
+                      <span className={`badge inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${approvalStyles[log.approval_status] || approvalStyles.pending}`}>
+                        {(log.approval_status || 'pending').replace('_', ' ')}
+                      </span>
+                      <span>By: {log.user_name || log.user}</span>
+                    </div>
                   </div>
                   <p className="text-[13px] text-[#1a1f2e] mb-3">{log.description}</p>
                   <div className="flex gap-4">
@@ -139,6 +172,56 @@ export default function ActivityDetail() {
                           <p className="text-[10px] text-[#6b7280] mt-1">{new Date(log.after_photo_taken_at).toLocaleString()}</p>
                         )}
                       </div>
+                    )}
+                  </div>
+                  {/* Approval Actions */}
+                  <div className="mt-3 pt-3 border-t border-[#e4e8ed]">
+                    {(!log.approval_status || log.approval_status === 'pending') && (
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleApprove(log.id)}
+                          className="px-3 py-1.5 rounded-lg text-[12px] font-semibold bg-[#e8f5ee] text-[#1a6b4a] hover:bg-[#d0ebdd] transition-colors"
+                        >
+                          Approve
+                        </button>
+                        {rejectingLogId === log.id ? (
+                          <div className="flex items-center gap-2 flex-1">
+                            <input
+                              type="text"
+                              value={rejectReason}
+                              onChange={(e) => setRejectReason(e.target.value)}
+                              placeholder="Reason for rejection..."
+                              className="flex-1 px-3 py-1.5 rounded-lg text-[12px] border border-[#e4e8ed] focus:outline-none focus:border-orchid"
+                            />
+                            <button
+                              onClick={() => handleReject(log.id, rejectReason)}
+                              disabled={!rejectReason.trim()}
+                              className="px-3 py-1.5 rounded-lg text-[12px] font-semibold bg-[#fdecea] text-[#c0392b] hover:bg-[#fad4d1] transition-colors disabled:opacity-50"
+                            >
+                              Confirm
+                            </button>
+                            <button
+                              onClick={() => { setRejectingLogId(null); setRejectReason('') }}
+                              className="px-3 py-1.5 rounded-lg text-[12px] font-semibold text-[#6b7280] hover:bg-[#f0f1f3] transition-colors"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setRejectingLogId(log.id)}
+                            className="px-3 py-1.5 rounded-lg text-[12px] font-semibold bg-[#fdecea] text-[#c0392b] hover:bg-[#fad4d1] transition-colors"
+                          >
+                            Reject
+                          </button>
+                        )}
+                      </div>
+                    )}
+                    {log.approval_status === 'rejected' && log.rejection_reason && (
+                      <p className="text-[12px] text-[#c0392b] mt-1">Reason: {log.rejection_reason}</p>
+                    )}
+                    {(log.approval_status === 'approved' || log.approval_status === 'rejected') && log.reviewed_by_name && (
+                      <p className="text-[11px] text-[#6b7280] mt-1">Reviewed by {log.reviewed_by_name}</p>
                     )}
                   </div>
                 </div>

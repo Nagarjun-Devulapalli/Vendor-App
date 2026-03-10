@@ -5,6 +5,7 @@ from .models import Activity, ActivityOccurrence, WorkLog
 
 class WorkLogSerializer(serializers.ModelSerializer):
     user_name = serializers.CharField(source='user.get_full_name', read_only=True)
+    reviewed_by_name = serializers.CharField(source='reviewed_by.get_full_name', read_only=True, default=None)
 
     class Meta:
         model = WorkLog
@@ -12,9 +13,15 @@ class WorkLogSerializer(serializers.ModelSerializer):
             'id', 'occurrence', 'user', 'user_name',
             'before_photo', 'before_photo_taken_at',
             'after_photo', 'after_photo_taken_at',
-            'description', 'created_at',
+            'description', 'approval_status', 'rejection_reason',
+            'reviewed_by', 'reviewed_by_name', 'reviewed_at',
+            'created_at',
         ]
-        read_only_fields = ['id', 'user', 'user_name', 'before_photo_taken_at', 'after_photo_taken_at', 'created_at']
+        read_only_fields = [
+            'id', 'user', 'user_name', 'before_photo_taken_at', 'after_photo_taken_at',
+            'approval_status', 'rejection_reason', 'reviewed_by', 'reviewed_by_name', 'reviewed_at',
+            'created_at',
+        ]
 
     def create(self, validated_data):
         validated_data['user'] = self.context['request'].user

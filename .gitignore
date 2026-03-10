@@ -2,8 +2,8 @@
 __pycache__/
 *.pyc
 *.pyo
-db.sqlite3
 backend/media/
+conversation_log.md
 
 # Node
 node_modules/

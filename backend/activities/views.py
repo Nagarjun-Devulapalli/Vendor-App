@@ -114,11 +114,33 @@ class OccurrenceViewSet(viewsets.ModelViewSet):
 class WorkLogViewSet(viewsets.ModelViewSet):
     serializer_class = WorkLogSerializer
     permission_classes = [IsAuthenticated]
-    http_method_names = ['get', 'post', 'head', 'options']
+    http_method_names = ['get', 'post', 'patch', 'head', 'options']
 
     def get_queryset(self):
-        qs = WorkLog.objects.select_related('user', 'occurrence').all()
+        qs = WorkLog.objects.select_related('user', 'occurrence', 'reviewed_by').all()
         occurrence_id = self.request.query_params.get('occurrence')
         if occurrence_id:
             qs = qs.filter(occurrence_id=occurrence_id)
         return qs
+
+    @action(detail=True, methods=['patch'], url_path='review')
+    def review(self, request, pk=None):
+        if request.user.role != 'admin':
+            return Response(
+                {'detail': 'Only admins can review work logs.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        work_log = self.get_object()
+        approval_status = request.data.get('approval_status')
+        if approval_status not in ('approved', 'rejected'):
+            return Response(
+                {'detail': 'approval_status must be "approved" or "rejected".'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        work_log.approval_status = approval_status
+        work_log.rejection_reason = request.data.get('rejection_reason', '')
+        work_log.reviewed_by = request.user
+        work_log.reviewed_at = timezone.now()
+        work_log.save()
+        serializer = self.get_serializer(work_log)
+        return Response(serializer.data)
