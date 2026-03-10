@@ -18,6 +18,9 @@ export default function Payments() {
   const [payNowModal, setPayNowModal] = useState(null)
   const [payAmount, setPayAmount] = useState('')
   const [paySubmitting, setPaySubmitting] = useState(false)
+  const [receiptModal, setReceiptModal] = useState(null)
+  const [receiptFile, setReceiptFile] = useState(null)
+  const [receiptUploading, setReceiptUploading] = useState(false)
 
   const fetchPayments = () => {
     let url = '/payments/'
@@ -77,6 +80,25 @@ export default function Payments() {
       alert(err.response?.data?.detail || JSON.stringify(err.response?.data) || 'Error updating payment')
     } finally {
       setPaySubmitting(false)
+    }
+  }
+
+  const handleReceiptUpload = async () => {
+    if (!receiptFile) return
+    setReceiptUploading(true)
+    try {
+      const formData = new FormData()
+      formData.append('receipt', receiptFile)
+      await api.post(`/payments/${receiptModal.id}/upload-receipt/`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      setReceiptModal(null)
+      setReceiptFile(null)
+      fetchPayments()
+    } catch (err) {
+      alert(err.response?.data?.error || 'Failed to upload receipt')
+    } finally {
+      setReceiptUploading(false)
     }
   }
 
@@ -154,6 +176,7 @@ export default function Payments() {
               <th className="text-left text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider px-4 py-2.5">Paid</th>
               <th className="text-left text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider px-4 py-2.5">Payment Date</th>
               <th className="text-left text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider px-4 py-2.5">Status</th>
+              <th className="text-left text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider px-4 py-2.5">Receipt</th>
               <th className="text-left text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider px-4 py-2.5">Action</th>
             </tr>
           </thead>
@@ -175,6 +198,19 @@ export default function Payments() {
                   </span>
                 </td>
                 <td className="px-4 py-3.5">
+                  {p.receipt ? (
+                    <a href={p.receipt} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 px-2.5 py-1 bg-[#e8f5ee] text-[#1a6b4a] rounded-lg text-[11px] font-semibold hover:bg-[#d0ebdb] transition-colors">
+                      📄 View
+                    </a>
+                  ) : p.payment_status === 'completed' ? (
+                    <button onClick={() => setReceiptModal(p)} className="inline-flex items-center gap-1 px-2.5 py-1 border-[1.5px] border-dashed border-[#e4e8ed] rounded-lg text-[11px] font-semibold text-[#6b7280] hover:bg-[#f6f7f9] transition-colors">
+                      ⬆ Upload
+                    </button>
+                  ) : (
+                    <span className="text-[11px] text-[#6b7280]">—</span>
+                  )}
+                </td>
+                <td className="px-4 py-3.5">
                   {p.payment_status !== 'completed' ? (
                     <button
                       onClick={() => openPayNow(p)}
@@ -183,12 +219,12 @@ export default function Payments() {
                       Pay Now
                     </button>
                   ) : (
-                    <button className="w-[30px] h-[30px] rounded-lg border border-[#e4e8ed] inline-flex items-center justify-center text-sm text-[#6b7280] hover:bg-[#f6f7f9] transition-colors">📄</button>
+                    <span className="text-[11px] text-orchid font-semibold">✓ Done</span>
                   )}
                 </td>
               </tr>
             ))}
-            {payments.length === 0 && <tr><td colSpan="7" className="px-4 py-8 text-center text-[13px] text-[#6b7280]">No payments found</td></tr>}
+            {payments.length === 0 && <tr><td colSpan="8" className="px-4 py-8 text-center text-[13px] text-[#6b7280]">No payments found</td></tr>}
           </tbody>
         </table>
       </div>
@@ -272,6 +308,49 @@ export default function Payments() {
       })()}
 
       {/* Record Payment Modal */}
+      {/* Upload Receipt Modal */}
+      {receiptModal && (
+        <div className="fixed inset-0 bg-black/40 modal-backdrop flex items-center justify-center z-[1000] p-4" onClick={(e) => e.target === e.currentTarget && setReceiptModal(null)}>
+          <div className="bg-white rounded-2xl shadow-xl w-[420px] max-w-[90vw]">
+            <div className="px-6 pt-5 pb-4 border-b border-[#e4e8ed] flex items-center justify-between">
+              <h3 className="font-serif text-lg font-bold">Upload Receipt</h3>
+              <button onClick={() => { setReceiptModal(null); setReceiptFile(null) }} className="w-7 h-7 bg-[#f6f7f9] rounded-md flex items-center justify-center text-sm text-[#6b7280] hover:text-[#1a1f2e]">✕</button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <span className="text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider">Activity</span>
+                <p className="font-semibold text-[15px] mt-0.5">{receiptModal.activity_title}</p>
+                <p className="text-xs text-[#6b7280]">{receiptModal.vendor_name} · ₹{Number(receiptModal.actual_amount_paid).toLocaleString()} paid</p>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-[#1a1f2e] mb-2">Receipt File (Image or PDF)</label>
+                <div className="border-[1.5px] border-dashed border-[#e4e8ed] rounded-lg p-4 text-center hover:border-orchid transition-colors">
+                  <input
+                    type="file"
+                    accept="image/*,.pdf"
+                    onChange={(e) => setReceiptFile(e.target.files[0])}
+                    className="w-full text-sm text-[#6b7280] file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-[12px] file:font-semibold file:bg-orchid/10 file:text-orchid hover:file:bg-orchid/20 cursor-pointer"
+                  />
+                  {receiptFile && (
+                    <p className="text-[12px] text-orchid font-medium mt-2">{receiptFile.name}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="px-6 py-4 border-t border-[#e4e8ed] flex justify-end gap-2.5">
+              <button type="button" onClick={() => { setReceiptModal(null); setReceiptFile(null) }} className="px-4 py-2 border-[1.5px] border-[#e4e8ed] rounded-lg text-[13px] font-semibold hover:bg-[#f6f7f9] transition-colors">Cancel</button>
+              <button
+                onClick={handleReceiptUpload}
+                disabled={receiptUploading || !receiptFile}
+                className="px-4 py-2 bg-orchid text-white rounded-lg text-[13px] font-semibold hover:bg-orchid-mid disabled:opacity-50 transition-colors"
+              >
+                {receiptUploading ? 'Uploading...' : 'Upload Receipt →'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showModal && (
         <div className="fixed inset-0 bg-black/40 modal-backdrop flex items-center justify-center z-[1000] p-4" onClick={(e) => e.target === e.currentTarget && setShowModal(false)}>
           <div className="bg-white rounded-2xl shadow-xl w-[480px] max-w-[90vw]">
