@@ -1,5 +1,7 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, status
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 from .models import Payment
 from .serializers import PaymentSerializer
 from accounts.permissions import IsAdmin
@@ -28,3 +30,13 @@ class PaymentViewSet(viewsets.ModelViewSet):
         if self.action in ('create', 'update', 'partial_update', 'destroy'):
             return [IsAdmin()]
         return [IsAuthenticated()]
+
+    @action(detail=True, methods=['post'], url_path='upload-receipt')
+    def upload_receipt(self, request, pk=None):
+        payment = self.get_object()
+        receipt = request.FILES.get('receipt')
+        if not receipt:
+            return Response({'error': 'No receipt file provided.'}, status=status.HTTP_400_BAD_REQUEST)
+        payment.receipt = receipt
+        payment.save()
+        return Response({'message': 'Receipt uploaded successfully.', 'receipt': payment.receipt.url}, status=status.HTTP_200_OK)

@@ -14,6 +14,7 @@ class Payment(models.Model):
     payment_status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     payment_date = models.DateField(null=True, blank=True)
     notes = models.TextField(blank=True)
+    receipt = models.FileField(upload_to='payment_receipts/', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
