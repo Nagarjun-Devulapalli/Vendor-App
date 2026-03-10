@@ -53,6 +53,7 @@ class Activity(models.Model):
 class ActivityOccurrence(models.Model):
     STATUS_CHOICES = [
         ('pending', 'Pending'),
+        ('in_progress', 'In Progress'),
         ('completed', 'Completed'),
         ('missed', 'Missed'),
     ]
@@ -70,6 +71,10 @@ class ActivityOccurrence(models.Model):
 
 
 class WorkLog(models.Model):
+    STATUS_CHOICES = [
+        ('in_progress', 'In Progress'),
+        ('completed', 'Completed'),
+    ]
     APPROVAL_STATUS_CHOICES = [
         ('pending', 'Pending'),
         ('approved', 'Approved'),
@@ -82,6 +87,7 @@ class WorkLog(models.Model):
     before_photo_taken_at = models.DateTimeField(null=True, blank=True)
     after_photo = models.ImageField(upload_to='work_logs/after/', blank=True, null=True)
     after_photo_taken_at = models.DateTimeField(null=True, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='in_progress')
     description = models.TextField(blank=True)
     approval_status = models.CharField(max_length=20, choices=APPROVAL_STATUS_CHOICES, default='pending')
     rejection_reason = models.TextField(blank=True, null=True)

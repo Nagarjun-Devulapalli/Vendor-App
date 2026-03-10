@@ -128,7 +128,11 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
     }
 
     // Progress ring
-    final progress = occ.isCompleted ? 1.0 : (_workLogs.isNotEmpty ? 0.3 + (_workLogs.length * 0.1) : 0.0);
+    final progress = occ.isCompleted
+        ? 1.0
+        : occ.status == 'in_progress'
+            ? 0.5
+            : (_workLogs.isNotEmpty ? 0.3 + (_workLogs.length * 0.1) : 0.0);
 
     return Scaffold(
       backgroundColor: AppColors.bg,
@@ -154,12 +158,15 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
                     children: [
                       _chip(
                         occ.status == 'completed' ? '✓ Completed'
+                            : occ.status == 'in_progress' ? '● In Progress'
                             : occ.status == 'missed' ? '⚠️ Overdue'
                             : '● Pending',
                         occ.status == 'completed' ? AppColors.greenLight
+                            : occ.status == 'in_progress' ? AppColors.blueLight
                             : occ.status == 'missed' ? AppColors.redLight
                             : AppColors.amberLight,
                         occ.status == 'completed' ? AppColors.green
+                            : occ.status == 'in_progress' ? AppColors.blue
                             : occ.status == 'missed' ? AppColors.red
                             : AppColors.amber,
                       ),
@@ -172,8 +179,11 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
                   // Info block
                   _infoBlock([
                     _infoRow('Scheduled Date', occ.scheduledDate),
-                    _infoRow('Status', occ.status[0].toUpperCase() + occ.status.substring(1),
+                    _infoRow('Status',
+                      occ.status == 'in_progress' ? 'In Progress'
+                          : occ.status[0].toUpperCase() + occ.status.substring(1),
                       valueColor: occ.status == 'completed' ? AppColors.green
+                          : occ.status == 'in_progress' ? AppColors.blue
                           : occ.status == 'missed' ? AppColors.red : AppColors.amber),
                     if (occ.completedByName != null)
                       _infoRow('Completed By', occ.completedByName!),
@@ -211,44 +221,7 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
                   const SizedBox(height: 16),
 
                   // Actions
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: () async {
-                        await Navigator.push(context, MaterialPageRoute(
-                          builder: (_) => WorkLogScreen(occurrenceId: widget.occurrenceId),
-                        ));
-                        _loadData();
-                      },
-                      icon: const Text('📸'),
-                      label: Text('Submit Work Log', style: GoogleFonts.nunito(fontWeight: FontWeight.w800)),
-                      style: AppTheme.greenButton,
-                    ),
-                  ),
-                  if (occ.isPending) ...[
-                    const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: _isUpdating ? null : () => _updateStatus('completed'),
-                            style: AppTheme.greenButton.copyWith(
-                              padding: WidgetStatePropertyAll(const EdgeInsets.symmetric(vertical: 14)),
-                            ),
-                            child: Text('✓ Complete', style: GoogleFonts.nunito(fontWeight: FontWeight.w800)),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: _isUpdating ? null : () => _updateStatus('missed'),
-                            style: AppTheme.outlineButton,
-                            child: Text('Mark as Missed', style: GoogleFonts.nunito(fontWeight: FontWeight.w800, color: AppColors.text)),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                  _buildActionButton(occ),
                   const SizedBox(height: 24),
                 ],
               ),
@@ -257,6 +230,75 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
         ],
       ),
     );
+  }
+
+  Widget _buildActionButton(Occurrence occ) {
+    // Find an in-progress work log if one exists
+    final inProgressLog = _workLogs.cast<WorkLog?>().firstWhere(
+      (log) => log!.isInProgress,
+      orElse: () => null,
+    );
+
+    if (occ.status == 'pending' && _workLogs.isEmpty) {
+      // No work started yet - show Start Work button
+      return SizedBox(
+        width: double.infinity,
+        child: ElevatedButton.icon(
+          onPressed: () async {
+            final result = await Navigator.push(context, MaterialPageRoute(
+              builder: (_) => WorkLogScreen(
+                occurrenceId: widget.occurrenceId,
+                mode: WorkLogMode.start,
+              ),
+            ));
+            if (result == true) _loadData();
+          },
+          icon: const Icon(Icons.play_arrow_rounded, size: 20),
+          label: Text('Start Work', style: GoogleFonts.nunito(fontWeight: FontWeight.w800)),
+          style: AppTheme.greenButton,
+        ),
+      );
+    } else if ((occ.status == 'in_progress' || occ.status == 'pending') && inProgressLog != null) {
+      // Work in progress - show Complete Work button
+      return SizedBox(
+        width: double.infinity,
+        child: ElevatedButton.icon(
+          onPressed: () async {
+            final result = await Navigator.push(context, MaterialPageRoute(
+              builder: (_) => WorkLogScreen(
+                occurrenceId: widget.occurrenceId,
+                mode: WorkLogMode.complete,
+                workLogId: inProgressLog.id,
+                existingBeforePhotoUrl: inProgressLog.beforePhoto,
+              ),
+            ));
+            if (result == true) _loadData();
+          },
+          icon: const Icon(Icons.check_circle_outline_rounded, size: 20),
+          label: Text('Complete Work', style: GoogleFonts.nunito(fontWeight: FontWeight.w800)),
+          style: AppTheme.greenButton,
+        ),
+      );
+    } else if (occ.status == 'completed') {
+      // Completed - show disabled button
+      return SizedBox(
+        width: double.infinity,
+        child: ElevatedButton.icon(
+          onPressed: null,
+          icon: const Icon(Icons.check_circle, size: 20),
+          label: Text('Completed', style: GoogleFonts.nunito(fontWeight: FontWeight.w800)),
+          style: AppTheme.greenButton.copyWith(
+            backgroundColor: WidgetStatePropertyAll(AppColors.border),
+            foregroundColor: WidgetStatePropertyAll(AppColors.muted),
+            elevation: const WidgetStatePropertyAll(0),
+            shadowColor: const WidgetStatePropertyAll(Colors.transparent),
+          ),
+        ),
+      );
+    }
+
+    // Fallback: no action button (e.g. missed status)
+    return const SizedBox.shrink();
   }
 
   Widget _progressRing(double progress) {

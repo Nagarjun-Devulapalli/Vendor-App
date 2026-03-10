@@ -13,15 +13,18 @@ class WorkLogSerializer(serializers.ModelSerializer):
             'id', 'occurrence', 'user', 'user_name',
             'before_photo', 'before_photo_taken_at',
             'after_photo', 'after_photo_taken_at',
-            'description', 'approval_status', 'rejection_reason',
+            'status', 'description', 'approval_status', 'rejection_reason',
             'reviewed_by', 'reviewed_by_name', 'reviewed_at',
             'created_at',
         ]
         read_only_fields = [
             'id', 'user', 'user_name', 'before_photo_taken_at', 'after_photo_taken_at',
-            'approval_status', 'rejection_reason', 'reviewed_by', 'reviewed_by_name', 'reviewed_at',
+            'status', 'approval_status', 'rejection_reason', 'reviewed_by', 'reviewed_by_name', 'reviewed_at',
             'created_at',
         ]
+        extra_kwargs = {
+            'after_photo': {'required': False},
+        }
 
     def create(self, validated_data):
         validated_data['user'] = self.context['request'].user

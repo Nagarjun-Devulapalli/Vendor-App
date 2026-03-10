@@ -98,7 +98,7 @@ class OccurrenceViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def today(self, request):
-        today = timezone.now().date()
+        today = timezone.localtime(timezone.now()).date()
         qs = self.get_queryset().filter(scheduled_date=today)
         serializer = self.get_serializer(qs, many=True)
         return Response(serializer.data)
@@ -122,6 +122,38 @@ class WorkLogViewSet(viewsets.ModelViewSet):
         if occurrence_id:
             qs = qs.filter(occurrence_id=occurrence_id)
         return qs
+
+    def perform_create(self, serializer):
+        work_log = serializer.save(user=self.request.user, status='in_progress')
+        occurrence = work_log.occurrence
+        if occurrence.status == 'pending':
+            occurrence.status = 'in_progress'
+            occurrence.save(update_fields=['status'])
+
+    @action(detail=True, methods=['patch'], url_path='complete')
+    def complete(self, request, pk=None):
+        work_log = self.get_object()
+        after_photo = request.FILES.get('after_photo')
+        if not after_photo:
+            return Response(
+                {'detail': 'after_photo is required to complete a work log.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        work_log.after_photo = after_photo
+        work_log.after_photo_taken_at = timezone.now()
+        work_log.status = 'completed'
+        work_log.save(update_fields=['after_photo', 'after_photo_taken_at', 'status'])
+
+        # Mark occurrence as completed
+        occurrence = work_log.occurrence
+        if occurrence.status != 'completed':
+            occurrence.status = 'completed'
+            occurrence.completed_by = request.user
+            occurrence.completed_at = timezone.now()
+            occurrence.save(update_fields=['status', 'completed_by', 'completed_at'])
+
+        serializer = self.get_serializer(work_log)
+        return Response(serializer.data)
 
     @action(detail=True, methods=['patch'], url_path='review')
     def review(self, request, pk=None):

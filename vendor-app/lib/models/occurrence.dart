@@ -45,6 +45,7 @@ class Occurrence {
   }
 
   bool get isPending => status == 'pending';
+  bool get isInProgress => status == 'in_progress';
   bool get isCompleted => status == 'completed';
   bool get isMissed => status == 'missed';
 }

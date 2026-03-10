@@ -171,6 +171,27 @@ class ApiService {
     }
   }
 
+  static Future<void> completeWorkLog({
+    required int workLogId,
+    required File afterPhoto,
+  }) async {
+    final token = await AuthService.getAccessToken();
+    final request = http.MultipartRequest(
+      'PATCH',
+      Uri.parse('$baseUrl/work-logs/$workLogId/complete/'),
+    );
+    request.headers['Authorization'] = 'Bearer $token';
+    request.files.add(
+      await http.MultipartFile.fromPath('after_photo', afterPhoto.path),
+    );
+
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception('Failed to complete work log: ${response.body}');
+    }
+  }
+
   // Employees
   static Future<List<dynamic>> getEmployees({int? vendorId}) async {
     final path = vendorId != null ? '/employees/?vendor_owner=$vendorId' : '/employees/';
