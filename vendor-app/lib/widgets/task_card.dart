@@ -47,6 +47,8 @@ class TaskCard extends StatelessWidget {
     switch (occurrence.status) {
       case 'completed':
         return 'Completed';
+      case 'in_progress':
+        return 'In Progress';
       case 'missed':
         return 'Overdue';
       default:
@@ -126,7 +128,7 @@ class TaskCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Scheduled ${occurrence.scheduledDate}${occurrence.categoryName != null ? ' · ${occurrence.categoryName}' : ''}',
+                          'Started ${occurrence.scheduledDate}${occurrence.categoryName != null ? ' · ${occurrence.categoryName}' : ''}',
                           style: GoogleFonts.nunito(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,

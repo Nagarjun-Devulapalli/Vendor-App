@@ -1,9 +1,9 @@
 from datetime import timedelta
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, serializers
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.utils import timezone
 
 from .models import Activity, ActivityOccurrence, OccurrenceAssignment, WorkLog
@@ -13,7 +13,9 @@ from vendors.models import Employee
 
 
 def generate_initial_occurrence(activity):
-    """Create the first occurrence on the activity's start_date."""
+    """Create the first occurrence on the activity's start_date.
+    For one_time and long_term, this is the ONLY occurrence ever created.
+    For recurring, this is the first one; more are created on-the-fly."""
     ActivityOccurrence.objects.get_or_create(
         activity=activity,
         scheduled_date=activity.start_date,
@@ -21,12 +23,16 @@ def generate_initial_occurrence(activity):
 
 
 def ensure_today_occurrences(user):
-    """Auto-create today's occurrence for all active (non-completed) activities.
+    """Auto-create today's occurrence ONLY for recurring activities.
+    one_time and long_term activities have a single occurrence created at activity creation.
     Called on-the-fly when /occurrences/today/ is requested."""
     today = timezone.localtime(timezone.now()).date()
 
-    # Get active activities scoped to user
-    activities = Activity.objects.exclude(status__in=['completed', 'cancelled'])
+    # Only recurring activities need daily occurrence creation
+    activities = Activity.objects.filter(
+        activity_type='recurring',
+    ).exclude(status__in=['completed', 'cancelled'])
+
     if user.role == 'admin' and user.branch:
         activities = activities.filter(branch=user.branch)
     elif user.role == 'vendor_owner':
@@ -34,10 +40,18 @@ def ensure_today_occurrences(user):
     elif user.role == 'vendor_employee':
         activities = activities.filter(vendor__employees__user=user)
 
-    # Only for activities that have started
+    # Only for activities that have started and haven't ended
     activities = activities.filter(start_date__lte=today)
 
     for activity in activities:
+        # Check if today falls on a recurrence day
+        if activity.recurrence_interval_days:
+            days_since_start = (today - activity.start_date).days
+            if days_since_start % activity.recurrence_interval_days != 0:
+                continue
+        # Skip if past end_date
+        if activity.end_date and today > activity.end_date:
+            continue
         ActivityOccurrence.objects.get_or_create(
             activity=activity,
             scheduled_date=today,
@@ -78,10 +92,31 @@ class ActivityViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['patch'], url_path='mark-complete')
     def mark_complete(self, request, pk=None):
-        """Mark an activity as completed. Stops new occurrences from being created."""
+        """Mark an activity as completed. Validates that an approved work log exists."""
         activity = self.get_object()
+
+        # For one_time/long_term: require an approved work log
+        if activity.activity_type in ('one_time', 'long_term'):
+            has_approved = WorkLog.objects.filter(
+                occurrence__activity=activity,
+                approval_status='approved',
+            ).exists()
+            if not has_approved:
+                return Response(
+                    {'detail': 'Cannot mark complete without an approved work log.'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
         activity.status = 'completed'
         activity.save(update_fields=['status'])
+
+        # Also mark all pending occurrences as completed
+        activity.occurrences.exclude(status='completed').update(
+            status='completed',
+            completed_by=request.user,
+            completed_at=timezone.now(),
+        )
+
         serializer = self.get_serializer(activity)
         return Response(serializer.data)
 
@@ -120,10 +155,26 @@ class OccurrenceViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def today(self, request):
-        # Auto-create today's occurrences for all active activities
+        # Auto-create today's occurrences for recurring activities
         ensure_today_occurrences(request.user)
         today = timezone.localtime(timezone.now()).date()
-        qs = self.get_queryset().filter(scheduled_date=today)
+
+        # Recurring: today's occurrences
+        recurring_today = self.get_queryset().filter(
+            activity__activity_type='recurring',
+            scheduled_date=today,
+        )
+
+        # one_time & long_term: show their single occurrence if activity not completed
+        non_recurring_active = self.get_queryset().filter(
+            activity__activity_type__in=['one_time', 'long_term'],
+            activity__start_date__lte=today,
+        ).exclude(
+            activity__status__in=['completed', 'cancelled'],
+        )
+
+        # Combine both querysets
+        qs = (recurring_today | non_recurring_active).distinct()
         serializer = self.get_serializer(qs, many=True)
         return Response(serializer.data)
 
@@ -236,11 +287,26 @@ class WorkLogViewSet(viewsets.ModelViewSet):
         return qs
 
     def perform_create(self, serializer):
+        occurrence = ActivityOccurrence.objects.get(pk=serializer.validated_data['occurrence'].pk)
+        activity = occurrence.activity
+
+        # For one_time/long_term: only allow one active work log per activity
+        if activity.activity_type in ('one_time', 'long_term'):
+            existing = WorkLog.objects.filter(
+                occurrence__activity=activity,
+            ).exclude(approval_status='rejected').first()
+            if existing:
+                raise serializers.ValidationError(
+                    {'detail': 'A work log already exists for this activity. Only one is allowed.'}
+                )
+
         work_log = serializer.save(user=self.request.user, status='in_progress')
-        occurrence = work_log.occurrence
         if occurrence.status == 'pending':
             occurrence.status = 'in_progress'
             occurrence.save(update_fields=['status'])
+        if activity.status == 'pending':
+            activity.status = 'in_progress'
+            activity.save(update_fields=['status'])
 
     @action(detail=True, methods=['patch'], url_path='complete')
     def complete(self, request, pk=None):
@@ -279,32 +345,35 @@ class WorkLogViewSet(viewsets.ModelViewSet):
         work_log.reviewed_at = timezone.now()
         work_log.save()
 
-        if approval_status == 'approved':
-            # Fresh fetch to avoid stale cached data
-            occurrence = ActivityOccurrence.objects.prefetch_related('assignments').get(
-                pk=work_log.occurrence_id
-            )
-            if occurrence.status != 'completed':
-                assigned_ids = set(occurrence.assignments.values_list('employee_id', flat=True))
-                if assigned_ids:
-                    # All assigned employees must have an approved + completed work log
-                    approved_user_ids = set(
-                        WorkLog.objects.filter(
-                            occurrence_id=occurrence.pk,
-                            status='completed',
-                            approval_status='approved',
-                        ).values_list('user_id', flat=True)
-                    )
-                    all_approved = assigned_ids.issubset(approved_user_ids)
-                else:
-                    # No assignments — mark complete when any work log is approved
-                    all_approved = True
+        occurrence = ActivityOccurrence.objects.get(pk=work_log.occurrence_id)
+        activity = occurrence.activity
 
-                if all_approved:
-                    occurrence.status = 'completed'
-                    occurrence.completed_by = request.user
-                    occurrence.completed_at = timezone.now()
-                    occurrence.save(update_fields=['status', 'completed_by', 'completed_at'])
+        if approval_status == 'approved':
+            # Mark occurrence as completed
+            if occurrence.status != 'completed':
+                occurrence.status = 'completed'
+                occurrence.completed_by = request.user
+                occurrence.completed_at = timezone.now()
+                occurrence.save(update_fields=['status', 'completed_by', 'completed_at'])
+
+            # For one_time/long_term: also mark the activity as completed
+            if activity.activity_type in ('one_time', 'long_term'):
+                activity.status = 'completed'
+                activity.save(update_fields=['status'])
+
+        elif approval_status == 'rejected':
+            # Reset work log so vendor can resubmit after photo
+            work_log.status = 'in_progress'
+            work_log.after_photo = None
+            work_log.after_photo_taken_at = None
+            work_log.save(update_fields=['status', 'after_photo', 'after_photo_taken_at'])
+
+            # Reset occurrence status back to in_progress
+            if occurrence.status == 'completed':
+                occurrence.status = 'in_progress'
+                occurrence.completed_by = None
+                occurrence.completed_at = None
+                occurrence.save(update_fields=['status', 'completed_by', 'completed_at'])
 
         serializer = self.get_serializer(work_log)
         return Response(serializer.data)
