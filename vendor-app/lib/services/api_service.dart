@@ -155,6 +155,12 @@ class ApiService {
     await _patch('/occurrences/$id/', {'status': status});
   }
 
+  // Mark activity as completed (stops new occurrences)
+  static Future<Map<String, dynamic>> markActivityComplete(int activityId) async {
+    final data = await _patch('/activities/$activityId/mark-complete/', {});
+    return data as Map<String, dynamic>;
+  }
+
   // Work Logs
   static Future<void> submitWorkLog({
     required int occurrenceId,
@@ -247,5 +253,14 @@ class ApiService {
   static Future<List<dynamic>> getWorkLogs(int occurrenceId) async {
     final data = await _get('/work-logs/?occurrence=$occurrenceId');
     return data is List ? data : (data['results'] ?? []);
+  }
+
+  // Assignments
+  static Future<void> assignEmployee(int occurrenceId, int employeeId) async {
+    await _post('/occurrences/$occurrenceId/assign/', {'employee_id': employeeId});
+  }
+
+  static Future<void> unassignEmployee(int occurrenceId, int employeeId) async {
+    await _post('/occurrences/$occurrenceId/unassign/', {'employee_id': employeeId});
   }
 }

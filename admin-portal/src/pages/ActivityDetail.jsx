@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import api from '../services/api'
+import { ExclamationCircleOutlined } from '@ant-design/icons'
 
 const statusStyles = {
   pending: 'bg-[#fef3e0] text-[#b07200]',
@@ -75,7 +76,7 @@ export default function ActivityDetail() {
           <div>
             <h1 className="font-serif text-2xl font-bold">{activity.title}</h1>
             {activity.is_overdue && (
-              <span className="badge inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#fdecea] text-[#c0392b] mt-1">⚠️ Overdue</span>
+              <span className="badge inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#fdecea] text-[#c0392b] mt-1"><ExclamationCircleOutlined /> Overdue</span>
             )}
           </div>
           <span className={`badge inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold ${statusStyles[activity.status] || 'bg-[#f0f1f3] text-[#555]'}`}>
@@ -155,7 +156,7 @@ export default function ActivityDetail() {
                     {log.before_photo && (
                       <div>
                         <p className="text-[11px] text-[#6b7280] mb-1 font-medium">Before</p>
-                        <img src={`http://localhost:8000${log.before_photo}`} alt="Before" className="w-40 h-32 object-cover rounded-lg border border-[#e4e8ed]" />
+                        <img src={log.before_photo.startsWith('http') ? log.before_photo : `http://localhost:8000${log.before_photo}`} alt="Before" className="w-40 h-32 object-cover rounded-lg border border-[#e4e8ed]" />
                         {log.before_photo_taken_at && (
                           <p className="text-[10px] text-[#6b7280] mt-1">{new Date(log.before_photo_taken_at).toLocaleString()}</p>
                         )}
@@ -164,7 +165,7 @@ export default function ActivityDetail() {
                     {log.after_photo && (
                       <div>
                         <p className="text-[11px] text-[#6b7280] mb-1 font-medium">After</p>
-                        <img src={`http://localhost:8000${log.after_photo}`} alt="After" className="w-40 h-32 object-cover rounded-lg border border-[#e4e8ed]" />
+                        <img src={log.after_photo.startsWith('http') ? log.after_photo : `http://localhost:8000${log.after_photo}`} alt="After" className="w-40 h-32 object-cover rounded-lg border border-[#e4e8ed]" />
                         {log.after_photo_taken_at && (
                           <p className="text-[10px] text-[#6b7280] mt-1">{new Date(log.after_photo_taken_at).toLocaleString()}</p>
                         )}

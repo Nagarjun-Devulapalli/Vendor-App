@@ -6,8 +6,9 @@ import '../theme/app_theme.dart';
 class TaskCard extends StatelessWidget {
   final Occurrence occurrence;
   final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
 
-  const TaskCard({super.key, required this.occurrence, this.onTap});
+  const TaskCard({super.key, required this.occurrence, this.onTap, this.onLongPress});
 
   Color get _statusColor {
     switch (occurrence.status) {
@@ -76,6 +77,7 @@ class TaskCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
+      onLongPress: onLongPress,
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
         decoration: AppTheme.cardDecoration.copyWith(

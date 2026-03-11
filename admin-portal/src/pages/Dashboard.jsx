@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import api from '../services/api'
+import { ShopOutlined, FileTextOutlined, ExclamationCircleOutlined, CreditCardOutlined, EyeOutlined } from '@ant-design/icons'
 
 const PIE_COLORS = { pending: '#e8a020', in_progress: '#2563a8', completed: '#1a6b4a', cancelled: '#c0392b' }
 
@@ -43,10 +44,10 @@ export default function Dashboard() {
   )
 
   const statCards = [
-    { label: 'Total Vendors', value: stats?.total_vendors || 0, sub: `${vendors.length} registered`, color: 'green', icon: '🏢', route: '/vendors' },
-    { label: 'Open Activities', value: stats?.total_activities || 0, sub: `${activities.filter(a => a.status === 'in_progress').length} in progress`, color: 'amber', icon: '📋', route: '/activities' },
-    { label: 'Overdue Tasks', value: stats?.overdue_activities_count || 0, sub: 'Action required', color: 'red', icon: '⚠️' },
-    { label: 'Payments Pending', value: `₹${((stats?.pending_payments_amount || 0) / 1000).toFixed(0)}K`, sub: `${stats?.pending_payments_count || 0} invoices`, color: 'blue', icon: '💳' },
+    { label: 'Active Vendors', value: stats?.total_vendors || 0, sub: `${vendors.length} registered`, color: 'green', icon: '🏢', onClick: null },
+    { label: 'Open Activities', value: stats?.total_activities || 0, sub: `${activities.filter(a => a.status === 'in_progress').length} in progress`, color: 'amber', icon: '📋', onClick: null },
+    { label: 'Partial Payments', value: `₹${((stats?.partial_payments_amount || 0) / 1000).toFixed(0)}K`, sub: `${stats?.partial_payments_count || 0} invoices`, color: 'amber', icon: '💰', onClick: () => navigate('/payments?tab=partial') },
+    { label: 'Pending payments', value: `₹${((stats?.pending_payments_amount || 0) / 1000).toFixed(0)}K`, sub: `${stats?.pending_payments_count || 0} invoices`, color: 'blue', icon: '💳', onClick: () => navigate('/payments?tab=pending') },
   ]
 
   const colorMap = { green: { border: 'border-t-orchid', iconBg: 'bg-orchid-light', valueColor: 'text-orchid' }, amber: { border: 'border-t-[#e8a020]', iconBg: 'bg-[#fef3e0]', valueColor: 'text-[#e8a020]' }, red: { border: 'border-t-[#c0392b]', iconBg: 'bg-[#fdecea]', valueColor: 'text-[#c0392b]' }, blue: { border: 'border-t-[#2563a8]', iconBg: 'bg-[#e8f0fc]', valueColor: 'text-[#2563a8]' } }
@@ -74,8 +75,14 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {statCards.map((card, i) => {
           const c = colorMap[card.color]
+          const CardWrapper = card.onClick ? 'button' : 'div'
           return (
-            <div key={card.label} onClick={() => card.route && navigate(card.route)} className={`bg-white rounded-xl border border-[#e4e8ed] shadow-sm p-5 border-t-[3px] ${c.border} animate-fade-up${card.route ? ' cursor-pointer hover:shadow-md transition-shadow' : ''}`} style={{ animationDelay: `${i * 0.05}s` }}>
+            <CardWrapper
+              key={card.label}
+              onClick={card.onClick}
+              className={`bg-white rounded-xl border border-[#e4e8ed] shadow-sm p-5 border-t-[3px] ${c.border} animate-fade-up ${card.onClick ? 'cursor-pointer hover:shadow-md transition-shadow text-left w-full' : ''}`}
+              style={{ animationDelay: `${i * 0.05}s` }}
+            >
               <div className={`w-10 h-10 rounded-[10px] flex items-center justify-center text-lg mb-3.5 ${c.iconBg}`}>
                 {card.icon}
               </div>
@@ -84,7 +91,7 @@ export default function Dashboard() {
               </div>
               <div className="text-[13px] text-[#6b7280] font-medium">{card.label}</div>
               <div className="text-[11px] text-[#6b7280] mt-2 pt-2 border-t border-[#e4e8ed]">{card.sub}</div>
-            </div>
+            </CardWrapper>
           )
         })}
       </div>
@@ -107,7 +114,7 @@ export default function Dashboard() {
                 <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#6b7280' }} />
                 <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} />
                 <Tooltip formatter={(v) => `₹${v.toLocaleString()}`} contentStyle={{ borderRadius: 8, border: '1px solid #e4e8ed', fontSize: 13 }} />
-                <Bar dataKey="amount" fill="#e8f5ee" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="amount" fill="#e8eefb" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
             {currentMonth && (
@@ -195,7 +202,7 @@ export default function Dashboard() {
                   </td>
                   <td className="px-4 py-3">
                     <button onClick={() => navigate(`/vendors/${v.id}`)} className="w-[30px] h-[30px] rounded-lg border border-[#e4e8ed] inline-flex items-center justify-center text-sm text-[#6b7280] hover:bg-[#f6f7f9] hover:text-[#1a1f2e] transition-colors">
-                      👁️
+                      <EyeOutlined />
                     </button>
                   </td>
                 </tr>

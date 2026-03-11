@@ -81,10 +81,13 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
         final doneTasks = tasks.where((t) => t.status == 'completed').length;
         final pendingTasks = tasks.where((t) => t.status == 'pending').length;
 
-        return RefreshIndicator(
+        return NotificationListener<OverscrollIndicatorNotification>(
+          onNotification: (n) { n.disallowIndicator(); return true; },
+          child: RefreshIndicator(
           color: AppColors.green,
           onRefresh: () => provider.loadTodayTasks(),
           child: CustomScrollView(
+            physics: const ClampingScrollPhysics(),
             slivers: [
               SliverToBoxAdapter(
                 child: HeroHeader(
@@ -92,6 +95,7 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
                   name: user?.firstName ?? 'Employee',
                   subtitle: '$dateStr · ${user?.branchName ?? ''}',
                   initials: _getInitials(user?.fullName ?? ''),
+                  onAvatarTap: () => setState(() => _navIndex = 2),
                 ),
               ),
               SliverToBoxAdapter(
@@ -152,6 +156,7 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
                 ),
             ],
           ),
+          ),
         );
       },
     );
@@ -164,9 +169,13 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
           children: [
             Container(
               color: AppColors.green,
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+              padding: const EdgeInsets.fromLTRB(8, 12, 20, 20),
               child: Row(
                 children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
+                    onPressed: () => setState(() => _navIndex = 0),
+                  ),
                   Expanded(
                     child: Text('My Tasks', style: GoogleFonts.fraunces(
                       fontSize: 22, fontWeight: FontWeight.w800, color: Colors.white,
@@ -220,9 +229,13 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
       children: [
         Container(
           color: AppColors.green,
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+          padding: const EdgeInsets.fromLTRB(8, 12, 20, 20),
           child: Row(
             children: [
+              IconButton(
+                icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
+                onPressed: () => setState(() => _navIndex = 0),
+              ),
               Expanded(
                 child: Text('Profile', style: GoogleFonts.fraunces(
                   fontSize: 22, fontWeight: FontWeight.w800, color: Colors.white,

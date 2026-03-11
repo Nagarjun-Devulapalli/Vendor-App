@@ -25,6 +25,7 @@ class VendorSerializer(serializers.ModelSerializer):
     display_name = serializers.CharField(read_only=True)
     branch_name = serializers.CharField(source='branch.name', read_only=True)
     category_names = serializers.SerializerMethodField()
+    is_active = serializers.BooleanField(source='user.is_active', read_only=True)
     # Write fields
     first_name = serializers.CharField(write_only=True, required=False)
     last_name = serializers.CharField(write_only=True, required=False)
@@ -37,7 +38,7 @@ class VendorSerializer(serializers.ModelSerializer):
         model = Vendor
         fields = [
             'id', 'user', 'display_name', 'branch', 'branch_name', 'company_name', 'categories',
-            'category_names', 'created_at',
+            'category_names', 'is_active', 'created_at',
             'first_name', 'last_name', 'phone', 'aadhar_number', 'photo', 'category_ids',
         ]
         read_only_fields = ['id', 'created_at', 'user', 'categories']
@@ -70,6 +71,7 @@ class VendorSerializer(serializers.ModelSerializer):
             user.photo = photo
             user.save()
 
+        validated_data.pop('categories', None)
         vendor = Vendor.objects.create(user=user, **validated_data)
         if category_ids:
             vendor.categories.set(category_ids)
@@ -77,6 +79,36 @@ class VendorSerializer(serializers.ModelSerializer):
         self._generated_password = password
         self._generated_username = username
         return vendor
+
+    def update(self, instance, validated_data):
+        first_name = validated_data.pop('first_name', None)
+        last_name = validated_data.pop('last_name', None)
+        phone = validated_data.pop('phone', None)
+        aadhar_number = validated_data.pop('aadhar_number', None)
+        photo = validated_data.pop('photo', None)
+        category_ids = validated_data.pop('category_ids', None)
+        validated_data.pop('categories', None)
+
+        user = instance.user
+        if first_name is not None:
+            user.first_name = first_name
+        if last_name is not None:
+            user.last_name = last_name
+        if phone is not None:
+            user.phone = phone
+        if aadhar_number is not None:
+            user.aadhar_number = aadhar_number
+        if photo is not None:
+            user.photo = photo
+        user.save()
+
+        if category_ids is not None:
+            instance.categories.set(category_ids)
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
@@ -90,6 +122,7 @@ class VendorSerializer(serializers.ModelSerializer):
 
 class EmployeeSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
+    is_active = serializers.BooleanField(source='user.is_active', read_only=True)
     # Write fields
     first_name = serializers.CharField(write_only=True, required=False)
     last_name = serializers.CharField(write_only=True, required=False)
@@ -99,7 +132,7 @@ class EmployeeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Employee
-        fields = ['id', 'user', 'vendor_owner', 'created_at', 'first_name', 'last_name', 'phone', 'aadhar_number', 'photo']
+        fields = ['id', 'user', 'vendor_owner', 'is_active', 'created_at', 'first_name', 'last_name', 'phone', 'aadhar_number', 'photo']
         read_only_fields = ['id', 'created_at']
 
     def create(self, validated_data):
@@ -130,6 +163,31 @@ class EmployeeSerializer(serializers.ModelSerializer):
         self._generated_password = password
         self._generated_username = username
         return employee
+
+    def update(self, instance, validated_data):
+        first_name = validated_data.pop('first_name', None)
+        last_name = validated_data.pop('last_name', None)
+        phone = validated_data.pop('phone', None)
+        aadhar_number = validated_data.pop('aadhar_number', None)
+        photo = validated_data.pop('photo', None)
+
+        user = instance.user
+        if first_name is not None:
+            user.first_name = first_name
+        if last_name is not None:
+            user.last_name = last_name
+        if phone is not None:
+            user.phone = phone
+        if aadhar_number is not None:
+            user.aadhar_number = aadhar_number
+        if photo is not None:
+            user.photo = photo
+        user.save()
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
 
     def to_representation(self, instance):
         data = super().to_representation(instance)

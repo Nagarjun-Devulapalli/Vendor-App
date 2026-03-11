@@ -115,7 +115,7 @@ class OccurrenceViewSet(viewsets.ModelViewSet):
         elif user.role == 'vendor_owner':
             qs = qs.filter(activity__vendor__user=user)
         elif user.role == 'vendor_employee':
-            qs = qs.filter(activity__vendor__employees__user=user)
+            qs = qs.filter(assignments__employee=user)
         return qs
 
     @action(detail=False, methods=['get'])
@@ -256,14 +256,6 @@ class WorkLogViewSet(viewsets.ModelViewSet):
         work_log.status = 'completed'
         work_log.save(update_fields=['after_photo', 'after_photo_taken_at', 'status'])
 
-        # Mark occurrence as completed
-        occurrence = work_log.occurrence
-        if occurrence.status != 'completed':
-            occurrence.status = 'completed'
-            occurrence.completed_by = request.user
-            occurrence.completed_at = timezone.now()
-            occurrence.save(update_fields=['status', 'completed_by', 'completed_at'])
-
         serializer = self.get_serializer(work_log)
         return Response(serializer.data)
 
@@ -286,5 +278,33 @@ class WorkLogViewSet(viewsets.ModelViewSet):
         work_log.reviewed_by = request.user
         work_log.reviewed_at = timezone.now()
         work_log.save()
+
+        if approval_status == 'approved':
+            # Fresh fetch to avoid stale cached data
+            occurrence = ActivityOccurrence.objects.prefetch_related('assignments').get(
+                pk=work_log.occurrence_id
+            )
+            if occurrence.status != 'completed':
+                assigned_ids = set(occurrence.assignments.values_list('employee_id', flat=True))
+                if assigned_ids:
+                    # All assigned employees must have an approved + completed work log
+                    approved_user_ids = set(
+                        WorkLog.objects.filter(
+                            occurrence_id=occurrence.pk,
+                            status='completed',
+                            approval_status='approved',
+                        ).values_list('user_id', flat=True)
+                    )
+                    all_approved = assigned_ids.issubset(approved_user_ids)
+                else:
+                    # No assignments — mark complete when any work log is approved
+                    all_approved = True
+
+                if all_approved:
+                    occurrence.status = 'completed'
+                    occurrence.completed_by = request.user
+                    occurrence.completed_at = timezone.now()
+                    occurrence.save(update_fields=['status', 'completed_by', 'completed_at'])
+
         serializer = self.get_serializer(work_log)
         return Response(serializer.data)
