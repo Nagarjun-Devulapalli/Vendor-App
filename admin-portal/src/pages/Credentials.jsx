@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
 import { SearchOutlined, CopyOutlined, CheckOutlined, EditOutlined, SwapOutlined } from '@ant-design/icons'
 import Pagination from '../components/Pagination'
+import BranchFilter from '../components/BranchFilter'
 
 const PAGE_SIZE = 15
 
@@ -21,7 +22,6 @@ const roleStyles = {
 
 export default function Credentials() {
   const [credentials, setCredentials] = useState([])
-  const [branches, setBranches] = useState([])
   const [loading, setLoading] = useState(true)
   const [roleFilter, setRoleFilter] = useState('')
   const [branchFilter, setBranchFilter] = useState('')
@@ -50,10 +50,6 @@ export default function Credentials() {
   useEffect(() => {
     fetchCredentials()
   }, [roleFilter, branchFilter])
-
-  useEffect(() => {
-    api.get('/branches/').then(res => setBranches(res.data.results || res.data)).catch(console.error)
-  }, [])
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -151,16 +147,7 @@ export default function Credentials() {
         </div>
 
         {/* Branch Filter */}
-        <select
-          value={branchFilter}
-          onChange={(e) => { setBranchFilter(e.target.value); setCurrentPage(1) }}
-          className="border-[1.5px] border-[#e4e8ed] rounded-lg px-3.5 py-2 text-sm focus:border-orchid focus:outline-none transition-colors min-w-[200px]"
-        >
-          <option value="">All Branches</option>
-          {branches.map(b => (
-            <option key={b.id} value={b.id}>{b.name}</option>
-          ))}
-        </select>
+        <BranchFilter value={branchFilter} onChange={(v) => { setBranchFilter(v || ''); setCurrentPage(1) }} />
 
         {/* Search */}
         <div className="relative flex-1 min-w-[250px]">
@@ -264,21 +251,31 @@ export default function Credentials() {
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <button
-                        onClick={() => handleSwitchUser(c)}
-                        disabled={switching === c.id || !c.is_active}
-                        className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-colors ${
-                          !c.is_active
-                            ? 'bg-[#f6f7f9] text-[#6b7280] cursor-not-allowed'
-                            : isUntracked(c.password_plain)
-                            ? 'border border-[#e4e8ed] text-[#6b7280] hover:bg-[#f6f7f9] cursor-not-allowed opacity-50'
-                            : 'bg-[#e8f0fc] text-[#2563a8] hover:bg-[#d0e0f8]'
-                        }`}
-                        title={!c.is_active ? 'User is inactive' : isUntracked(c.password_plain) ? 'Reset password first' : `Login as ${c.username}`}
-                      >
-                        <SwapOutlined />
-                        {switching === c.id ? 'Switching...' : 'Switch'}
-                      </button>
+                      {c.role === 'admin' ? (
+                        <button
+                          onClick={() => handleSwitchUser(c)}
+                          disabled={switching === c.id || !c.is_active}
+                          className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-colors ${
+                            !c.is_active
+                              ? 'bg-[#f6f7f9] text-[#6b7280] cursor-not-allowed'
+                              : isUntracked(c.password_plain)
+                              ? 'border border-[#e4e8ed] text-[#6b7280] hover:bg-[#f6f7f9] cursor-not-allowed opacity-50'
+                              : 'bg-[#e8f0fc] text-[#2563a8] hover:bg-[#d0e0f8]'
+                          }`}
+                          title={!c.is_active ? 'User is inactive' : isUntracked(c.password_plain) ? 'Reset password first' : `Login as ${c.username}`}
+                        >
+                          <SwapOutlined />
+                          {switching === c.id ? 'Switching...' : 'Switch'}
+                        </button>
+                      ) : (
+                        <span
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-[#f6f7f9] text-[#6b7280] cursor-not-allowed opacity-50"
+                          title="Switch is only available for admins"
+                        >
+                          <SwapOutlined />
+                          Switch
+                        </span>
+                      )}
                     </td>
                   </tr>
                 ))}

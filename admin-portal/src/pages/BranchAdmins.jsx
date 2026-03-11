@@ -178,7 +178,7 @@ export default function BranchAdmins() {
               <h3 className="font-serif text-lg font-bold">{editingAdmin ? 'Edit Admin' : 'Add Branch Admin'}</h3>
               <button onClick={() => setShowModal(false)} className="w-7 h-7 bg-[#f6f7f9] rounded-md flex items-center justify-center text-sm text-[#6b7280] hover:text-[#1a1f2e]">✕</button>
             </div>
-            <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto flex-1">
+            <form id="admin-form" onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto flex-1">
               <div>
                 <label className="block text-xs font-semibold text-[#1a1f2e] mb-1.5">Username *</label>
                 <input value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} className="w-full border-[1.5px] border-[#e4e8ed] rounded-lg px-3.5 py-2.5 text-sm focus:border-orchid focus:outline-none transition-colors" required disabled={!!editingAdmin} />
@@ -217,7 +217,7 @@ export default function BranchAdmins() {
             </form>
             <div className="px-6 py-4 border-t border-[#e4e8ed] flex justify-end gap-2.5">
               <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 border-[1.5px] border-[#e4e8ed] rounded-lg text-[13px] font-semibold hover:bg-[#f6f7f9] transition-colors">Cancel</button>
-              <button onClick={handleSubmit} disabled={submitting} className="px-4 py-2 bg-orchid text-white rounded-lg text-[13px] font-semibold hover:bg-orchid-mid disabled:opacity-50 transition-colors">
+              <button type="submit" form="admin-form" disabled={submitting} className="px-4 py-2 bg-orchid text-white rounded-lg text-[13px] font-semibold hover:bg-orchid-mid disabled:opacity-50 transition-colors">
                 {submitting ? 'Saving...' : editingAdmin ? 'Update Admin' : 'Create Admin →'}
               </button>
             </div>
