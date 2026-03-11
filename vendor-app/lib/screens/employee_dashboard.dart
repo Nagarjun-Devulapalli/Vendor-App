@@ -81,10 +81,13 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
         final doneTasks = tasks.where((t) => t.status == 'completed').length;
         final pendingTasks = tasks.where((t) => t.status == 'pending').length;
 
-        return RefreshIndicator(
+        return NotificationListener<OverscrollIndicatorNotification>(
+          onNotification: (n) { n.disallowIndicator(); return true; },
+          child: RefreshIndicator(
           color: AppColors.green,
           onRefresh: () => provider.loadTodayTasks(),
           child: CustomScrollView(
+            physics: const ClampingScrollPhysics(),
             slivers: [
               SliverToBoxAdapter(
                 child: HeroHeader(
@@ -152,6 +155,7 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
                   ),
                 ),
             ],
+          ),
           ),
         );
       },

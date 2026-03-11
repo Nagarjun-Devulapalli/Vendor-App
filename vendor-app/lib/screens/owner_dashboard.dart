@@ -108,13 +108,16 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
         final doneTasks = tasks.where((t) => t.status == 'completed').length;
         final overdueTasks = tasks.where((t) => t.status == 'missed').length;
 
-        return RefreshIndicator(
+        return NotificationListener<OverscrollIndicatorNotification>(
+          onNotification: (n) { n.disallowIndicator(); return true; },
+          child: RefreshIndicator(
           color: AppColors.green,
           onRefresh: () async {
             await provider.loadTodayTasks();
             await _loadEmployees();
           },
           child: CustomScrollView(
+            physics: const ClampingScrollPhysics(),
             slivers: [
               // Hero
               SliverToBoxAdapter(
@@ -265,6 +268,7 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                       ),
               ),
             ],
+          ),
           ),
         );
       },

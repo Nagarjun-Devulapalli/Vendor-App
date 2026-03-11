@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import '../services/api_service.dart';
@@ -286,6 +287,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                           const SizedBox(height: 6),
                           TextFormField(
                             controller: _firstNameController,
+                            inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z ]'))],
                             style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w600),
                             decoration: AppTheme.styledInput(label: '', hint: 'e.g. Suresh'),
                             validator: (v) => v == null || v.isEmpty ? 'Required' : null,
@@ -295,6 +297,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                           const SizedBox(height: 6),
                           TextFormField(
                             controller: _lastNameController,
+                            inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z ]'))],
                             style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w600),
                             decoration: AppTheme.styledInput(label: '', hint: 'e.g. Babu'),
                             validator: (v) => v == null || v.isEmpty ? 'Required' : null,
@@ -304,12 +307,16 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                           const SizedBox(height: 6),
                           TextFormField(
                             controller: _phoneController,
-                            keyboardType: TextInputType.phone,
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                              LengthLimitingTextInputFormatter(10),
+                            ],
                             style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w600),
-                            decoration: AppTheme.styledInput(label: '', hint: '+91 98765 XXXXX'),
+                            decoration: AppTheme.styledInput(label: '', hint: '10-digit phone number'),
                             validator: (v) {
                               if (v == null || v.isEmpty) return 'Required';
-                              if (v.length < 10) return 'Enter valid phone number';
+                              if (v.length != 10) return 'Enter exactly 10 digits';
                               return null;
                             },
                           ),
@@ -319,8 +326,16 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                           TextFormField(
                             controller: _aadharController,
                             keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                              LengthLimitingTextInputFormatter(12),
+                            ],
                             style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w600),
-                            decoration: AppTheme.styledInput(label: '', hint: 'XXXX XXXX XXXX'),
+                            decoration: AppTheme.styledInput(label: '', hint: '12-digit Aadhar number'),
+                            validator: (v) {
+                              if (v != null && v.isNotEmpty && v.length != 12) return 'Enter exactly 12 digits';
+                              return null;
+                            },
                           ),
                         ],
                       ),
