@@ -17,6 +17,7 @@ vendor-app/.flutter-plugins-dependencies
 vendor-app/build/
 vendor-app/.packages
 vendor-app/pubspec.lock
+backend/venv
 
 # IDE
 .idea/
