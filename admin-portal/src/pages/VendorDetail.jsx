@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import api from '../services/api'
+import { CameraOutlined, FileTextOutlined, CheckCircleOutlined } from '@ant-design/icons'
 
 const statusStyles = {
   pending: 'bg-[#fef3e0] text-[#b07200]',
@@ -202,7 +203,7 @@ export default function VendorDetail() {
                   {empPhotoPreview ? (
                     <img src={empPhotoPreview} alt="Preview" className="w-14 h-14 rounded-full object-cover border-2 border-[#e4e8ed]" />
                   ) : (
-                    <div className="w-14 h-14 rounded-full bg-[#f6f7f9] border-2 border-dashed border-[#e4e8ed] flex items-center justify-center text-xl text-[#6b7280]">📷</div>
+                    <div className="w-14 h-14 rounded-full bg-[#f6f7f9] border-2 border-dashed border-[#e4e8ed] flex items-center justify-center text-xl text-[#6b7280]"><CameraOutlined /></div>
                   )}
                   <label className="px-3 py-1.5 border-[1.5px] border-[#e4e8ed] rounded-lg text-[13px] font-medium cursor-pointer hover:bg-[#f6f7f9] transition-colors">
                     {empPhoto ? 'Change Photo' : 'Upload Photo'}
@@ -229,7 +230,7 @@ export default function VendorDetail() {
                 <input value={empForm.aadhar_number} onChange={(e) => setEmpForm({ ...empForm, aadhar_number: e.target.value })} className="w-full border-[1.5px] border-[#e4e8ed] rounded-lg px-3.5 py-2.5 text-sm focus:border-orchid focus:outline-none transition-colors" />
               </div>
               <div className="bg-[#fef3e0] border border-[#f0c060] rounded-lg px-3.5 py-3">
-                <p className="text-xs font-semibold text-[#7a5000]">📋 Login credentials will be auto-generated</p>
+                <p className="text-xs font-semibold text-[#7a5000]"><FileTextOutlined style={{ marginRight: 4 }} /> Login credentials will be auto-generated</p>
               </div>
             </form>
             <div className="px-6 py-4 border-t border-[#e4e8ed] flex justify-end gap-2.5">
@@ -246,7 +247,7 @@ export default function VendorDetail() {
       {credentials && (
         <div className="fixed inset-0 bg-black/40 modal-backdrop flex items-center justify-center z-[1000] p-4">
           <div className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full text-center">
-            <div className="w-12 h-12 bg-orchid-light rounded-full flex items-center justify-center mx-auto mb-3 text-xl">✓</div>
+            <div className="w-12 h-12 bg-orchid-light rounded-full flex items-center justify-center mx-auto mb-3 text-xl text-orchid"><CheckCircleOutlined /></div>
             <h2 className="font-serif text-xl font-bold mb-2">Employee Created!</h2>
             <p className="text-[#c0392b] text-sm mb-4 font-medium">Save these credentials — they won't be shown again!</p>
             <div className="bg-[#f6f7f9] rounded-lg p-4 text-left space-y-2 text-[13px]">

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { BankOutlined } from '@ant-design/icons'
 
 export default function Login() {
   const [username, setUsername] = useState('')
@@ -18,8 +19,8 @@ export default function Login() {
     <div className="min-h-screen bg-gradient-to-br from-orchid-dark to-orchid flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-orchid rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl">
-            🏫
+          <div className="w-16 h-16 bg-orchid rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl text-white">
+            <BankOutlined />
           </div>
           <h1 className="font-serif text-2xl font-bold text-[#1a1f2e]">Orchids Schools</h1>
           <p className="text-[#6b7280] mt-1 text-sm">Vendor Portal — Admin</p>

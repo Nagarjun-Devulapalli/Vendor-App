@@ -29,6 +29,9 @@ backend/venv
 .env
 *.env
 .venv
-venv/
+backend/venv
+
+# Credentials
+backend/credentials/
 
 

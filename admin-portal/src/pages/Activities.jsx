@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
+import { ExclamationCircleOutlined } from '@ant-design/icons'
 
 const statusStyles = {
   pending: 'bg-[#fef3e0] text-[#b07200]',
@@ -123,7 +124,7 @@ export default function Activities() {
                 <td className="px-4 py-3.5 font-semibold text-[13px] tabular-nums">₹{Number(a.expected_cost).toLocaleString()}</td>
                 <td className="px-4 py-3.5">
                   {a.is_overdue ? (
-                    <span className="badge inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#fdecea] text-[#c0392b]">⚠️ Overdue</span>
+                    <span className="badge inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#fdecea] text-[#c0392b]"><ExclamationCircleOutlined /> Overdue</span>
                   ) : (
                     <span className={`badge inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${statusStyles[a.status] || 'bg-[#f0f1f3] text-[#555]'}`}>
                       {a.status?.replace('_', ' ')}

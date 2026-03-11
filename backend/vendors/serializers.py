@@ -70,6 +70,7 @@ class VendorSerializer(serializers.ModelSerializer):
             user.photo = photo
             user.save()
 
+        validated_data.pop('categories', None)
         vendor = Vendor.objects.create(user=user, **validated_data)
         if category_ids:
             vendor.categories.set(category_ids)

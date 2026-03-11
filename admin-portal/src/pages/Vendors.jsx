@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
+import { EyeOutlined, DeleteOutlined, CameraOutlined, CheckCircleOutlined, FileTextOutlined } from '@ant-design/icons'
 
 export default function Vendors() {
   const [vendors, setVendors] = useState([])
@@ -137,8 +138,8 @@ export default function Vendors() {
                 <td className="px-4 py-3.5 text-[13px]">{v.employees?.length || '-'}</td>
                 <td className="px-4 py-3.5 text-[13px]">{v.user?.phone}</td>
                 <td className="px-4 py-3.5 space-x-2">
-                  <button onClick={() => navigate(`/vendors/${v.id}`)} className="w-[30px] h-[30px] rounded-lg border border-[#e4e8ed] inline-flex items-center justify-center text-sm text-[#6b7280] hover:bg-[#f6f7f9] transition-colors">👁️</button>
-                  <button onClick={() => handleDelete(v.id)} className="w-[30px] h-[30px] rounded-lg border border-[#e4e8ed] inline-flex items-center justify-center text-sm text-[#6b7280] hover:bg-[#fdecea] hover:text-[#c0392b] transition-colors">🗑️</button>
+                  <button onClick={() => navigate(`/vendors/${v.id}`)} className="w-[30px] h-[30px] rounded-lg border border-[#e4e8ed] inline-flex items-center justify-center text-sm text-[#6b7280] hover:bg-[#f6f7f9] transition-colors"><EyeOutlined /></button>
+                  <button onClick={() => handleDelete(v.id)} className="w-[30px] h-[30px] rounded-lg border border-[#e4e8ed] inline-flex items-center justify-center text-sm text-[#6b7280] hover:bg-[#fdecea] hover:text-[#c0392b] transition-colors"><DeleteOutlined /></button>
                 </td>
               </tr>
             ))}
@@ -152,19 +153,19 @@ export default function Vendors() {
       {/* Add Vendor Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/40 modal-backdrop flex items-center justify-center z-[1000] p-4" onClick={(e) => e.target === e.currentTarget && setShowModal(false)}>
-          <div className="bg-white rounded-2xl shadow-xl w-[480px] max-w-[90vw]">
+          <div className="bg-white rounded-2xl shadow-xl w-[480px] max-w-[90vw] max-h-[90vh] flex flex-col">
             <div className="px-6 pt-5 pb-4 border-b border-[#e4e8ed] flex items-center justify-between">
               <h3 className="font-serif text-lg font-bold">Register New Vendor</h3>
               <button onClick={() => setShowModal(false)} className="w-7 h-7 bg-[#f6f7f9] rounded-md flex items-center justify-center text-sm text-[#6b7280] hover:text-[#1a1f2e]">✕</button>
             </div>
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+            <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto flex-1">
               <div>
                 <label className="block text-xs font-semibold text-[#1a1f2e] mb-1.5">Photo *</label>
                 <div className="flex items-center gap-4">
                   {photoPreview ? (
                     <img src={photoPreview} alt="Preview" className="w-16 h-16 rounded-full object-cover border-2 border-[#e4e8ed]" />
                   ) : (
-                    <div className="w-16 h-16 rounded-full bg-[#f6f7f9] border-2 border-dashed border-[#e4e8ed] flex items-center justify-center text-2xl text-[#6b7280]">📷</div>
+                    <div className="w-16 h-16 rounded-full bg-[#f6f7f9] border-2 border-dashed border-[#e4e8ed] flex items-center justify-center text-2xl text-[#6b7280]"><CameraOutlined /></div>
                   )}
                   <label className="px-3 py-1.5 border-[1.5px] border-[#e4e8ed] rounded-lg text-[13px] font-medium cursor-pointer hover:bg-[#f6f7f9] transition-colors">
                     {photo ? 'Change Photo' : 'Upload Photo'}
@@ -215,7 +216,7 @@ export default function Vendors() {
                 </div>
               </div>
               <div className="bg-[#fef3e0] border border-[#f0c060] rounded-lg px-3.5 py-3">
-                <p className="text-xs font-semibold text-[#7a5000]">📋 Login credentials will be auto-generated</p>
+                <p className="text-xs font-semibold text-[#7a5000]"><FileTextOutlined style={{ marginRight: 4 }} /> Login credentials will be auto-generated</p>
                 <p className="text-xs text-[#7a5000] mt-1">Username and password will be shown once after saving.</p>
               </div>
             </form>
@@ -233,7 +234,7 @@ export default function Vendors() {
       {credentials && (
         <div className="fixed inset-0 bg-black/40 modal-backdrop flex items-center justify-center z-[1000] p-4">
           <div className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full text-center">
-            <div className="w-12 h-12 bg-orchid-light rounded-full flex items-center justify-center mx-auto mb-3 text-xl">✓</div>
+            <div className="w-12 h-12 bg-orchid-light rounded-full flex items-center justify-center mx-auto mb-3 text-xl text-orchid"><CheckCircleOutlined /></div>
             <h2 className="font-serif text-xl font-bold mb-2">Vendor Created!</h2>
             <p className="text-[#c0392b] text-sm mb-4 font-medium">Save these credentials — they won't be shown again!</p>
             <div className="bg-[#f6f7f9] rounded-lg p-4 text-left space-y-2 text-[13px]">
