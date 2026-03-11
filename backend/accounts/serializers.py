@@ -24,6 +24,18 @@ class LoginSerializer(serializers.Serializer):
         return data
 
 
+class ResetPasswordSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    new_password = serializers.CharField(write_only=True)
+
+    def validate_username(self, value):
+        try:
+            User.objects.get(username=value)
+        except User.DoesNotExist:
+            raise serializers.ValidationError('User with this username does not exist.')
+        return value
+
+
 class ProfileSerializer(serializers.ModelSerializer):
     branch_name = serializers.CharField(source='branch.name', read_only=True, default=None)
     vendor_id = serializers.SerializerMethodField()

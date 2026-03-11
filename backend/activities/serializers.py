@@ -1,6 +1,6 @@
 from django.utils import timezone
 from rest_framework import serializers
-from .models import Activity, ActivityOccurrence, WorkLog
+from .models import Activity, ActivityOccurrence, OccurrenceAssignment, WorkLog
 
 
 class WorkLogSerializer(serializers.ModelSerializer):
@@ -13,15 +13,18 @@ class WorkLogSerializer(serializers.ModelSerializer):
             'id', 'occurrence', 'user', 'user_name',
             'before_photo', 'before_photo_taken_at',
             'after_photo', 'after_photo_taken_at',
-            'description', 'approval_status', 'rejection_reason',
+            'status', 'description', 'approval_status', 'rejection_reason',
             'reviewed_by', 'reviewed_by_name', 'reviewed_at',
             'created_at',
         ]
         read_only_fields = [
             'id', 'user', 'user_name', 'before_photo_taken_at', 'after_photo_taken_at',
-            'approval_status', 'rejection_reason', 'reviewed_by', 'reviewed_by_name', 'reviewed_at',
+            'status', 'approval_status', 'rejection_reason', 'reviewed_by', 'reviewed_by_name', 'reviewed_at',
             'created_at',
         ]
+        extra_kwargs = {
+            'after_photo': {'required': False},
+        }
 
     def create(self, validated_data):
         validated_data['user'] = self.context['request'].user
@@ -41,11 +44,21 @@ class WorkLogSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
 
+class AssignmentSerializer(serializers.ModelSerializer):
+    employee_name = serializers.CharField(source='employee.get_full_name', read_only=True)
+    employee_id = serializers.IntegerField(source='employee.id', read_only=True)
+
+    class Meta:
+        model = OccurrenceAssignment
+        fields = ['id', 'employee_id', 'employee_name', 'assigned_at']
+
+
 class OccurrenceSerializer(serializers.ModelSerializer):
     activity_title = serializers.CharField(source='activity.title', read_only=True)
     category_name = serializers.CharField(source='activity.category.name', read_only=True, default=None)
     description = serializers.CharField(source='activity.description', read_only=True)
     completed_by_name = serializers.CharField(source='completed_by.get_full_name', read_only=True, default=None)
+    assignments = AssignmentSerializer(many=True, read_only=True)
     work_logs = WorkLogSerializer(many=True, read_only=True)
     work_log_count = serializers.IntegerField(read_only=True, default=0)
 
@@ -54,7 +67,8 @@ class OccurrenceSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'activity', 'activity_title', 'category_name', 'description',
             'scheduled_date', 'status', 'completed_by', 'completed_by_name',
-            'completed_at', 'work_logs', 'work_log_count',
+            'completed_at', 'assignments',
+            'work_logs', 'work_log_count',
         ]
         read_only_fields = ['id', 'activity', 'scheduled_date', 'completed_at']
 

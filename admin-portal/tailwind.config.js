@@ -8,10 +8,10 @@ export default {
     extend: {
       colors: {
         orchid: {
-          DEFAULT: '#1B4CCB',
-          light: '#e8eefb',
-          mid: '#ff6b6b',
-          dark: '#BB2139',
+          DEFAULT: '#1a6b4a',
+          light: '#e8f5ee',
+          mid: '#2d8f63',
+          dark: '#145537',
         },
         amber: {
           DEFAULT: '#e8a020',

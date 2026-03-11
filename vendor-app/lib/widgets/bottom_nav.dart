@@ -37,7 +37,7 @@ class AppBottomNav extends StatelessWidget {
                   AnimatedScale(
                     scale: active ? 1.15 : 1.0,
                     duration: const Duration(milliseconds: 150),
-                    child: Text(item.icon, style: const TextStyle(fontSize: 20)),
+                    child: Icon(item.icon, size: 22, color: active ? AppColors.green : AppColors.muted),
                   ),
                   const SizedBox(height: 3),
                   Text(
@@ -70,7 +70,7 @@ class AppBottomNav extends StatelessWidget {
 }
 
 class AppNavItem {
-  final String icon;
+  final IconData icon;
   final String label;
   const AppNavItem({required this.icon, required this.label});
 }

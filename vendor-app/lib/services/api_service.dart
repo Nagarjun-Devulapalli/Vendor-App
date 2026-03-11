@@ -5,6 +5,17 @@ import 'auth_service.dart';
 
 class ApiService {
   static const String baseUrl = 'http://10.0.2.2:8000/api';
+  static const String mediaBaseUrl = 'http://10.0.2.2:8000';
+
+  /// Resolves a photo URL from the API to a full URL.
+  /// Handles both relative paths (/media/...) and full URLs.
+  static String resolvePhotoUrl(String url) {
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url.replaceFirst('http://localhost:8000', mediaBaseUrl)
+                .replaceFirst('http://127.0.0.1:8000', mediaBaseUrl);
+    }
+    return '$mediaBaseUrl$url';
+  }
 
   static Future<Map<String, String>> _getHeaders({bool isJson = true}) async {
     final token = await AuthService.getAccessToken();
@@ -168,6 +179,27 @@ class ApiService {
     final response = await http.Response.fromStream(streamedResponse);
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw Exception('Failed to submit work log: ${response.body}');
+    }
+  }
+
+  static Future<void> completeWorkLog({
+    required int workLogId,
+    required File afterPhoto,
+  }) async {
+    final token = await AuthService.getAccessToken();
+    final request = http.MultipartRequest(
+      'PATCH',
+      Uri.parse('$baseUrl/work-logs/$workLogId/complete/'),
+    );
+    request.headers['Authorization'] = 'Bearer $token';
+    request.files.add(
+      await http.MultipartFile.fromPath('after_photo', afterPhoto.path),
+    );
+
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception('Failed to complete work log: ${response.body}');
     }
   }
 

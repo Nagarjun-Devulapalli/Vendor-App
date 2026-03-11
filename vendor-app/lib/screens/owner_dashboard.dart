@@ -37,7 +37,9 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
       final data = await ApiService.getEmployees();
       if (mounted) {
         setState(() {
-          _employees = data.map((e) => Employee.fromJson(e as Map<String, dynamic>)).toList();
+          _employees = data
+              .map((e) => Employee.fromJson(e as Map<String, dynamic>))
+              .toList();
         });
       }
     } catch (_) {}
@@ -53,7 +55,8 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
   String _getInitials(String name) {
     final parts = name.trim().split(' ');
     if (parts.length >= 2) return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
-    if (parts.isNotEmpty && parts[0].isNotEmpty) return parts[0][0].toUpperCase();
+    if (parts.isNotEmpty && parts[0].isNotEmpty)
+      return parts[0][0].toUpperCase();
     return '?';
   }
 
@@ -77,19 +80,19 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
             child: _navIndex == 0
                 ? _buildHome(user, dateStr)
                 : _navIndex == 1
-                    ? _buildTaskList()
-                    : _navIndex == 2
-                        ? const EmployeeListScreen(embedded: true)
-                        : _buildProfile(auth),
+                ? _buildTaskList()
+                : _navIndex == 2
+                ? const EmployeeListScreen(embedded: true)
+                : _buildProfile(auth),
           ),
           AppBottomNav(
             currentIndex: _navIndex,
             onTap: (i) => setState(() => _navIndex = i),
             items: const [
-              AppNavItem(icon: '🏠', label: 'Home'),
-              AppNavItem(icon: '📋', label: 'Tasks'),
-              AppNavItem(icon: '👥', label: 'Team'),
-              AppNavItem(icon: '👤', label: 'Profile'),
+              AppNavItem(icon: Icons.home_rounded, label: 'Home'),
+              AppNavItem(icon: Icons.assignment_rounded, label: 'Tasks'),
+              AppNavItem(icon: Icons.groups_rounded, label: 'Team'),
+              AppNavItem(icon: Icons.person_rounded, label: 'Profile'),
             ],
           ),
         ],
@@ -115,7 +118,7 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
               // Hero
               SliverToBoxAdapter(
                 child: HeroHeader(
-                  greeting: '${_getGreeting()} 👋',
+                  greeting: _getGreeting(),
                   name: user?.firstName ?? 'Vendor',
                   subtitle: '$dateStr · ${user?.branchName ?? ''}',
                   initials: _getInitials(user?.fullName ?? ''),
@@ -140,9 +143,14 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                       Text("TODAY'S TASKS", style: AppTheme.sectionTitle),
                       GestureDetector(
                         onTap: () => setState(() => _navIndex = 1),
-                        child: Text('See All', style: GoogleFonts.nunito(
-                          fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.green,
-                        )),
+                        child: Text(
+                          'See All',
+                          style: GoogleFonts.nunito(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.green,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -151,10 +159,12 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
               const SliverToBoxAdapter(child: SizedBox(height: 12)),
               if (provider.isLoading)
                 const SliverToBoxAdapter(
-                  child: Center(child: Padding(
-                    padding: EdgeInsets.all(32),
-                    child: CircularProgressIndicator(color: AppColors.green),
-                  )),
+                  child: Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(32),
+                      child: CircularProgressIndicator(color: AppColors.green),
+                    ),
+                  ),
                 )
               else if (tasks.isEmpty)
                 SliverToBoxAdapter(
@@ -162,11 +172,16 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                     padding: const EdgeInsets.all(32),
                     child: Column(
                       children: [
-                        const Text('✅', style: TextStyle(fontSize: 48)),
+                        const Icon(Icons.check_circle_rounded, size: 48, color: AppColors.green),
                         const SizedBox(height: 12),
-                        Text('No tasks for today', style: GoogleFonts.nunito(
-                          fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.muted,
-                        )),
+                        Text(
+                          'No tasks for today',
+                          style: GoogleFonts.nunito(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.muted,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -179,9 +194,14 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                       (ctx, i) => TaskCard(
                         occurrence: tasks[i],
                         onTap: () async {
-                          await Navigator.push(context, MaterialPageRoute(
-                            builder: (_) => OccurrenceDetailScreen(occurrenceId: tasks[i].id),
-                          ));
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => OccurrenceDetailScreen(
+                                occurrenceId: tasks[i].id,
+                              ),
+                            ),
+                          );
                           if (mounted) provider.loadTodayTasks();
                         },
                       ),
@@ -200,9 +220,14 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                       Text('MY TEAM', style: AppTheme.sectionTitle),
                       GestureDetector(
                         onTap: () => setState(() => _navIndex = 2),
-                        child: Text('Manage →', style: GoogleFonts.nunito(
-                          fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.green,
-                        )),
+                        child: Text(
+                          'See all →',
+                          style: GoogleFonts.nunito(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.green,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -217,16 +242,22 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                           decoration: AppTheme.cardDecoration,
                           padding: const EdgeInsets.all(24),
                           child: Center(
-                            child: Text('No employees yet', style: GoogleFonts.nunito(
-                              color: AppColors.muted, fontWeight: FontWeight.w600,
-                            )),
+                            child: Text(
+                              'No employees yet',
+                              style: GoogleFonts.nunito(
+                                color: AppColors.muted,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                           ),
                         ),
                       )
                     : SliverList(
                         delegate: SliverChildBuilderDelegate(
                           (ctx, i) => _employeeCard(_employees[i]),
-                          childCount: _employees.length > 3 ? 3 : _employees.length,
+                          childCount: _employees.length > 3
+                              ? 3
+                              : _employees.length,
                         ),
                       ),
               ),
@@ -245,7 +276,8 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
       child: Row(
         children: [
           Container(
-            width: 44, height: 44,
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
               color: AppColors.greenLight,
               borderRadius: BorderRadius.circular(14),
@@ -254,7 +286,9 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
             child: Text(
               _getInitials(emp.fullName),
               style: GoogleFonts.nunito(
-                fontSize: 16, fontWeight: FontWeight.w900, color: AppColors.green,
+                fontSize: 16,
+                fontWeight: FontWeight.w900,
+                color: AppColors.green,
               ),
             ),
           ),
@@ -263,13 +297,29 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(emp.fullName, style: GoogleFonts.nunito(
-                  fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.text,
-                )),
+                Text(
+                  emp.fullName,
+                  style: GoogleFonts.nunito(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.text,
+                  ),
+                ),
                 const SizedBox(height: 1),
-                Text('📞 ${emp.phone}', style: GoogleFonts.nunito(
-                  fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.muted,
-                )),
+                Row(
+                  children: [
+                    const Icon(Icons.phone_rounded, size: 12, color: AppColors.muted),
+                    const SizedBox(width: 4),
+                    Text(
+                      emp.phone,
+                      style: GoogleFonts.nunito(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.muted,
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
@@ -290,9 +340,14 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
               child: Row(
                 children: [
                   Expanded(
-                    child: Text("Today's Tasks", style: GoogleFonts.fraunces(
-                      fontSize: 22, fontWeight: FontWeight.w800, color: Colors.white,
-                    )),
+                    child: Text(
+                      "Today's Tasks",
+                      style: GoogleFonts.fraunces(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -302,32 +357,52 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                 color: AppColors.green,
                 onRefresh: () => provider.loadTodayTasks(),
                 child: provider.isLoading
-                    ? const Center(child: CircularProgressIndicator(color: AppColors.green))
+                    ? const Center(
+                        child: CircularProgressIndicator(
+                          color: AppColors.green,
+                        ),
+                      )
                     : provider.todayTasks.isEmpty
-                        ? ListView(children: [
-                            const SizedBox(height: 120),
-                            const Center(child: Text('✅', style: TextStyle(fontSize: 48))),
-                            const SizedBox(height: 12),
-                            Center(child: Text('All clear!', style: GoogleFonts.nunito(
-                              fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.muted,
-                            ))),
-                          ])
-                        : ListView.builder(
-                            padding: const EdgeInsets.all(16),
-                            itemCount: provider.todayTasks.length,
-                            itemBuilder: (ctx, i) {
-                              final task = provider.todayTasks[i];
-                              return TaskCard(
-                                occurrence: task,
-                                onTap: () async {
-                                  await Navigator.push(context, MaterialPageRoute(
-                                    builder: (_) => OccurrenceDetailScreen(occurrenceId: task.id),
-                                  ));
-                                  if (mounted) provider.loadTodayTasks();
-                                },
-                              );
-                            },
+                    ? ListView(
+                        children: [
+                          const SizedBox(height: 120),
+                          const Center(
+                            child: Icon(Icons.check_circle_rounded, size: 48, color: AppColors.green),
                           ),
+                          const SizedBox(height: 12),
+                          Center(
+                            child: Text(
+                              'All clear!',
+                              style: GoogleFonts.nunito(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.muted,
+                              ),
+                            ),
+                          ),
+                        ],
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: provider.todayTasks.length,
+                        itemBuilder: (ctx, i) {
+                          final task = provider.todayTasks[i];
+                          return TaskCard(
+                            occurrence: task,
+                            onTap: () async {
+                              await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => OccurrenceDetailScreen(
+                                    occurrenceId: task.id,
+                                  ),
+                                ),
+                              );
+                              if (mounted) provider.loadTodayTasks();
+                            },
+                          );
+                        },
+                      ),
               ),
             ),
           ],
@@ -346,9 +421,14 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
           child: Row(
             children: [
               Expanded(
-                child: Text('Profile', style: GoogleFonts.fraunces(
-                  fontSize: 22, fontWeight: FontWeight.w800, color: Colors.white,
-                )),
+                child: Text(
+                  'Profile',
+                  style: GoogleFonts.fraunces(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                  ),
+                ),
               ),
             ],
           ),
@@ -356,7 +436,8 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
         const SizedBox(height: 24),
         // Avatar
         Container(
-          width: 72, height: 72,
+          width: 72,
+          height: 72,
           decoration: BoxDecoration(
             color: AppColors.greenLight,
             borderRadius: BorderRadius.circular(20),
@@ -365,17 +446,29 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
           child: Text(
             _getInitials(user?.fullName ?? ''),
             style: GoogleFonts.fraunces(
-              fontSize: 28, fontWeight: FontWeight.w800, color: AppColors.green,
+              fontSize: 28,
+              fontWeight: FontWeight.w800,
+              color: AppColors.green,
             ),
           ),
         ),
         const SizedBox(height: 12),
-        Text(user?.fullName ?? '', style: GoogleFonts.nunito(
-          fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.text,
-        )),
-        Text(user?.username ?? '', style: GoogleFonts.nunito(
-          fontSize: 13, color: AppColors.muted, fontWeight: FontWeight.w600,
-        )),
+        Text(
+          user?.fullName ?? '',
+          style: GoogleFonts.nunito(
+            fontSize: 18,
+            fontWeight: FontWeight.w800,
+            color: AppColors.text,
+          ),
+        ),
+        Text(
+          user?.username ?? '',
+          style: GoogleFonts.nunito(
+            fontSize: 13,
+            color: AppColors.muted,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
         const SizedBox(height: 6),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -383,9 +476,14 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
             color: AppColors.greenLight,
             borderRadius: BorderRadius.circular(20),
           ),
-          child: Text('Vendor Owner', style: GoogleFonts.nunito(
-            fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.green,
-          )),
+          child: Text(
+            'Vendor Owner',
+            style: GoogleFonts.nunito(
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              color: AppColors.green,
+            ),
+          ),
         ),
         const SizedBox(height: 24),
         // Info
@@ -416,9 +514,17 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                 foregroundColor: AppColors.red,
                 side: const BorderSide(color: AppColors.red, width: 1.5),
                 padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
               ),
-              child: Text('Logout', style: GoogleFonts.nunito(fontWeight: FontWeight.w800, fontSize: 15)),
+              child: Text(
+                'Logout',
+                style: GoogleFonts.nunito(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 15,
+                ),
+              ),
             ),
           ),
         ),
@@ -432,8 +538,22 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: GoogleFonts.nunito(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.muted)),
-          Text(value, style: GoogleFonts.nunito(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.text)),
+          Text(
+            label,
+            style: GoogleFonts.nunito(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: AppColors.muted,
+            ),
+          ),
+          Text(
+            value,
+            style: GoogleFonts.nunito(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: AppColors.text,
+            ),
+          ),
         ],
       ),
     );

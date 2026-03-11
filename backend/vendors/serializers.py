@@ -40,7 +40,7 @@ class VendorSerializer(serializers.ModelSerializer):
             'category_names', 'created_at',
             'first_name', 'last_name', 'phone', 'aadhar_number', 'photo', 'category_ids',
         ]
-        read_only_fields = ['id', 'created_at', 'user']
+        read_only_fields = ['id', 'created_at', 'user', 'categories']
         extra_kwargs = {'company_name': {'required': False}}
 
     def get_category_names(self, obj):
@@ -54,7 +54,10 @@ class VendorSerializer(serializers.ModelSerializer):
         photo = validated_data.pop('photo', None)
         category_ids = validated_data.pop('category_ids', [])
 
-        username = f"vendor_{phone}" if phone else f"vendor_{random.randint(10000, 99999)}"
+        base_username = f"vendor_{phone}" if phone else f"vendor_{random.randint(10000, 99999)}"
+        username = base_username
+        while User.objects.filter(username=username).exists():
+            username = f"{base_username}_{random.randint(100, 999)}"
         password = generate_password()
 
         user = User.objects.create_user(
@@ -106,7 +109,10 @@ class EmployeeSerializer(serializers.ModelSerializer):
         aadhar_number = validated_data.pop('aadhar_number', '')
         photo = validated_data.pop('photo', None)
 
-        username = f"emp_{phone}" if phone else f"emp_{random.randint(10000, 99999)}"
+        base_username = f"emp_{phone}" if phone else f"emp_{random.randint(10000, 99999)}"
+        username = base_username
+        while User.objects.filter(username=username).exists():
+            username = f"{base_username}_{random.randint(100, 999)}"
         password = generate_password()
 
         vendor_owner = validated_data['vendor_owner']

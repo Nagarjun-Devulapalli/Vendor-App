@@ -6,9 +6,22 @@ import '../services/api_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/detail_hero.dart';
 
+enum WorkLogMode { start, complete }
+
 class WorkLogScreen extends StatefulWidget {
   final int occurrenceId;
-  const WorkLogScreen({super.key, required this.occurrenceId});
+  final WorkLogMode mode;
+  final int? workLogId;
+  final String? existingBeforePhotoUrl;
+
+  const WorkLogScreen({
+    super.key,
+    required this.occurrenceId,
+    this.mode = WorkLogMode.start,
+    this.workLogId,
+    this.existingBeforePhotoUrl,
+  });
+
   @override
   State<WorkLogScreen> createState() => _WorkLogScreenState();
 }
@@ -20,6 +33,8 @@ class _WorkLogScreenState extends State<WorkLogScreen> {
   File? _afterPhoto;
   bool _isSubmitting = false;
   bool _showSuccess = false;
+
+  bool get _isCompleteMode => widget.mode == WorkLogMode.complete;
 
   @override
   void dispose() {
@@ -82,33 +97,58 @@ class _WorkLogScreenState extends State<WorkLogScreen> {
     final picked = await _picker.pickImage(source: source, maxWidth: 1024, imageQuality: 85);
     if (picked != null) {
       setState(() {
-        if (isBefore) _beforePhoto = File(picked.path);
-        else _afterPhoto = File(picked.path);
+        if (isBefore) {
+          _beforePhoto = File(picked.path);
+        } else {
+          _afterPhoto = File(picked.path);
+        }
       });
     }
   }
 
   Future<void> _submit() async {
-    if (_descriptionController.text.trim().isEmpty && _beforePhoto == null && _afterPhoto == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Please add a description or photos'),
-          backgroundColor: AppColors.amber,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      );
-      return;
+    if (_isCompleteMode) {
+      // Complete mode: require after photo
+      if (_afterPhoto == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Please take an after photo'),
+            backgroundColor: AppColors.amber,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+        return;
+      }
+    } else {
+      // Start mode: require before photo
+      if (_beforePhoto == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Please take a before photo'),
+            backgroundColor: AppColors.amber,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+        return;
+      }
     }
 
     setState(() => _isSubmitting = true);
     try {
-      await ApiService.submitWorkLog(
-        occurrenceId: widget.occurrenceId,
-        description: _descriptionController.text.trim(),
-        beforePhoto: _beforePhoto,
-        afterPhoto: _afterPhoto,
-      );
+      if (_isCompleteMode) {
+        await ApiService.completeWorkLog(
+          workLogId: widget.workLogId!,
+          afterPhoto: _afterPhoto!,
+        );
+      } else {
+        await ApiService.submitWorkLog(
+          occurrenceId: widget.occurrenceId,
+          description: _descriptionController.text.trim(),
+          beforePhoto: _beforePhoto,
+        );
+      }
       if (mounted) {
         setState(() {
           _isSubmitting = false;
@@ -127,6 +167,13 @@ class _WorkLogScreenState extends State<WorkLogScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final heroTitle = _isCompleteMode ? 'Complete Work' : 'Start Work';
+    final heroSubtitle = 'Task #${widget.occurrenceId}';
+    final successTitle = _isCompleteMode ? 'Work Completed!' : 'Work Started!';
+    final successMessage = _isCompleteMode
+        ? 'Your after photo has been uploaded. The work log is now complete.'
+        : 'Your before photo has been uploaded. Remember to complete the work log when done.';
+
     return Scaffold(
       backgroundColor: AppColors.bg,
       body: Stack(
@@ -134,78 +181,128 @@ class _WorkLogScreenState extends State<WorkLogScreen> {
           Column(
             children: [
               DetailHero(
-                title: 'Submit Work Log',
-                subtitle: 'Task #${widget.occurrenceId}',
+                title: heroTitle,
+                subtitle: heroSubtitle,
                 onBack: () => Navigator.pop(context),
               ),
               Expanded(
                 child: ListView(
                   padding: const EdgeInsets.all(16),
                   children: [
-                    // Photo upload
+                    // Photo upload section
                     Container(
                       decoration: AppTheme.cardDecoration,
                       padding: const EdgeInsets.all(16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('📷 UPLOAD PHOTOS', style: AppTheme.label),
-                          const SizedBox(height: 12),
-                          Row(
-                            children: [
-                              Expanded(child: _photoBox('Before Work', _beforePhoto, true)),
-                              const SizedBox(width: 10),
-                              Expanded(child: _photoBox('After Work', _afterPhoto, false)),
-                            ],
+                          Text(
+                            _isCompleteMode ? 'AFTER PHOTO' : 'BEFORE PHOTO',
+                            style: AppTheme.label,
                           ),
+                          const SizedBox(height: 12),
+
+                          if (_isCompleteMode) ...[
+                            // Complete mode: show existing before photo read-only, then after picker
+                            if (widget.existingBeforePhotoUrl != null) ...[
+                              Text(
+                                'Before Photo (submitted)',
+                                style: GoogleFonts.nunito(
+                                  fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.muted,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Image.network(
+                                  ApiService.resolvePhotoUrl(widget.existingBeforePhotoUrl!),
+                                  height: 120,
+                                  width: double.infinity,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) => Container(
+                                    height: 120,
+                                    decoration: BoxDecoration(
+                                      color: AppColors.border,
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: const Center(
+                                      child: Icon(Icons.broken_image, color: AppColors.muted, size: 32),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'Take After Photo',
+                                style: GoogleFonts.nunito(
+                                  fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.text,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                            ],
+                            _photoBox('After Work', _afterPhoto, false),
+                          ] else ...[
+                            // Start mode: only before photo picker
+                            _photoBox('Before Work', _beforePhoto, true),
+                          ],
+
                           const SizedBox(height: 10),
                           Center(
                             child: Text(
-                              'Tap each box to take a photo or choose from gallery',
-                              style: GoogleFonts.nunito(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.muted),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    // Description
-                    Container(
-                      decoration: AppTheme.cardDecoration,
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('WORK DESCRIPTION *', style: AppTheme.label),
-                          const SizedBox(height: 10),
-                          TextFormField(
-                            controller: _descriptionController,
-                            maxLines: 3,
-                            style: GoogleFonts.nunito(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.text),
-                            decoration: InputDecoration(
-                              hintText: 'Describe the work done...',
-                              hintStyle: GoogleFonts.nunito(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.muted),
-                              filled: true,
-                              fillColor: AppColors.bg,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: AppColors.border, width: 1.5),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: AppColors.border, width: 1.5),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: AppColors.green, width: 1.5),
+                              _isCompleteMode
+                                  ? 'Tap the box to take the after photo'
+                                  : 'Tap the box to take the before photo',
+                              style: GoogleFonts.nunito(
+                                fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.muted,
                               ),
                             ),
                           ),
                         ],
                       ),
                     ),
+
+                    // Description (only in start mode)
+                    if (!_isCompleteMode) ...[
+                      const SizedBox(height: 12),
+                      Container(
+                        decoration: AppTheme.cardDecoration,
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('WORK DESCRIPTION', style: AppTheme.label),
+                            const SizedBox(height: 10),
+                            TextFormField(
+                              controller: _descriptionController,
+                              maxLines: 3,
+                              style: GoogleFonts.nunito(
+                                fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.text,
+                              ),
+                              decoration: InputDecoration(
+                                hintText: 'Describe the work to be done...',
+                                hintStyle: GoogleFonts.nunito(
+                                  fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.muted,
+                                ),
+                                filled: true,
+                                fillColor: AppColors.bg,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: AppColors.border, width: 1.5),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: AppColors.border, width: 1.5),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: AppColors.green, width: 1.5),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
 
                     const SizedBox(height: 16),
 
@@ -215,8 +312,14 @@ class _WorkLogScreenState extends State<WorkLogScreen> {
                         onPressed: _isSubmitting ? null : _submit,
                         style: AppTheme.greenButton,
                         child: _isSubmitting
-                            ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                            : Text('✅ Submit Work Log', style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w800)),
+                            ? const SizedBox(
+                                width: 24, height: 24,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              )
+                            : Text(
+                                _isCompleteMode ? 'Complete Work \u2192' : 'Start Work \u2192',
+                                style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w800),
+                              ),
                       ),
                     ),
                     const SizedBox(height: 24),
@@ -235,16 +338,20 @@ class _WorkLogScreenState extends State<WorkLogScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text('✅', style: TextStyle(fontSize: 60)),
+                      Icon(
+                        _isCompleteMode ? Icons.check_circle : Icons.play_circle_filled,
+                        size: 60,
+                        color: Colors.white,
+                      ),
                       const SizedBox(height: 16),
-                      Text('Work Log Submitted!', style: GoogleFonts.fraunces(
+                      Text(successTitle, style: GoogleFonts.fraunces(
                         fontSize: 24, fontWeight: FontWeight.w800, color: Colors.white,
                       )),
                       const SizedBox(height: 8),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 32),
                         child: Text(
-                          'Your before & after photos have been uploaded. The admin has been notified.',
+                          successMessage,
                           textAlign: TextAlign.center,
                           style: GoogleFonts.nunito(
                             fontSize: 13, color: Colors.white.withOpacity(0.65),
@@ -253,14 +360,14 @@ class _WorkLogScreenState extends State<WorkLogScreen> {
                       ),
                       const SizedBox(height: 28),
                       ElevatedButton(
-                        onPressed: () => Navigator.pop(context),
+                        onPressed: () => Navigator.pop(context, true),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white,
                           foregroundColor: AppColors.green,
                           padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                         ),
-                        child: Text('Back to Tasks', style: GoogleFonts.nunito(fontWeight: FontWeight.w800, fontSize: 15)),
+                        child: Text('Back to Task', style: GoogleFonts.nunito(fontWeight: FontWeight.w800, fontSize: 15)),
                       ),
                     ],
                   ),
@@ -300,7 +407,7 @@ class _WorkLogScreenState extends State<WorkLogScreen> {
     return GestureDetector(
       onTap: () => _pickImage(isBefore),
       child: Container(
-        height: 90,
+        height: 120,
         decoration: BoxDecoration(
           color: hasFilled ? AppColors.greenLight : AppColors.bg,
           border: Border.all(
@@ -348,9 +455,11 @@ class _WorkLogScreenState extends State<WorkLogScreen> {
             : Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text('📷', style: TextStyle(fontSize: 20)),
-                  const SizedBox(height: 4),
-                  Text(label, style: GoogleFonts.nunito(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.muted)),
+                  const Icon(Icons.camera_alt_rounded, size: 28, color: AppColors.muted),
+                  const SizedBox(height: 6),
+                  Text(label, style: GoogleFonts.nunito(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.muted)),
+                  const SizedBox(height: 2),
+                  Text('Tap to capture', style: GoogleFonts.nunito(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.muted)),
                 ],
               ),
       ),

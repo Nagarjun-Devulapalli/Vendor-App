@@ -1,6 +1,7 @@
 class WorkLog {
   final int id;
   final int occurrenceId;
+  final String status;
   final String? beforePhoto;
   final String? beforePhotoTakenAt;
   final String? afterPhoto;
@@ -15,6 +16,7 @@ class WorkLog {
   WorkLog({
     required this.id,
     required this.occurrenceId,
+    this.status = 'in_progress',
     this.beforePhoto,
     this.beforePhotoTakenAt,
     this.afterPhoto,
@@ -27,11 +29,15 @@ class WorkLog {
     this.reviewedByName,
   });
 
+  bool get isInProgress => status == 'in_progress';
+  bool get isCompleted => status == 'completed';
+
   factory WorkLog.fromJson(Map<String, dynamic> json) => WorkLog(
         id: json['id'] ?? 0,
         occurrenceId: json['occurrence'] is Map
             ? json['occurrence']['id'] ?? 0
             : (json['occurrence'] ?? 0),
+        status: json['status'] ?? 'in_progress',
         beforePhoto: json['before_photo'],
         beforePhotoTakenAt: json['before_photo_taken_at'],
         afterPhoto: json['after_photo'],

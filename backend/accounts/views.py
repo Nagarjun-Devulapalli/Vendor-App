@@ -6,7 +6,8 @@ from django.db.models import Sum, Count
 from django.utils import timezone
 from datetime import timedelta
 
-from .serializers import LoginSerializer, ProfileSerializer
+from .serializers import LoginSerializer, ResetPasswordSerializer, ProfileSerializer
+from .models import User
 from .permissions import IsAdmin
 
 
@@ -32,6 +33,18 @@ class LoginView(APIView):
                 'phone': user.phone,
             }
         })
+
+
+class ResetPasswordView(APIView):
+    permission_classes = [AllowAny]
+
+    def put(self, request):
+        serializer = ResetPasswordSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = User.objects.get(username=serializer.validated_data['username'])
+        user.set_password(serializer.validated_data['new_password'])
+        user.save()
+        return Response({'message': 'Password updated successfully.'})
 
 
 class ProfileView(APIView):

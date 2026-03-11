@@ -53,6 +53,7 @@ class Activity(models.Model):
 class ActivityOccurrence(models.Model):
     STATUS_CHOICES = [
         ('pending', 'Pending'),
+        ('in_progress', 'In Progress'),
         ('completed', 'Completed'),
         ('missed', 'Missed'),
     ]
@@ -64,12 +65,32 @@ class ActivityOccurrence(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True
     )
     completed_at = models.DateTimeField(null=True, blank=True)
+    assigned_to = models.ManyToManyField(
+        settings.AUTH_USER_MODEL, through='OccurrenceAssignment',
+        related_name='assigned_occurrences', blank=True
+    )
 
     def __str__(self):
         return f"{self.activity.title} - {self.scheduled_date}"
 
 
+class OccurrenceAssignment(models.Model):
+    occurrence = models.ForeignKey(ActivityOccurrence, on_delete=models.CASCADE, related_name='assignments')
+    employee = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='occurrence_assignments')
+    assigned_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('occurrence', 'employee')
+
+    def __str__(self):
+        return f"{self.employee.get_full_name()} -> {self.occurrence}"
+
+
 class WorkLog(models.Model):
+    STATUS_CHOICES = [
+        ('in_progress', 'In Progress'),
+        ('completed', 'Completed'),
+    ]
     APPROVAL_STATUS_CHOICES = [
         ('pending', 'Pending'),
         ('approved', 'Approved'),
@@ -82,6 +103,7 @@ class WorkLog(models.Model):
     before_photo_taken_at = models.DateTimeField(null=True, blank=True)
     after_photo = models.ImageField(upload_to='work_logs/after/', blank=True, null=True)
     after_photo_taken_at = models.DateTimeField(null=True, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='in_progress')
     description = models.TextField(blank=True)
     approval_status = models.CharField(max_length=20, choices=APPROVAL_STATUS_CHOICES, default='pending')
     rejection_reason = models.TextField(blank=True, null=True)

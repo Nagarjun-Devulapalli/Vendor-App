@@ -22,6 +22,9 @@ export default function Payments() {
   const [receiptModal, setReceiptModal] = useState(null)
   const [receiptFile, setReceiptFile] = useState(null)
   const [receiptUploading, setReceiptUploading] = useState(false)
+  const [receiptModal, setReceiptModal] = useState(null)
+  const [receiptFile, setReceiptFile] = useState(null)
+  const [receiptUploading, setReceiptUploading] = useState(false)
 
   const fetchPayments = () => {
     let url = '/payments/'
@@ -178,6 +181,7 @@ export default function Payments() {
               <th className="text-left text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider px-4 py-2.5">Payment Date</th>
               <th className="text-left text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider px-4 py-2.5">Status</th>
               <th className="text-left text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider px-4 py-2.5">Receipt</th>
+              <th className="text-left text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider px-4 py-2.5">Receipt</th>
               <th className="text-left text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider px-4 py-2.5">Action</th>
             </tr>
           </thead>
@@ -201,11 +205,11 @@ export default function Payments() {
                 <td className="px-4 py-3.5">
                   {p.receipt ? (
                     <a href={p.receipt} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 px-2.5 py-1 bg-[#e8f5ee] text-[#1a6b4a] rounded-lg text-[11px] font-semibold hover:bg-[#d0ebdb] transition-colors">
-                      <FileTextOutlined /> View
+                      📄 View
                     </a>
                   ) : p.payment_status === 'completed' ? (
                     <button onClick={() => setReceiptModal(p)} className="inline-flex items-center gap-1 px-2.5 py-1 border-[1.5px] border-dashed border-[#e4e8ed] rounded-lg text-[11px] font-semibold text-[#6b7280] hover:bg-[#f6f7f9] transition-colors">
-                      <UploadOutlined /> Upload
+                      ⬆ Upload
                     </button>
                   ) : (
                     <span className="text-[11px] text-[#6b7280]">—</span>
@@ -220,7 +224,7 @@ export default function Payments() {
                       Pay Now
                     </button>
                   ) : (
-                    <span className="text-[11px] text-orchid font-semibold"><CheckOutlined /> Done</span>
+                    <span className="text-[11px] text-orchid font-semibold">✓ Done</span>
                   )}
                 </td>
               </tr>
