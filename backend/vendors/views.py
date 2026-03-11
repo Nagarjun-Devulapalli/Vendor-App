@@ -1,0 +1,64 @@
+from rest_framework import viewsets, status
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+
+from .models import Branch, Vendor, Employee
+from .serializers import BranchSerializer, VendorSerializer, EmployeeSerializer
+from accounts.permissions import IsAdmin, IsAdminOrReadOnly
+
+
+class BranchViewSet(viewsets.ModelViewSet):
+    queryset = Branch.objects.all()
+    serializer_class = BranchSerializer
+    permission_classes = [IsAdminOrReadOnly]
+
+
+class VendorViewSet(viewsets.ModelViewSet):
+    serializer_class = VendorSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        qs = Vendor.objects.select_related('user', 'branch').prefetch_related('categories').all()
+        user = self.request.user
+        if user.role == 'admin' and user.branch:
+            qs = qs.filter(branch=user.branch)
+        elif user.role == 'vendor_owner':
+            qs = qs.filter(user=user)
+        vendor_id = self.request.query_params.get('vendor')
+        if vendor_id:
+            qs = qs.filter(id=vendor_id)
+        return qs
+
+    def get_permissions(self):
+        if self.action in ('create', 'update', 'partial_update', 'destroy'):
+            return [IsAdmin()]
+        return [IsAuthenticated()]
+
+    @action(detail=False, methods=['get'], url_path='by-category')
+    def by_category(self, request):
+        cat_id = request.query_params.get('cat')
+        if not cat_id:
+            return Response({'error': 'cat parameter required'}, status=400)
+        qs = self.get_queryset().filter(categories__id=cat_id)
+        serializer = self.get_serializer(qs, many=True)
+        return Response(serializer.data)
+
+
+class EmployeeViewSet(viewsets.ModelViewSet):
+    serializer_class = EmployeeSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        qs = Employee.objects.select_related('user', 'vendor_owner').all()
+        user = self.request.user
+        if user.role == 'admin' and user.branch:
+            qs = qs.filter(vendor_owner__branch=user.branch)
+        elif user.role == 'vendor_owner':
+            qs = qs.filter(vendor_owner__user=user)
+        elif user.role == 'vendor_employee':
+            qs = qs.filter(user=user)
+        vendor_owner = self.request.query_params.get('vendor_owner')
+        if vendor_owner:
+            qs = qs.filter(vendor_owner_id=vendor_owner)
+        return qs

@@ -1,0 +1,249 @@
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import api from '../services/api'
+
+export default function Vendors() {
+  const [vendors, setVendors] = useState([])
+  const [branches, setBranches] = useState([])
+  const [categories, setCategories] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [showModal, setShowModal] = useState(false)
+  const [credentials, setCredentials] = useState(null)
+  const [form, setForm] = useState({ company_name: '', first_name: '', last_name: '', phone: '', aadhar_number: '', branch: '', category_ids: [] })
+  const [photo, setPhoto] = useState(null)
+  const [photoPreview, setPhotoPreview] = useState(null)
+  const [submitting, setSubmitting] = useState(false)
+  const navigate = useNavigate()
+
+  const fetchVendors = () => {
+    api.get('/vendors/').then((res) => setVendors(res.data.results || res.data)).catch(console.error).finally(() => setLoading(false))
+  }
+
+  useEffect(() => {
+    fetchVendors()
+    api.get('/branches/').then((res) => setBranches(res.data.results || res.data)).catch(console.error)
+    api.get('/categories/').then((res) => setCategories(res.data.results || res.data)).catch(console.error)
+  }, [])
+
+  const handlePhotoChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      setPhoto(file)
+      setPhotoPreview(URL.createObjectURL(file))
+    }
+  }
+
+  const handleSubmit = async (e) => {
+    if (e) e.preventDefault()
+    setSubmitting(true)
+    try {
+      const formData = new FormData()
+      if (form.company_name) formData.append('company_name', form.company_name)
+      formData.append('first_name', form.first_name)
+      formData.append('last_name', form.last_name)
+      formData.append('phone', form.phone)
+      if (form.aadhar_number) formData.append('aadhar_number', form.aadhar_number)
+      formData.append('branch', form.branch)
+      form.category_ids.forEach(id => formData.append('category_ids', id))
+      if (photo) formData.append('photo', photo)
+      const res = await api.post('/vendors/', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
+      setCredentials(res.data.credentials || { username: res.data.user?.username, password: res.data.generated_password })
+      setShowModal(false)
+      setForm({ company_name: '', first_name: '', last_name: '', phone: '', aadhar_number: '', branch: '', category_ids: [] })
+      setPhoto(null)
+      setPhotoPreview(null)
+      fetchVendors()
+    } catch (err) {
+      alert(err.response?.data?.detail || JSON.stringify(err.response?.data) || 'Error creating vendor')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const toggleCategory = (id) => {
+    setForm((f) => ({
+      ...f,
+      category_ids: f.category_ids.includes(id) ? f.category_ids.filter((c) => c !== id) : [...f.category_ids, id],
+    }))
+  }
+
+  const handleDelete = async (id) => {
+    if (!confirm('Delete this vendor?')) return
+    try {
+      await api.delete(`/vendors/${id}/`)
+      fetchVendors()
+    } catch (err) {
+      alert('Error deleting vendor')
+    }
+  }
+
+  if (loading) return <div className="flex items-center justify-center h-64 text-[#6b7280]">Loading...</div>
+
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="font-serif text-lg font-bold">All Vendors</h3>
+          <p className="text-[13px] text-[#6b7280] mt-0.5">{vendors.length} vendors registered</p>
+        </div>
+        <button onClick={() => setShowModal(true)} className="inline-flex items-center gap-1.5 px-4 py-2 bg-orchid text-white rounded-lg text-[13px] font-semibold hover:bg-orchid-mid transition-colors">
+          + Add Vendor
+        </button>
+      </div>
+
+      <div className="bg-white rounded-xl border border-[#e4e8ed] shadow-sm overflow-hidden">
+        <table className="w-full">
+          <thead>
+            <tr className="bg-[#f6f7f9] border-b border-[#e4e8ed]">
+              <th className="text-left text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider px-4 py-2.5">Company / Owner</th>
+              <th className="text-left text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider px-4 py-2.5">Work Type</th>
+              <th className="text-left text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider px-4 py-2.5">Employees</th>
+              <th className="text-left text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider px-4 py-2.5">Phone</th>
+              <th className="text-left text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider px-4 py-2.5">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {vendors.map((v) => (
+              <tr key={v.id} className="border-b border-[#e4e8ed] last:border-0 hover:bg-[#f9fafb] transition-colors">
+                <td className="px-4 py-3.5">
+                  <div className="flex items-center gap-3">
+                    {v.user?.photo ? (
+                      <img
+                        src={v.user.photo.startsWith('http') ? v.user.photo : `http://localhost:8000${v.user.photo}`}
+                        alt=""
+                        className="w-9 h-9 rounded-full object-cover border border-[#e4e8ed]"
+                        onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex' }}
+                      />
+                    ) : null}
+                    <div className={`w-9 h-9 rounded-full bg-orchid-light items-center justify-center text-xs font-bold text-orchid ${v.user?.photo ? 'hidden' : 'flex'}`}>
+                      {(v.user?.first_name || '')[0]}{(v.user?.last_name || '')[0]}
+                    </div>
+                    <div>
+                      <span className="font-semibold text-[13px] block">{v.display_name || v.company_name || `${v.user?.first_name} ${v.user?.last_name}`}</span>
+                      <span className="text-[11px] text-[#6b7280]">{v.user?.first_name} {v.user?.last_name} · {v.user?.phone}</span>
+                    </div>
+                  </div>
+                </td>
+                <td className="px-4 py-3.5">
+                  <div className="flex flex-wrap gap-1">
+                    {(v.category_names || []).slice(0, 2).map((c, i) => (
+                      <span key={i} className="badge inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#e8f0fc] text-[#2563a8]">{c}</span>
+                    ))}
+                    {(v.category_names || []).length > 2 && (
+                      <span className="text-[11px] text-[#6b7280]">+{v.category_names.length - 2}</span>
+                    )}
+                  </div>
+                </td>
+                <td className="px-4 py-3.5 text-[13px]">{v.employees?.length || '-'}</td>
+                <td className="px-4 py-3.5 text-[13px]">{v.user?.phone}</td>
+                <td className="px-4 py-3.5 space-x-2">
+                  <button onClick={() => navigate(`/vendors/${v.id}`)} className="w-[30px] h-[30px] rounded-lg border border-[#e4e8ed] inline-flex items-center justify-center text-sm text-[#6b7280] hover:bg-[#f6f7f9] transition-colors">👁️</button>
+                  <button onClick={() => handleDelete(v.id)} className="w-[30px] h-[30px] rounded-lg border border-[#e4e8ed] inline-flex items-center justify-center text-sm text-[#6b7280] hover:bg-[#fdecea] hover:text-[#c0392b] transition-colors">🗑️</button>
+                </td>
+              </tr>
+            ))}
+            {vendors.length === 0 && (
+              <tr><td colSpan="5" className="px-4 py-8 text-center text-[13px] text-[#6b7280]">No vendors found</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Add Vendor Modal */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black/40 modal-backdrop flex items-center justify-center z-[1000] p-4" onClick={(e) => e.target === e.currentTarget && setShowModal(false)}>
+          <div className="bg-white rounded-2xl shadow-xl w-[480px] max-w-[90vw]">
+            <div className="px-6 pt-5 pb-4 border-b border-[#e4e8ed] flex items-center justify-between">
+              <h3 className="font-serif text-lg font-bold">Register New Vendor</h3>
+              <button onClick={() => setShowModal(false)} className="w-7 h-7 bg-[#f6f7f9] rounded-md flex items-center justify-center text-sm text-[#6b7280] hover:text-[#1a1f2e]">✕</button>
+            </div>
+            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-[#1a1f2e] mb-1.5">Photo *</label>
+                <div className="flex items-center gap-4">
+                  {photoPreview ? (
+                    <img src={photoPreview} alt="Preview" className="w-16 h-16 rounded-full object-cover border-2 border-[#e4e8ed]" />
+                  ) : (
+                    <div className="w-16 h-16 rounded-full bg-[#f6f7f9] border-2 border-dashed border-[#e4e8ed] flex items-center justify-center text-2xl text-[#6b7280]">📷</div>
+                  )}
+                  <label className="px-3 py-1.5 border-[1.5px] border-[#e4e8ed] rounded-lg text-[13px] font-medium cursor-pointer hover:bg-[#f6f7f9] transition-colors">
+                    {photo ? 'Change Photo' : 'Upload Photo'}
+                    <input type="file" accept="image/*" onChange={handlePhotoChange} className="hidden" />
+                  </label>
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-[#1a1f2e] mb-1.5">Company Name <span className="text-[#6b7280] font-normal">(optional)</span></label>
+                <input value={form.company_name} onChange={(e) => setForm({ ...form, company_name: e.target.value })} placeholder="Leave blank for individual vendors" className="w-full border-[1.5px] border-[#e4e8ed] rounded-lg px-3.5 py-2.5 text-sm focus:border-orchid focus:outline-none transition-colors" />
+              </div>
+              <div className="grid grid-cols-2 gap-3.5">
+                <div>
+                  <label className="block text-xs font-semibold text-[#1a1f2e] mb-1.5">Owner First Name *</label>
+                  <input value={form.first_name} onChange={(e) => setForm({ ...form, first_name: e.target.value })} className="w-full border-[1.5px] border-[#e4e8ed] rounded-lg px-3.5 py-2.5 text-sm focus:border-orchid focus:outline-none transition-colors" required />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[#1a1f2e] mb-1.5">Owner Last Name *</label>
+                  <input value={form.last_name} onChange={(e) => setForm({ ...form, last_name: e.target.value })} className="w-full border-[1.5px] border-[#e4e8ed] rounded-lg px-3.5 py-2.5 text-sm focus:border-orchid focus:outline-none transition-colors" required />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3.5">
+                <div>
+                  <label className="block text-xs font-semibold text-[#1a1f2e] mb-1.5">Phone Number *</label>
+                  <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="w-full border-[1.5px] border-[#e4e8ed] rounded-lg px-3.5 py-2.5 text-sm focus:border-orchid focus:outline-none transition-colors" required />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[#1a1f2e] mb-1.5">Aadhar Number</label>
+                  <input value={form.aadhar_number} onChange={(e) => setForm({ ...form, aadhar_number: e.target.value })} placeholder="XXXX XXXX XXXX" className="w-full border-[1.5px] border-[#e4e8ed] rounded-lg px-3.5 py-2.5 text-sm focus:border-orchid focus:outline-none transition-colors" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-[#1a1f2e] mb-1.5">Branch *</label>
+                <select value={form.branch} onChange={(e) => setForm({ ...form, branch: e.target.value })} className="w-full border-[1.5px] border-[#e4e8ed] rounded-lg px-3.5 py-2.5 text-sm focus:border-orchid focus:outline-none transition-colors" required>
+                  <option value="">Select branch</option>
+                  {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-[#1a1f2e] mb-1.5">Work Categories *</label>
+                <div className="flex flex-wrap gap-2">
+                  {categories.map((c) => (
+                    <label key={c.id} className={`flex items-center gap-1.5 text-[13px] px-2.5 py-1 rounded-full border cursor-pointer transition-colors ${form.category_ids.includes(c.id) ? 'bg-orchid-light border-orchid text-orchid font-medium' : 'border-[#e4e8ed] text-[#6b7280] hover:border-orchid/50'}`}>
+                      <input type="checkbox" checked={form.category_ids.includes(c.id)} onChange={() => toggleCategory(c.id)} className="hidden" />
+                      {c.name}
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <div className="bg-[#fef3e0] border border-[#f0c060] rounded-lg px-3.5 py-3">
+                <p className="text-xs font-semibold text-[#7a5000]">📋 Login credentials will be auto-generated</p>
+                <p className="text-xs text-[#7a5000] mt-1">Username and password will be shown once after saving.</p>
+              </div>
+            </form>
+            <div className="px-6 py-4 border-t border-[#e4e8ed] flex justify-end gap-2.5">
+              <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 border-[1.5px] border-[#e4e8ed] rounded-lg text-[13px] font-semibold hover:bg-[#f6f7f9] transition-colors">Cancel</button>
+              <button onClick={handleSubmit} disabled={submitting} className="px-4 py-2 bg-orchid text-white rounded-lg text-[13px] font-semibold hover:bg-orchid-mid disabled:opacity-50 transition-colors">
+                {submitting ? 'Saving...' : 'Save Vendor →'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Credentials Modal */}
+      {credentials && (
+        <div className="fixed inset-0 bg-black/40 modal-backdrop flex items-center justify-center z-[1000] p-4">
+          <div className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full text-center">
+            <div className="w-12 h-12 bg-orchid-light rounded-full flex items-center justify-center mx-auto mb-3 text-xl">✓</div>
+            <h2 className="font-serif text-xl font-bold mb-2">Vendor Created!</h2>
+            <p className="text-[#c0392b] text-sm mb-4 font-medium">Save these credentials — they won't be shown again!</p>
+            <div className="bg-[#f6f7f9] rounded-lg p-4 text-left space-y-2 text-[13px]">
+              <p><span className="font-semibold">Username:</span> {credentials.username}</p>
+              <p><span className="font-semibold">Password:</span> {credentials.password}</p>
+            </div>
+            <button onClick={() => setCredentials(null)} className="mt-4 px-6 py-2 bg-orchid text-white rounded-lg text-[13px] font-semibold hover:bg-orchid-mid transition-colors">Done</button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
