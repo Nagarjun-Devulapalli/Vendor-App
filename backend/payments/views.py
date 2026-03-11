@@ -12,7 +12,7 @@ from accounts.permissions import IsAdmin
 class PaymentViewSet(viewsets.ModelViewSet):
     serializer_class = PaymentSerializer
     permission_classes = [IsAuthenticated]
-    http_method_names = ['get', 'head', 'options']
+    http_method_names = ['get', 'post', 'head', 'options']
 
     def get_queryset(self):
         qs = Payment.objects.select_related(
