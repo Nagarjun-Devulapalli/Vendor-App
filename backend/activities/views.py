@@ -320,7 +320,15 @@ class WorkLogViewSet(viewsets.ModelViewSet):
         work_log.after_photo = after_photo
         work_log.after_photo_taken_at = timezone.now()
         work_log.status = 'completed'
-        work_log.save(update_fields=['after_photo', 'after_photo_taken_at', 'status'])
+        # Reset approval status so admin can review again (handles resubmission after rejection)
+        work_log.approval_status = 'pending'
+        work_log.rejection_reason = ''
+        work_log.reviewed_by = None
+        work_log.reviewed_at = None
+        work_log.save(update_fields=[
+            'after_photo', 'after_photo_taken_at', 'status',
+            'approval_status', 'rejection_reason', 'reviewed_by', 'reviewed_at',
+        ])
 
         serializer = self.get_serializer(work_log)
         return Response(serializer.data)
