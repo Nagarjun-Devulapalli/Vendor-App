@@ -1,8 +1,9 @@
 from django.conf import settings
 from django.db import models
+from vendor_portal.mixins import SoftDeleteModel
 
 
-class Branch(models.Model):
+class Branch(SoftDeleteModel):
     name = models.CharField(max_length=200)
     address = models.TextField(blank=True)
     city = models.CharField(max_length=100)
@@ -15,7 +16,7 @@ class Branch(models.Model):
         return self.name
 
 
-class Vendor(models.Model):
+class Vendor(SoftDeleteModel):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='vendor_profile'
     )
@@ -31,8 +32,13 @@ class Vendor(models.Model):
     def __str__(self):
         return self.display_name
 
+    def delete(self, using=None, keep_parents=False):
+        # Soft delete the linked user too
+        self.user.delete()
+        super().delete(using=using, keep_parents=keep_parents)
 
-class Employee(models.Model):
+
+class Employee(SoftDeleteModel):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='employee_profile'
     )
@@ -41,3 +47,7 @@ class Employee(models.Model):
 
     def __str__(self):
         return f"{self.user.get_full_name()} (Employee of {self.vendor_owner})"
+
+    def delete(self, using=None, keep_parents=False):
+        self.user.delete()
+        super().delete(using=using, keep_parents=keep_parents)

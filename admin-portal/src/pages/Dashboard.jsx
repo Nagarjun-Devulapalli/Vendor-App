@@ -35,10 +35,27 @@ export default function Dashboard() {
   }, [])
 
   if (loading) return (
-    <div className="flex items-center justify-center h-64 text-[#6b7280]">
-      <div className="text-center">
-        <div className="w-8 h-8 border-2 border-orchid border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-        Loading dashboard...
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="bg-white rounded-xl border border-[#e4e8ed] shadow-sm p-5 animate-pulse">
+            <div className="flex items-start justify-between mb-4">
+              <div className="space-y-2"><div className="h-3 bg-[#e4e8ed] rounded w-24" /><div className="h-7 bg-[#e4e8ed] rounded w-16 mt-2" /></div>
+              <div className="w-10 h-10 bg-[#e4e8ed] rounded-xl" />
+            </div>
+            <div className="h-2.5 bg-[#e4e8ed] rounded w-20" />
+          </div>
+        ))}
+      </div>
+      <div className="grid grid-cols-3 gap-4">
+        <div className="col-span-2 bg-white rounded-xl border border-[#e4e8ed] shadow-sm p-5 h-64 animate-pulse">
+          <div className="h-4 bg-[#e4e8ed] rounded w-32 mb-4" />
+          <div className="h-40 bg-[#e4e8ed] rounded" />
+        </div>
+        <div className="bg-white rounded-xl border border-[#e4e8ed] shadow-sm p-5 h-64 animate-pulse">
+          <div className="h-4 bg-[#e4e8ed] rounded w-24 mb-4" />
+          <div className="space-y-3">{Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-8 bg-[#e4e8ed] rounded" />)}</div>
+        </div>
       </div>
     </div>
   )
@@ -47,7 +64,7 @@ export default function Dashboard() {
     { label: 'Total Vendors', value: stats?.total_vendors || 0, sub: `${vendors.length} registered`, color: 'green', icon: <ShopOutlined />, onClick: () => navigate('/vendors') },
     { label: 'Open Activities', value: stats?.total_activities || 0, sub: `${activities.filter(a => a.status === 'in_progress').length} in progress`, color: 'amber', icon: <FileTextOutlined />, onClick: () => navigate('/activities') },
     { label: 'Partial Payments', value: `₹${((stats?.partial_payments_amount || 0) / 1000).toFixed(0)}K`, sub: `${stats?.partial_payments_count || 0} invoices`, color: 'amber', icon: <ExclamationCircleOutlined />, onClick: () => navigate('/payments?tab=partial') },
-    { label: 'Pending payments', value: `₹${((stats?.pending_payments_amount || 0) / 1000).toFixed(0)}K`, sub: `${stats?.pending_payments_count || 0} invoices`, color: 'blue', icon: <CreditCardOutlined />, onClick: () => navigate('/payments?tab=pending') },
+    { label: 'Balance Remaining', value: `₹${((stats?.balance_remaining_amount || 0) / 1000).toFixed(0)}K`, sub: `${stats?.balance_remaining_count || 0} outstanding`, color: 'blue', icon: <CreditCardOutlined />, onClick: () => navigate('/payments') },
   ]
 
   const colorMap = { green: { border: 'border-t-orchid', iconBg: 'bg-orchid-light', valueColor: 'text-orchid' }, amber: { border: 'border-t-[#e8a020]', iconBg: 'bg-[#fef3e0]', valueColor: 'text-[#e8a020]' }, red: { border: 'border-t-[#c0392b]', iconBg: 'bg-[#fdecea]', valueColor: 'text-[#c0392b]' }, blue: { border: 'border-t-[#2563a8]', iconBg: 'bg-[#e8f0fc]', valueColor: 'text-[#2563a8]' } }

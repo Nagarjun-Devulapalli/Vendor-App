@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
+import { useToast, parseApiError } from '../components/Toast'
 import {
   ToolOutlined,
   ClearOutlined,
@@ -39,6 +40,7 @@ const categoryIcons = {
 }
 
 export default function Categories() {
+  const toast = useToast()
   const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
@@ -78,7 +80,7 @@ export default function Categories() {
       setShowModal(false)
       fetchCategories()
     } catch (err) {
-      alert(err.response?.data?.detail || JSON.stringify(err.response?.data) || 'Error')
+      toast.error(parseApiError(err, 'Error saving category'))
     } finally {
       setSubmitting(false)
     }
@@ -91,7 +93,7 @@ export default function Categories() {
       setDeleteTarget(null)
       fetchCategories()
     } catch (err) {
-      alert('Error deleting category')
+      toast.error('Error deleting category')
     }
   }
 

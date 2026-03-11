@@ -1,10 +1,10 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.utils import timezone
 
 
 class User(AbstractUser):
     ROLE_CHOICES = [
-        ('superadmin', 'Super Admin'),
         ('admin', 'Admin'),
         ('vendor_owner', 'Vendor Owner'),
         ('vendor_employee', 'Vendor Employee'),
@@ -16,17 +16,23 @@ class User(AbstractUser):
     phone = models.CharField(max_length=15, blank=True)
     aadhar_number = models.CharField(max_length=12, blank=True)
     photo = models.ImageField(upload_to='user_photos/', blank=True, null=True)
+    is_deleted = models.BooleanField(default=False)
+    deleted_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.username} ({self.role})"
 
+    def delete(self, using=None, keep_parents=False):
+        self.is_deleted = True
+        self.deleted_at = timezone.now()
+        self.is_active = False
+        self.save(update_fields=['is_deleted', 'deleted_at', 'is_active'])
 
-class UserCredential(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='stored_credential')
-    username = models.CharField(max_length=150)
-    password_plain = models.CharField(max_length=255)
-    role = models.CharField(max_length=20)
-    created_at = models.DateTimeField(auto_now_add=True)
+    def hard_delete(self, using=None, keep_parents=False):
+        super().delete(using=using, keep_parents=keep_parents)
 
-    def __str__(self):
-        return f"{self.username} ({self.role})"
+    def restore(self):
+        self.is_deleted = False
+        self.deleted_at = None
+        self.is_active = True
+        self.save(update_fields=['is_deleted', 'deleted_at', 'is_active'])

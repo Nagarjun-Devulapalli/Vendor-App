@@ -21,11 +21,7 @@ class VendorViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         qs = Vendor.objects.select_related('user', 'branch').prefetch_related('categories').all()
         user = self.request.user
-        if user.role == 'superadmin':
-            branch_id = self.request.query_params.get('branch')
-            if branch_id:
-                qs = qs.filter(branch_id=branch_id)
-        elif user.role == 'admin' and user.branch:
+        if user.role == 'admin' and user.branch:
             qs = qs.filter(branch=user.branch)
         elif user.role == 'vendor_owner':
             qs = qs.filter(user=user)
@@ -82,11 +78,7 @@ class EmployeeViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         qs = Employee.objects.select_related('user', 'vendor_owner').all()
         user = self.request.user
-        if user.role == 'superadmin':
-            branch_id = self.request.query_params.get('branch')
-            if branch_id:
-                qs = qs.filter(vendor_owner__branch_id=branch_id)
-        elif user.role == 'admin' and user.branch:
+        if user.role == 'admin' and user.branch:
             qs = qs.filter(vendor_owner__branch=user.branch)
         elif user.role == 'vendor_owner':
             qs = qs.filter(vendor_owner__user=user)

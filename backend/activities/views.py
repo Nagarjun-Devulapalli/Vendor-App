@@ -10,6 +10,7 @@ from .models import Activity, ActivityOccurrence, OccurrenceAssignment, WorkLog
 from .serializers import ActivitySerializer, OccurrenceSerializer, WorkLogSerializer
 from accounts.permissions import IsAdmin
 from vendors.models import Employee
+from payments.models import Payment
 
 
 def generate_initial_occurrence(activity):
@@ -33,9 +34,7 @@ def ensure_today_occurrences(user):
         activity_type='recurring',
     ).exclude(status__in=['completed', 'cancelled'])
 
-    if user.role == 'superadmin':
-        pass  # no filter, show all
-    elif user.role == 'admin' and user.branch:
+    if user.role == 'admin' and user.branch:
         activities = activities.filter(branch=user.branch)
     elif user.role == 'vendor_owner':
         activities = activities.filter(vendor__user=user)
@@ -69,11 +68,7 @@ class ActivityViewSet(viewsets.ModelViewSet):
             occurrence_count=Count('occurrences')
         ).order_by('-created_at')
         user = self.request.user
-        if user.role == 'superadmin':
-            branch_id = self.request.query_params.get('branch')
-            if branch_id:
-                qs = qs.filter(branch_id=branch_id)
-        elif user.role == 'admin' and user.branch:
+        if user.role == 'admin' and user.branch:
             qs = qs.filter(branch=user.branch)
         elif user.role == 'vendor_owner':
             qs = qs.filter(vendor__user=user)
@@ -114,7 +109,9 @@ class ActivityViewSet(viewsets.ModelViewSet):
                 )
 
         activity.status = 'completed'
-        activity.save(update_fields=['status'])
+        if activity.activity_type in ('one_time', 'long_term'):
+            activity.end_date = timezone.localtime(timezone.now()).date()
+        activity.save(update_fields=['status', 'end_date'])
 
         # Also mark all pending occurrences as completed
         activity.occurrences.exclude(status='completed').update(
@@ -130,6 +127,8 @@ class ActivityViewSet(viewsets.ModelViewSet):
         user = self.request.user
         activity = serializer.save(branch=user.branch)
         generate_initial_occurrence(activity)
+        # Auto-create payment for the activity
+        Payment.objects.get_or_create(activity=activity)
 
     @action(detail=True, methods=['get'])
     def occurrences(self, request, pk=None):
@@ -151,11 +150,7 @@ class OccurrenceViewSet(viewsets.ModelViewSet):
             work_log_count=Count('work_logs')
         )
         user = self.request.user
-        if user.role == 'superadmin':
-            branch_id = self.request.query_params.get('branch')
-            if branch_id:
-                qs = qs.filter(activity__branch_id=branch_id)
-        elif user.role == 'admin' and user.branch:
+        if user.role == 'admin' and user.branch:
             qs = qs.filter(activity__branch=user.branch)
         elif user.role == 'vendor_owner':
             qs = qs.filter(activity__vendor__user=user)
@@ -345,7 +340,7 @@ class WorkLogViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['patch'], url_path='review')
     def review(self, request, pk=None):
-        if request.user.role not in ('admin', 'superadmin'):
+        if request.user.role != 'admin':
             return Response(
                 {'detail': 'Only admins can review work logs.'},
                 status=status.HTTP_403_FORBIDDEN,
@@ -377,7 +372,8 @@ class WorkLogViewSet(viewsets.ModelViewSet):
             # For one_time/long_term: also mark the activity as completed
             if activity.activity_type in ('one_time', 'long_term'):
                 activity.status = 'completed'
-                activity.save(update_fields=['status'])
+                activity.end_date = timezone.localtime(timezone.now()).date()
+                activity.save(update_fields=['status', 'end_date'])
 
         elif approval_status == 'rejected':
             # Reset work log so vendor can resubmit after photo

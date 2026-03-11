@@ -1,5 +1,3 @@
-from rest_framework import viewsets
-from rest_framework.decorators import action
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -57,68 +55,6 @@ class ResetPasswordView(APIView):
         return Response({'message': 'Password updated successfully.'})
 
 
-class BranchAdminViewSet(viewsets.ModelViewSet):
-    serializer_class = None  # will be set below
-    permission_classes = [IsAuthenticated]
-
-    def get_serializer_class(self):
-        from .serializers import BranchAdminSerializer
-        return BranchAdminSerializer
-
-    def get_permissions(self):
-        from .permissions import IsSuperAdmin
-        return [IsSuperAdmin()]
-
-    def get_queryset(self):
-        return User.objects.filter(role='admin').select_related('branch').order_by('branch__name', 'first_name')
-
-
-class UserCredentialViewSet(viewsets.ModelViewSet):
-    permission_classes = [IsAuthenticated]
-    http_method_names = ['get', 'patch', 'head', 'options']
-
-    def get_serializer_class(self):
-        from .serializers import UserCredentialSerializer
-        return UserCredentialSerializer
-
-    def get_permissions(self):
-        from .permissions import IsSuperAdmin
-        return [IsSuperAdmin()]
-
-    def get_queryset(self):
-        from .models import UserCredential
-        qs = UserCredential.objects.select_related('user', 'user__branch').order_by('-created_at')
-        role = self.request.query_params.get('role')
-        if role:
-            qs = qs.filter(role=role)
-        branch = self.request.query_params.get('branch')
-        if branch:
-            qs = qs.filter(user__branch_id=branch)
-        search = self.request.query_params.get('search')
-        if search:
-            from django.db.models import Q
-            qs = qs.filter(
-                Q(username__icontains=search) |
-                Q(user__first_name__icontains=search) |
-                Q(user__last_name__icontains=search) |
-                Q(user__phone__icontains=search)
-            )
-        return qs
-
-    @action(detail=True, methods=['patch'], url_path='reset-password')
-    def reset_password(self, request, pk=None):
-        from .models import UserCredential
-        credential = self.get_object()
-        new_password = request.data.get('new_password')
-        if not new_password:
-            return Response({'error': 'new_password is required'}, status=400)
-        credential.user.set_password(new_password)
-        credential.user.save()
-        credential.password_plain = new_password
-        credential.save()
-        return Response({'message': 'Password reset successfully', 'password_plain': new_password})
-
-
 class ProfileView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -136,25 +72,19 @@ class DashboardStatsView(APIView):
         from payments.models import Payment
 
         branch = request.user.branch
-        # Superadmin can filter by branch via query param
-        if request.user.role == 'superadmin':
-            branch_id = request.query_params.get('branch')
-            if branch_id:
-                from vendors.models import Branch
-                try:
-                    branch = Branch.objects.get(id=branch_id)
-                except Branch.DoesNotExist:
-                    branch = None
-            else:
-                branch = None  # Show all branches
-
         vendors_qs = Vendor.objects.filter(branch=branch) if branch else Vendor.objects.all()
         activities_qs = Activity.objects.filter(branch=branch) if branch else Activity.objects.all()
         payments_qs = Payment.objects.filter(activity__branch=branch) if branch else Payment.objects.all()
         employees_qs = Employee.objects.filter(vendor_owner__branch=branch) if branch else Employee.objects.all()
 
-        pending_payments = payments_qs.filter(payment_status='pending').aggregate(total=Sum('expected_amount'))['total'] or 0
-        completed_payments = payments_qs.filter(payment_status='completed').aggregate(total=Sum('actual_amount_paid'))['total'] or 0
+        pending_qs = payments_qs.filter(payment_status='pending')
+        partial_qs = payments_qs.filter(payment_status='partial')
+        completed_qs = payments_qs.filter(payment_status='completed')
+
+        balance_remaining = sum(p.balance_remaining for p in payments_qs.exclude(payment_status='completed'))
+        pending_payments_amount = sum(p.total_due for p in pending_qs)
+        partial_payments_amount = sum(p.total_paid for p in partial_qs)
+        completed_payments_amount = sum(p.total_paid for p in completed_qs)
 
         overdue_count = sum(1 for a in activities_qs if a.is_overdue)
 
@@ -166,8 +96,11 @@ class DashboardStatsView(APIView):
             'total_vendors': vendors_qs.count(),
             'total_activities': activities_qs.count(),
             'total_employees': employees_qs.count(),
-            'pending_payments_amount': float(pending_payments),
-            'completed_payments_amount': float(completed_payments),
+            'balance_remaining_amount': float(balance_remaining),
+            'balance_remaining_count': payments_qs.exclude(payment_status='completed').count(),
+            'partial_payments_amount': float(partial_payments_amount),
+            'partial_payments_count': partial_qs.count(),
+            'completed_payments_amount': float(completed_payments_amount),
             'overdue_activities_count': overdue_count,
             'activities_by_status': status_counts,
         })
@@ -177,21 +110,12 @@ class SpendingTrendsView(APIView):
     permission_classes = [IsAuthenticated, IsAdmin]
 
     def get(self, request):
-        from payments.models import Payment
+        from payments.models import PaymentEntry
 
         branch = request.user.branch
-        # Superadmin can filter by branch via query param
-        if request.user.role == 'superadmin':
-            branch_id = request.query_params.get('branch')
-            if branch_id:
-                from vendors.models import Branch
-                try:
-                    branch = Branch.objects.get(id=branch_id)
-                except Branch.DoesNotExist:
-                    branch = None
-            else:
-                branch = None  # Show all branches
-        payments_qs = Payment.objects.filter(activity__branch=branch) if branch else Payment.objects.all()
+        entries_qs = PaymentEntry.objects.all()
+        if branch:
+            entries_qs = entries_qs.filter(payment__activity__branch=branch)
 
         today = timezone.now().date()
         result = []
@@ -201,9 +125,9 @@ class SpendingTrendsView(APIView):
                 month_end = month_start.replace(year=month_start.year + 1, month=1, day=1)
             else:
                 month_end = month_start.replace(month=month_start.month + 1, day=1)
-            total = payments_qs.filter(
+            total = entries_qs.filter(
                 payment_date__gte=month_start, payment_date__lt=month_end
-            ).aggregate(total=Sum('actual_amount_paid'))['total'] or 0
+            ).aggregate(total=Sum('amount'))['total'] or 0
             result.append({
                 'month': month_start.strftime('%b %Y'),
                 'amount': float(total),
@@ -218,17 +142,6 @@ class CompletionRatesView(APIView):
         from activities.models import ActivityOccurrence
 
         branch = request.user.branch
-        # Superadmin can filter by branch via query param
-        if request.user.role == 'superadmin':
-            branch_id = request.query_params.get('branch')
-            if branch_id:
-                from vendors.models import Branch
-                try:
-                    branch = Branch.objects.get(id=branch_id)
-                except Branch.DoesNotExist:
-                    branch = None
-            else:
-                branch = None  # Show all branches
         occ_qs = ActivityOccurrence.objects.filter(activity__branch=branch) if branch else ActivityOccurrence.objects.all()
 
         today = timezone.now().date()
