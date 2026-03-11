@@ -331,7 +331,6 @@ export default function Activities() {
                 <div>
                   <label className="block text-xs font-semibold text-[#1a1f2e] mb-1.5">Payment Type *</label>
                   <select value={form.payment_type} onChange={(e) => setForm({ ...form, payment_type: e.target.value })} className="w-full border-[1.5px] border-[#e4e8ed] rounded-lg px-3.5 py-2.5 text-sm focus:border-orchid focus:outline-none transition-colors">
-                    <option value="hourly">Hourly</option>
                     <option value="daily">Daily</option>
                     <option value="contract">Contract</option>
                   </select>
