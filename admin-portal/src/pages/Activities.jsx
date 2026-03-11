@@ -69,7 +69,6 @@ export default function Activities() {
 
   const pagedActivities = activities.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
 
-  if (loading) return <div className="flex items-center justify-center h-64 text-[#6b7280]">Loading...</div>
 
   return (
     <div className="space-y-5">
@@ -111,8 +110,19 @@ export default function Activities() {
             </tr>
           </thead>
           <tbody>
-            {pagedActivities.map((a) => (
-              <tr key={a.id} className="border-b border-[#e4e8ed] last:border-0 hover:bg-[#f9fafb] cursor-pointer transition-colors" onClick={() => navigate(`/activities/${a.id}`)}>
+            {loading
+              ? Array.from({ length: 8 }).map((_, i) => (
+                  <tr key={i} className="border-b border-[#e4e8ed] animate-pulse">
+                    <td className="px-4 py-3.5"><div className="space-y-1.5"><div className="h-3 bg-[#e4e8ed] rounded w-36" /><div className="h-2.5 bg-[#e4e8ed] rounded w-20" /></div></td>
+                    <td className="px-4 py-3.5"><div className="h-3 bg-[#e4e8ed] rounded w-28" /></td>
+                    <td className="px-4 py-3.5"><div className="h-5 bg-[#e4e8ed] rounded-full w-16" /></td>
+                    <td className="px-4 py-3.5"><div className="h-3 bg-[#e4e8ed] rounded w-24" /></td>
+                    <td className="px-4 py-3.5"><div className="h-3 bg-[#e4e8ed] rounded w-16" /></td>
+                    <td className="px-4 py-3.5"><div className="h-5 bg-[#e4e8ed] rounded-full w-20" /></td>
+                  </tr>
+                ))
+              : pagedActivities.map((a, i) => (
+              <tr key={a.id} className="border-b border-[#e4e8ed] last:border-0 hover:bg-[#f9fafb] cursor-pointer animate-fade-in" style={{ animationDelay: `${i * 40}ms` }} onClick={() => navigate(`/activities/${a.id}`)}>
                 <td className="px-4 py-3.5">
                   <span className="font-semibold text-[13px] block">{a.title}</span>
                   <span className="text-[11px] text-[#6b7280]">{a.category_name || ''}</span>
@@ -139,7 +149,7 @@ export default function Activities() {
                 </td>
               </tr>
             ))}
-            {activities.length === 0 && <tr><td colSpan="6" className="px-4 py-8 text-center text-[13px] text-[#6b7280]">No activities found</td></tr>}
+            {!loading && activities.length === 0 && <tr><td colSpan="6" className="px-4 py-8 text-center text-[13px] text-[#6b7280]">No activities found</td></tr>}
           </tbody>
         </table>
         <Pagination

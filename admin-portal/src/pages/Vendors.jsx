@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
-import { EyeOutlined, DeleteOutlined, CameraOutlined, CheckCircleOutlined, FileTextOutlined } from '@ant-design/icons'
+import { DeleteOutlined, CameraOutlined, CheckCircleOutlined, FileTextOutlined } from '@ant-design/icons'
 import Pagination from '../components/Pagination'
 
 const PAGE_SIZE = 10
@@ -10,6 +10,7 @@ export default function Vendors() {
   const [vendors, setVendors] = useState([])
   const [branches, setBranches] = useState([])
   const [categories, setCategories] = useState([])
+  const [employeeCountMap, setEmployeeCountMap] = useState({})
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [credentials, setCredentials] = useState(null)
@@ -32,6 +33,15 @@ export default function Vendors() {
     fetchVendors()
     api.get('/branches/').then((res) => setBranches(res.data.results || res.data)).catch(console.error)
     api.get('/categories/').then((res) => setCategories(res.data.results || res.data)).catch(console.error)
+    api.get('/employees/').then((res) => {
+      const employees = res.data.results || res.data
+      const countMap = {}
+      employees.forEach((emp) => {
+        const vid = emp.vendor_owner
+        countMap[vid] = (countMap[vid] || 0) + 1
+      })
+      setEmployeeCountMap(countMap)
+    }).catch(console.error)
   }, [])
 
   // Close suggestions when clicking outside
@@ -142,8 +152,6 @@ export default function Vendors() {
   const pagedVendors = filteredVendors.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
   const suggestions = getSuggestions()
 
-  if (loading) return <div className="flex items-center justify-center h-64 text-[#6b7280]">Loading...</div>
-
   return (
     <div className="space-y-5">
       <div className="grid grid-cols-[200px_1fr_200px] items-center gap-6">
@@ -225,8 +233,18 @@ export default function Vendors() {
             </tr>
           </thead>
           <tbody>
-            {pagedVendors.map((v) => (
-              <tr key={v.id} className="border-b border-[#e4e8ed] last:border-0 hover:bg-[#f9fafb] transition-colors">
+            {loading
+              ? Array.from({ length: 8 }).map((_, i) => (
+                  <tr key={i} className="border-b border-[#e4e8ed] animate-pulse">
+                    <td className="px-4 py-3.5"><div className="flex items-center gap-3"><div className="w-9 h-9 rounded-full bg-[#e4e8ed]" /><div className="space-y-1.5"><div className="h-3 bg-[#e4e8ed] rounded w-32" /><div className="h-2.5 bg-[#e4e8ed] rounded w-24" /></div></div></td>
+                    <td className="px-4 py-3.5"><div className="h-3 bg-[#e4e8ed] rounded w-20" /></td>
+                    <td className="px-4 py-3.5"><div className="h-3 bg-[#e4e8ed] rounded w-6" /></td>
+                    <td className="px-4 py-3.5"><div className="h-3 bg-[#e4e8ed] rounded w-24" /></td>
+                    <td className="px-4 py-3.5"><div className="h-7 bg-[#e4e8ed] rounded w-7" /></td>
+                  </tr>
+                ))
+              : pagedVendors.map((v, i) => (
+              <tr key={v.id} className="border-b border-[#e4e8ed] last:border-0 hover:bg-[#f9fafb] cursor-pointer animate-fade-in" style={{ animationDelay: `${i * 40}ms` }} onClick={() => navigate(`/vendors/${v.id}`)}>
                 <td className="px-4 py-3.5">
                   <div className="flex items-center gap-3">
                     {v.user?.photo ? (
@@ -256,19 +274,14 @@ export default function Vendors() {
                     )}
                   </div>
                 </td>
-                <td className="px-4 py-3.5">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[13px]">{v.employees?.length || ''}</span>
-                    <button onClick={() => navigate(`/vendors/${v.id}`)} className="w-[26px] h-[26px] rounded-lg border border-[#e4e8ed] inline-flex items-center justify-center text-sm text-[#6b7280] hover:bg-[#f6f7f9] transition-colors" title="View vendor"><EyeOutlined /></button>
-                  </div>
-                </td>
+                <td className="px-4 py-3.5 text-[13px]">{employeeCountMap[v.id] ?? 0}</td>
                 <td className="px-4 py-3.5 text-[13px]">{v.user?.phone}</td>
                 <td className="px-4 py-3.5 space-x-2">
                   <button onClick={() => handleDelete(v.id)} className="w-[30px] h-[30px] rounded-lg border border-[#e4e8ed] inline-flex items-center justify-center text-sm text-[#6b7280] hover:bg-[#fdecea] hover:text-[#c0392b] transition-colors"><DeleteOutlined /></button>
                 </td>
               </tr>
             ))}
-            {filteredVendors.length === 0 && (
+            {!loading && filteredVendors.length === 0 && (
               <tr><td colSpan="5" className="px-4 py-8 text-center text-[13px] text-[#6b7280]">
                 {searchQuery || selectedVendorId ? 'No vendors match your search' : 'No vendors found'}
               </td></tr>

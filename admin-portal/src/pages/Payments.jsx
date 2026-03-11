@@ -122,8 +122,6 @@ export default function Payments() {
 
   const pagedPayments = payments.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
 
-  if (loading) return <div className="flex items-center justify-center h-64 text-[#6b7280]">Loading...</div>
-
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
@@ -194,8 +192,22 @@ export default function Payments() {
             </tr>
           </thead>
           <tbody>
-            {pagedPayments.map((p) => (
-              <tr key={p.id} className="border-b border-[#e4e8ed] last:border-0 hover:bg-[#f9fafb] transition-colors">
+            {loading
+              ? Array.from({ length: 8 }).map((_, i) => (
+                  <tr key={i} className="border-b border-[#e4e8ed] animate-pulse">
+                    <td className="px-4 py-3.5"><div className="h-3 bg-[#e4e8ed] rounded w-32" /></td>
+                    <td className="px-4 py-3.5"><div className="h-3 bg-[#e4e8ed] rounded w-24" /></td>
+                    <td className="px-4 py-3.5"><div className="h-3 bg-[#e4e8ed] rounded w-16" /></td>
+                    <td className="px-4 py-3.5"><div className="h-3 bg-[#e4e8ed] rounded w-16" /></td>
+                    <td className="px-4 py-3.5"><div className="h-3 bg-[#e4e8ed] rounded w-20" /></td>
+                    <td className="px-4 py-3.5"><div className="h-5 bg-[#e4e8ed] rounded-full w-14" /></td>
+                    <td className="px-4 py-3.5"><div className="h-3 bg-[#e4e8ed] rounded w-12" /></td>
+                    <td className="px-4 py-3.5"><div className="h-3 bg-[#e4e8ed] rounded w-12" /></td>
+                    <td className="px-4 py-3.5"><div className="h-7 bg-[#e4e8ed] rounded w-16" /></td>
+                  </tr>
+                ))
+              : pagedPayments.map((p, i) => (
+              <tr key={p.id} className="border-b border-[#e4e8ed] last:border-0 hover:bg-[#f9fafb] animate-fade-in" style={{ animationDelay: `${i * 40}ms` }}>
                 <td className="px-4 py-3.5">
                   <span className="font-semibold text-[13px]">{p.activity_title || p.activity?.title}</span>
                 </td>
@@ -237,7 +249,7 @@ export default function Payments() {
                 </td>
               </tr>
             ))}
-            {payments.length === 0 && <tr><td colSpan="8" className="px-4 py-8 text-center text-[13px] text-[#6b7280]">No payments found</td></tr>}
+            {!loading && payments.length === 0 && <tr><td colSpan="8" className="px-4 py-8 text-center text-[13px] text-[#6b7280]">No payments found</td></tr>}
           </tbody>
         </table>
         <Pagination
