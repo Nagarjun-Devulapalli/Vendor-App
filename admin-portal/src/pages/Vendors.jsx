@@ -152,12 +152,12 @@ export default function Vendors() {
       {/* Add Vendor Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/40 modal-backdrop flex items-center justify-center z-[1000] p-4" onClick={(e) => e.target === e.currentTarget && setShowModal(false)}>
-          <div className="bg-white rounded-2xl shadow-xl w-[480px] max-w-[90vw]">
+          <div className="bg-white rounded-2xl shadow-xl w-[480px] max-w-[90vw] max-h-[90vh] flex flex-col">
             <div className="px-6 pt-5 pb-4 border-b border-[#e4e8ed] flex items-center justify-between">
               <h3 className="font-serif text-lg font-bold">Register New Vendor</h3>
               <button onClick={() => setShowModal(false)} className="w-7 h-7 bg-[#f6f7f9] rounded-md flex items-center justify-center text-sm text-[#6b7280] hover:text-[#1a1f2e]">✕</button>
             </div>
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+            <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto flex-1">
               <div>
                 <label className="block text-xs font-semibold text-[#1a1f2e] mb-1.5">Photo *</label>
                 <div className="flex items-center gap-4">
