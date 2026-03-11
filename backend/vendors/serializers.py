@@ -80,6 +80,36 @@ class VendorSerializer(serializers.ModelSerializer):
         self._generated_username = username
         return vendor
 
+    def update(self, instance, validated_data):
+        first_name = validated_data.pop('first_name', None)
+        last_name = validated_data.pop('last_name', None)
+        phone = validated_data.pop('phone', None)
+        aadhar_number = validated_data.pop('aadhar_number', None)
+        photo = validated_data.pop('photo', None)
+        category_ids = validated_data.pop('category_ids', None)
+        validated_data.pop('categories', None)
+
+        user = instance.user
+        if first_name is not None:
+            user.first_name = first_name
+        if last_name is not None:
+            user.last_name = last_name
+        if phone is not None:
+            user.phone = phone
+        if aadhar_number is not None:
+            user.aadhar_number = aadhar_number
+        if photo is not None:
+            user.photo = photo
+        user.save()
+
+        if category_ids is not None:
+            instance.categories.set(category_ids)
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
+
     def to_representation(self, instance):
         data = super().to_representation(instance)
         if hasattr(self, '_generated_password'):
@@ -133,6 +163,31 @@ class EmployeeSerializer(serializers.ModelSerializer):
         self._generated_password = password
         self._generated_username = username
         return employee
+
+    def update(self, instance, validated_data):
+        first_name = validated_data.pop('first_name', None)
+        last_name = validated_data.pop('last_name', None)
+        phone = validated_data.pop('phone', None)
+        aadhar_number = validated_data.pop('aadhar_number', None)
+        photo = validated_data.pop('photo', None)
+
+        user = instance.user
+        if first_name is not None:
+            user.first_name = first_name
+        if last_name is not None:
+            user.last_name = last_name
+        if phone is not None:
+            user.phone = phone
+        if aadhar_number is not None:
+            user.aadhar_number = aadhar_number
+        if photo is not None:
+            user.photo = photo
+        user.save()
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
 
     def to_representation(self, instance):
         data = super().to_representation(instance)

@@ -62,9 +62,13 @@ export default function ActivityDetail() {
   if (loading) return <div className="flex items-center justify-center h-64 text-[#6b7280]">Loading...</div>
   if (!activity) return <div className="text-center text-[#6b7280]">Activity not found</div>
 
+  const isRecurring = activity.activity_type === 'recurring'
+  const allWorkLogs = occurrences.flatMap((occ) => (occ.work_logs || []).map((log) => ({ ...log, _occ: occ })))
+  const latestLog = allWorkLogs[allWorkLogs.length - 1]
+
+  // For recurring: show progress
   const completed = occurrences.filter(o => o.status === 'completed').length
   const total = occurrences.length
-  const progress = total > 0 ? Math.round((completed / total) * 100) : 0
 
   return (
     <div className="space-y-5">
@@ -92,48 +96,55 @@ export default function ActivityDetail() {
           <div><span className="text-[#6b7280]">Start:</span> <span className="font-medium">{activity.start_date}</span></div>
           <div><span className="text-[#6b7280]">End:</span> <span className="font-medium">{activity.end_date || 'N/A'}</span></div>
           <div><span className="text-[#6b7280]">Payment:</span> <span className="font-medium capitalize">{activity.payment_type}</span></div>
-          <div>
-            <span className="text-[#6b7280]">Progress:</span> <span className="font-medium">{completed}/{total}</span>
-            <div className="progress-bar mt-1">
-              <div className="progress-fill" style={{ width: `${progress}%`, background: progress === 100 ? '#1a6b4a' : '#2563a8' }} />
+          {isRecurring && (
+            <div><span className="text-[#6b7280]">Occurrences:</span> <span className="font-medium">{completed}/{total} completed</span></div>
+          )}
+          {!isRecurring && latestLog && (
+            <div>
+              <span className="text-[#6b7280]">Work Status:</span>{' '}
+              <span className={`font-semibold ${latestLog.approval_status === 'approved' ? 'text-[#1a6b4a]' : latestLog.approval_status === 'rejected' ? 'text-[#c0392b]' : latestLog.status === 'completed' ? 'text-[#2563a8]' : 'text-[#b07200]'}`}>
+                {latestLog.approval_status === 'approved' ? 'Approved' : latestLog.approval_status === 'rejected' ? 'Rejected — Resubmission Pending' : latestLog.status === 'completed' ? 'Awaiting Review' : 'Work In Progress'}
+              </span>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
-      {/* Occurrences */}
-      <div className="bg-white rounded-xl border border-[#e4e8ed] shadow-sm overflow-hidden">
-        <div className="px-5 py-4 border-b border-[#e4e8ed]">
-          <h3 className="font-serif text-base font-bold">Occurrences ({occurrences.length})</h3>
-        </div>
-        <div className="overflow-auto max-h-96">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-[#f6f7f9] border-b border-[#e4e8ed] sticky top-0">
-                <th className="text-left text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider px-4 py-2.5">Date</th>
-                <th className="text-left text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider px-4 py-2.5">Status</th>
-                <th className="text-left text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider px-4 py-2.5">Completed By</th>
-                <th className="text-left text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider px-4 py-2.5">Work Logs</th>
-              </tr>
-            </thead>
-            <tbody>
-              {occurrences.map((occ) => (
-                <tr key={occ.id} className="border-b border-[#e4e8ed] last:border-0 hover:bg-[#f9fafb] transition-colors">
-                  <td className="px-4 py-3 text-[13px]">{occ.scheduled_date}</td>
-                  <td className="px-4 py-3">
-                    <span className={`badge inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${statusStyles[occ.status] || 'bg-[#f0f1f3] text-[#555]'}`}>
-                      {occ.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-[13px]">{occ.completed_by_name || occ.completed_by || '-'}</td>
-                  <td className="px-4 py-3 text-[13px]">{occ.work_logs?.length || occ.work_log_count || 0}</td>
+      {/* Occurrences — only show table for recurring activities */}
+      {isRecurring && (
+        <div className="bg-white rounded-xl border border-[#e4e8ed] shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b border-[#e4e8ed]">
+            <h3 className="font-serif text-base font-bold">Occurrences ({occurrences.length})</h3>
+          </div>
+          <div className="overflow-auto max-h-96">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-[#f6f7f9] border-b border-[#e4e8ed] sticky top-0">
+                  <th className="text-left text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider px-4 py-2.5">Date</th>
+                  <th className="text-left text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider px-4 py-2.5">Status</th>
+                  <th className="text-left text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider px-4 py-2.5">Completed By</th>
+                  <th className="text-left text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider px-4 py-2.5">Work Logs</th>
                 </tr>
-              ))}
-              {occurrences.length === 0 && <tr><td colSpan="4" className="px-4 py-6 text-center text-[13px] text-[#6b7280]">No occurrences</td></tr>}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {occurrences.map((occ) => (
+                  <tr key={occ.id} className="border-b border-[#e4e8ed] last:border-0 hover:bg-[#f9fafb] transition-colors">
+                    <td className="px-4 py-3 text-[13px]">{occ.scheduled_date}</td>
+                    <td className="px-4 py-3">
+                      <span className={`badge inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${statusStyles[occ.status] || 'bg-[#f0f1f3] text-[#555]'}`}>
+                        {occ.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-[13px]">{occ.completed_by_name || occ.completed_by || '-'}</td>
+                    <td className="px-4 py-3 text-[13px]">{occ.work_logs?.length || occ.work_log_count || 0}</td>
+                  </tr>
+                ))}
+                {occurrences.length === 0 && <tr><td colSpan="4" className="px-4 py-6 text-center text-[13px] text-[#6b7280]">No occurrences</td></tr>}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Work Logs */}
       {occurrences.some((o) => o.work_logs?.length > 0) && (
@@ -146,15 +157,32 @@ export default function ActivityDetail() {
               occ.work_logs.map((log) => (
                 <div key={log.id} className="border border-[#e4e8ed] rounded-xl p-4">
                   <div className="flex justify-between text-[13px] text-[#6b7280] mb-2">
-                    <span>Date: {occ.scheduled_date}</span>
+                    <span>{isRecurring ? `Date: ${occ.scheduled_date}` : `Started: ${log.before_photo_taken_at ? new Date(log.before_photo_taken_at).toLocaleDateString() : occ.scheduled_date}`}</span>
                     <div className="flex items-center gap-2">
-                      <span className={`badge inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${approvalStyles[log.approval_status] || approvalStyles.pending}`}>
-                        {(log.approval_status || 'pending').replace('_', ' ')}
-                      </span>
+                      {log.status === 'in_progress' && (!log.approval_status || log.approval_status === 'pending') && (
+                        <span className="badge inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#e8f0fc] text-[#2563a8]">
+                          Work In Progress
+                        </span>
+                      )}
+                      {log.status === 'completed' && (!log.approval_status || log.approval_status === 'pending') && (
+                        <span className="badge inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#fef3e0] text-[#b07200]">
+                          Awaiting Review
+                        </span>
+                      )}
+                      {log.approval_status === 'approved' && (
+                        <span className="badge inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#e8f5ee] text-[#1a6b4a]">
+                          Approved
+                        </span>
+                      )}
+                      {log.approval_status === 'rejected' && (
+                        <span className="badge inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#fdecea] text-[#c0392b]">
+                          Rejected — Resubmission Pending
+                        </span>
+                      )}
                       <span>By: {log.user_name || log.user}</span>
                     </div>
                   </div>
-                  <p className="text-[13px] text-[#1a1f2e] mb-3">{log.description}</p>
+                  {log.description && <p className="text-[13px] text-[#1a1f2e] mb-3">{log.description}</p>}
                   <div className="flex gap-4">
                     {log.before_photo && (
                       <div>
@@ -174,10 +202,15 @@ export default function ActivityDetail() {
                         )}
                       </div>
                     )}
+                    {!log.after_photo && log.status === 'in_progress' && (
+                      <div className="flex items-center gap-2 text-[12px] text-[#6b7280] italic">
+                        After photo not yet submitted
+                      </div>
+                    )}
                   </div>
-                  {/* Approval Actions */}
+                  {/* Approval Actions — only show when work log is completed (after photo submitted) and pending review */}
                   <div className="mt-3 pt-3 border-t border-[#e4e8ed]">
-                    {(!log.approval_status || log.approval_status === 'pending') && (
+                    {log.status === 'completed' && (!log.approval_status || log.approval_status === 'pending') && (
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => handleApprove(log.id)}
@@ -229,6 +262,13 @@ export default function ActivityDetail() {
               ))
             )}
           </div>
+        </div>
+      )}
+
+      {/* No work logs yet */}
+      {!isRecurring && allWorkLogs.length === 0 && activity.status !== 'completed' && (
+        <div className="bg-white rounded-xl border border-[#e4e8ed] shadow-sm p-6 text-center">
+          <p className="text-[13px] text-[#6b7280]">No work log submitted yet. The vendor needs to start work from the mobile app.</p>
         </div>
       )}
     </div>

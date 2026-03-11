@@ -39,4 +39,16 @@ class ActivityProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<bool> markActivityComplete(int activityId) async {
+    try {
+      await ApiService.markActivityComplete(activityId);
+      await loadTodayTasks();
+      return true;
+    } catch (e) {
+      _error = e.toString().replaceFirst('Exception: ', '');
+      notifyListeners();
+      return false;
+    }
+  }
 }

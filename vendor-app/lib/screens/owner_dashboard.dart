@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/activity_provider.dart';
+import '../models/occurrence.dart';
 import '../models/employee.dart';
 import '../services/api_service.dart';
 import '../theme/app_theme.dart';
@@ -107,13 +108,16 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
         final doneTasks = tasks.where((t) => t.status == 'completed').length;
         final overdueTasks = tasks.where((t) => t.status == 'missed').length;
 
-        return RefreshIndicator(
+        return NotificationListener<OverscrollIndicatorNotification>(
+          onNotification: (n) { n.disallowIndicator(); return true; },
+          child: RefreshIndicator(
           color: AppColors.green,
           onRefresh: () async {
             await provider.loadTodayTasks();
             await _loadEmployees();
           },
           child: CustomScrollView(
+            physics: const ClampingScrollPhysics(),
             slivers: [
               // Hero
               SliverToBoxAdapter(
@@ -205,6 +209,7 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                           );
                           if (mounted) provider.loadTodayTasks();
                         },
+                        onLongPress: () => _showMarkCompleteSheet(tasks[i], provider),
                       ),
                       childCount: tasks.length > 3 ? 3 : tasks.length,
                     ),
@@ -263,6 +268,7 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                       ),
               ),
             ],
+          ),
           ),
         );
       },
@@ -325,6 +331,79 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showMarkCompleteSheet(Occurrence task, ActivityProvider provider) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 36,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: AppColors.border,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                child: Text(
+                  task.activityTitle,
+                  style: GoogleFonts.nunito(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.text,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              const SizedBox(height: 4),
+              ListTile(
+                leading: const Icon(Icons.done_all_rounded, color: AppColors.green),
+                title: Text(
+                  'Mark Job as Complete',
+                  style: GoogleFonts.nunito(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                subtitle: Text(
+                  'No new daily tasks will be created for this job',
+                  style: GoogleFonts.nunito(fontSize: 11, color: AppColors.muted),
+                ),
+                onTap: () async {
+                  Navigator.pop(ctx);
+                  final success = await provider.markActivityComplete(task.activityId);
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(success
+                            ? 'Job marked as complete!'
+                            : 'Failed to mark complete: ${provider.error}'),
+                        backgroundColor: success ? AppColors.green : AppColors.red,
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    );
+                  }
+                },
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -405,6 +484,7 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                               );
                               if (mounted) provider.loadTodayTasks();
                             },
+                            onLongPress: () => _showMarkCompleteSheet(task, provider),
                           );
                         },
                       ),
