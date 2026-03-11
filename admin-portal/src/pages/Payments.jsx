@@ -22,9 +22,6 @@ export default function Payments() {
   const [receiptModal, setReceiptModal] = useState(null)
   const [receiptFile, setReceiptFile] = useState(null)
   const [receiptUploading, setReceiptUploading] = useState(false)
-  const [receiptModal, setReceiptModal] = useState(null)
-  const [receiptFile, setReceiptFile] = useState(null)
-  const [receiptUploading, setReceiptUploading] = useState(false)
 
   const fetchPayments = () => {
     let url = '/payments/'
