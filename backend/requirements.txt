@@ -18,3 +18,4 @@ sqlparse==0.5.5
 typing_extensions==4.15.0
 virtualenv==20.37.0
 xlsxwriter==3.2.9
+
