@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
 import { ExclamationCircleOutlined, SearchOutlined } from '@ant-design/icons'
 import Pagination from '../components/Pagination'
+import BranchFilter from '../components/BranchFilter'
+import { useAuth } from '../context/AuthContext'
 
 const PAGE_SIZE = 10
 
@@ -32,8 +34,10 @@ export default function Activities() {
   const [searchQuery, setSearchQuery] = useState('')
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [selectedActivityId, setSelectedActivityId] = useState(null)
+  const [selectedBranch, setSelectedBranch] = useState(null)
   const navigate = useNavigate()
   const searchRef = useRef(null)
+  const { user } = useAuth()
 
   const [form, setForm] = useState({
     title: '', description: '', vendor: '', category: '', activity_type: 'one_time',
@@ -44,10 +48,11 @@ export default function Activities() {
     let url = '/activities/?'
     if (filterStatus) url += `status=${filterStatus}&`
     if (filterType) url += `activity_type=${filterType}&`
+    if (selectedBranch) url += `branch=${selectedBranch}&`
     api.get(url).then((res) => setActivities(res.data.results || res.data)).catch(console.error).finally(() => setLoading(false))
   }
 
-  useEffect(() => { fetchActivities(); setCurrentPage(1) }, [filterStatus, filterType])
+  useEffect(() => { setLoading(true); fetchActivities(); setCurrentPage(1) }, [filterStatus, filterType, selectedBranch])
   useEffect(() => {
     api.get('/vendors/').then((res) => setVendors(res.data.results || res.data)).catch(console.error)
     api.get('/categories/').then((res) => setCategories(res.data.results || res.data)).catch(console.error)
@@ -133,6 +138,8 @@ export default function Activities() {
           <h3 className="font-serif text-lg font-bold">All Activities</h3>
           <p className="text-[13px] text-[#6b7280] mt-0.5">{activities.length} activities across all vendors</p>
         </div>
+
+        <BranchFilter value={selectedBranch} onChange={(v) => { setSelectedBranch(v); setCurrentPage(1) }} />
 
         {/* Search Bar with Suggestions */}
         <div ref={searchRef} className="relative">
