@@ -3,8 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
 import { EyeOutlined, DeleteOutlined, CameraOutlined, CheckCircleOutlined, FileTextOutlined, SearchOutlined } from '@ant-design/icons'
 import Pagination from '../components/Pagination'
-import BranchFilter from '../components/BranchFilter'
-import { useAuth } from '../context/AuthContext'
 
 const PAGE_SIZE = 10
 
@@ -23,22 +21,15 @@ export default function Vendors() {
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [selectedVendorId, setSelectedVendorId] = useState(null)
   const [currentPage, setCurrentPage] = useState(1)
-  const [selectedBranch, setSelectedBranch] = useState(null)
   const navigate = useNavigate()
   const searchRef = useRef(null)
-  const { user } = useAuth()
 
   const fetchVendors = () => {
-    const params = selectedBranch ? `?branch=${selectedBranch}` : ''
-    api.get(`/vendors/${params}`).then((res) => setVendors(res.data.results || res.data)).catch(console.error).finally(() => setLoading(false))
+    api.get('/vendors/').then((res) => setVendors(res.data.results || res.data)).catch(console.error).finally(() => setLoading(false))
   }
 
   useEffect(() => {
-    setLoading(true)
     fetchVendors()
-  }, [selectedBranch])
-
-  useEffect(() => {
     api.get('/branches/').then((res) => setBranches(res.data.results || res.data)).catch(console.error)
     api.get('/categories/').then((res) => setCategories(res.data.results || res.data)).catch(console.error)
   }, [])
@@ -164,8 +155,6 @@ export default function Vendors() {
           <h3 className="font-serif text-lg font-bold">All Vendors</h3>
           <p className="text-[13px] text-[#6b7280] mt-0.5">{vendors.length} vendors registered</p>
         </div>
-
-        <BranchFilter value={selectedBranch} onChange={(v) => { setSelectedBranch(v); setCurrentPage(1) }} />
 
         {/* Search Bar with Suggestions */}
         <div ref={searchRef} className="relative">
