@@ -17,6 +17,17 @@ class LoginSerializer(serializers.Serializer):
     password = serializers.CharField()
 
     def validate(self, data):
+        from .models import User
+        # Check if user exists and is inactive
+        try:
+            existing_user = User.objects.get(username=data['username'])
+            if not existing_user.is_active:
+                raise serializers.ValidationError(
+                    'Your account is currently inactive. Please ask the school admin to activate your account.'
+                )
+        except User.DoesNotExist:
+            pass
+
         user = authenticate(username=data['username'], password=data['password'])
         if not user:
             raise serializers.ValidationError('Invalid credentials')
