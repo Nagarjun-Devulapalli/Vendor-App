@@ -11,7 +11,7 @@ class PaymentSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'activity', 'activity_title', 'vendor_name',
             'expected_amount', 'actual_amount_paid', 'payment_status',
-            'payment_date', 'notes', 'created_at',
+            'payment_date', 'notes', 'receipt', 'created_at',
         ]
         read_only_fields = ['id', 'created_at']
 
