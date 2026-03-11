@@ -103,7 +103,7 @@ STATIC_URL = 'static/'
 from google.oauth2 import service_account
 GS_BUCKET_NAME = 'vendor-portal-stage'
 GS_CREDENTIALS = service_account.Credentials.from_service_account_file(
-    os.path.join(BASE_DIR, 'credentials', 'gcp_stage_stage.json')
+    os.path.join(BASE_DIR, 'Credentials', 'gcp_stage_stage.json')
 )
 GS_LOCATION = 'vendor-portal'
 GS_EXPIRATION = timedelta(hours=1)

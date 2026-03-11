@@ -29,8 +29,8 @@ class VendorSerializer(serializers.ModelSerializer):
     # Write fields
     first_name = serializers.CharField(write_only=True, required=False)
     last_name = serializers.CharField(write_only=True, required=False)
-    phone = serializers.CharField(write_only=True, required=False)
-    aadhar_number = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    phone = serializers.CharField(write_only=True, required=False, max_length=10)
+    aadhar_number = serializers.CharField(write_only=True, required=False, allow_blank=True, max_length=12)
     photo = serializers.ImageField(write_only=True, required=False)
     category_ids = serializers.ListField(child=serializers.IntegerField(), write_only=True, required=False)
 
@@ -126,8 +126,8 @@ class EmployeeSerializer(serializers.ModelSerializer):
     # Write fields
     first_name = serializers.CharField(write_only=True, required=False)
     last_name = serializers.CharField(write_only=True, required=False)
-    phone = serializers.CharField(write_only=True, required=False)
-    aadhar_number = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    phone = serializers.CharField(write_only=True, required=False, max_length=10)
+    aadhar_number = serializers.CharField(write_only=True, required=False, allow_blank=True, max_length=12)
     photo = serializers.ImageField(write_only=True, required=False)
 
     class Meta:
