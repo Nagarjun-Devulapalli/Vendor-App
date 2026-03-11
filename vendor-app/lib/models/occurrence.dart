@@ -1,3 +1,26 @@
+class OccurrenceAssignment {
+  final int id;
+  final int employeeId;
+  final String employeeName;
+  final String assignedAt;
+
+  OccurrenceAssignment({
+    required this.id,
+    required this.employeeId,
+    required this.employeeName,
+    required this.assignedAt,
+  });
+
+  factory OccurrenceAssignment.fromJson(Map<String, dynamic> json) {
+    return OccurrenceAssignment(
+      id: json['id'] ?? 0,
+      employeeId: json['employee_id'] ?? 0,
+      employeeName: json['employee_name'] ?? '',
+      assignedAt: json['assigned_at'] ?? '',
+    );
+  }
+}
+
 class Occurrence {
   final int id;
   final int activityId;
@@ -8,6 +31,7 @@ class Occurrence {
   final String status;
   final String? completedByName;
   final int workLogCount;
+  final List<OccurrenceAssignment> assignments;
 
   Occurrence({
     required this.id,
@@ -19,10 +43,12 @@ class Occurrence {
     required this.status,
     this.completedByName,
     this.workLogCount = 0,
+    this.assignments = const [],
   });
 
   factory Occurrence.fromJson(Map<String, dynamic> json) {
     final activity = json['activity'];
+    final assignmentsList = json['assignments'] as List? ?? [];
     return Occurrence(
       id: json['id'] ?? 0,
       activityId: activity is Map ? activity['id'] ?? 0 : (json['activity'] ?? 0),
@@ -41,6 +67,9 @@ class Occurrence {
       workLogCount: json['work_logs'] is List
           ? (json['work_logs'] as List).length
           : (json['work_log_count'] ?? 0),
+      assignments: assignmentsList
+          .map((e) => OccurrenceAssignment.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
   }
 

@@ -1,6 +1,7 @@
 class WorkLog {
   final int id;
   final int occurrenceId;
+  final int? userId;
   final String status;
   final String? beforePhoto;
   final String? beforePhotoTakenAt;
@@ -16,6 +17,7 @@ class WorkLog {
   WorkLog({
     required this.id,
     required this.occurrenceId,
+    this.userId,
     this.status = 'in_progress',
     this.beforePhoto,
     this.beforePhotoTakenAt,
@@ -37,6 +39,7 @@ class WorkLog {
         occurrenceId: json['occurrence'] is Map
             ? json['occurrence']['id'] ?? 0
             : (json['occurrence'] ?? 0),
+        userId: json['user'] is int ? json['user'] as int : null,
         status: json['status'] ?? 'in_progress',
         beforePhoto: json['before_photo'],
         beforePhotoTakenAt: json['before_photo_taken_at'],
