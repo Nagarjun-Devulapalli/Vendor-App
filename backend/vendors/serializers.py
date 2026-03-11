@@ -76,9 +76,6 @@ class VendorSerializer(serializers.ModelSerializer):
         if category_ids:
             vendor.categories.set(category_ids)
 
-        from accounts.models import UserCredential
-        UserCredential.objects.create(user=user, username=username, password_plain=password, role='vendor_owner')
-
         self._generated_password = password
         self._generated_username = username
         return vendor
@@ -163,10 +160,6 @@ class EmployeeSerializer(serializers.ModelSerializer):
             user.save()
 
         employee = Employee.objects.create(user=user, **validated_data)
-
-        from accounts.models import UserCredential
-        UserCredential.objects.create(user=user, username=username, password_plain=password, role='vendor_employee')
-
         self._generated_password = password
         self._generated_username = username
         return employee

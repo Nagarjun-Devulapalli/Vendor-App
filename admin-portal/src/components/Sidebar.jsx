@@ -6,13 +6,18 @@ import {
   FileTextOutlined,
   CreditCardOutlined,
   AuditOutlined,
-  UserOutlined,
-  KeyOutlined,
   TagsOutlined,
   BankOutlined,
   LogoutOutlined,
-  RollbackOutlined,
 } from '@ant-design/icons'
+
+const navItems = [
+  { to: '/dashboard', label: 'Dashboard', icon: <DashboardOutlined /> },
+  { to: '/vendors', label: 'Vendors', icon: <ShopOutlined /> },
+  { to: '/activities', label: 'Activities', icon: <FileTextOutlined /> },
+  { to: '/payments', label: 'Payments', icon: <CreditCardOutlined /> },
+  { to: '/pending-approvals', label: 'Pending Approvals', icon: <AuditOutlined /> },
+]
 
 const settingsItems = [
   { to: '/categories', label: 'Work Categories', icon: <TagsOutlined /> },
@@ -20,18 +25,6 @@ const settingsItems = [
 
 export default function Sidebar() {
   const { user, logout } = useAuth()
-
-  const navItems = [
-    { to: '/dashboard', label: 'Dashboard', icon: <DashboardOutlined /> },
-    { to: '/vendors', label: 'Vendors', icon: <ShopOutlined /> },
-    { to: '/activities', label: 'Activities', icon: <FileTextOutlined /> },
-    { to: '/payments', label: 'Payments', icon: <CreditCardOutlined /> },
-    { to: '/pending-approvals', label: 'Pending Approvals', icon: <AuditOutlined /> },
-    ...(user?.role === 'superadmin' ? [
-      { to: '/branch-admins', label: 'Branch Admins', icon: <UserOutlined /> },
-      { to: '/credentials', label: 'Credentials', icon: <KeyOutlined /> },
-    ] : []),
-  ]
 
   const initials = `${(user?.first_name || '')[0] || ''}${(user?.last_name || '')[0] || ''}`.toUpperCase()
 
@@ -51,7 +44,7 @@ export default function Sidebar() {
       {/* Branch indicator */}
       <div className="mx-3 mt-4 bg-white/10 rounded-lg px-3 py-2.5 flex items-center gap-2">
         <div className="w-2 h-2 rounded-full bg-[#5dde9c]" />
-        <span className="text-xs text-white/85 font-medium">{user?.role === 'superadmin' ? 'All Branches' : (user?.branch_name || 'Branch')}</span>
+        <span className="text-xs text-white/85 font-medium">{user?.branch_name || 'Branch'}</span>
       </div>
 
       {/* Nav */}
@@ -93,26 +86,6 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      {/* Back to Superadmin */}
-      {localStorage.getItem('superadmin_session') && (
-        <div className="px-3 pb-2">
-          <button
-            onClick={() => {
-              const saved = JSON.parse(localStorage.getItem('superadmin_session'))
-              localStorage.setItem('access_token', saved.access)
-              localStorage.setItem('refresh_token', saved.refresh)
-              localStorage.setItem('user', saved.user)
-              localStorage.removeItem('superadmin_session')
-              window.location.href = '/credentials'
-            }}
-            className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-[#fef3e0] text-[#b07200] rounded-lg text-[12px] font-semibold hover:bg-[#fde8c8] transition-colors"
-          >
-            <RollbackOutlined />
-            Back to Super Admin
-          </button>
-        </div>
-      )}
-
       {/* Footer */}
       <div className="px-3 py-4 border-t border-white/[0.12]">
         <div className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg bg-white/[0.08]">
@@ -121,7 +94,7 @@ export default function Sidebar() {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-xs text-white font-medium truncate">{user?.first_name} {user?.last_name}</p>
-            <span className="text-[10px] text-white/50">{user?.role === 'superadmin' ? 'Super Admin' : 'Branch Admin'}</span>
+            <span className="text-[10px] text-white/50">Branch Admin</span>
           </div>
           <button onClick={logout} className="text-white/50 hover:text-white/80 transition-colors" title="Logout">
             <LogoutOutlined style={{ fontSize: 16 }} />

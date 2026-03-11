@@ -18,7 +18,7 @@ export function AuthProvider({ children }) {
     try {
       const res = await api.post('/auth/login/', { username, password })
       const { access, refresh, user: userData } = res.data
-      if (userData.role !== 'admin' && userData.role !== 'superadmin') {
+      if (userData.role !== 'admin') {
         setError('Access denied. Only admin users can log in here.')
         return false
       }
