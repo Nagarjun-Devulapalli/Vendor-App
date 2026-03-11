@@ -121,6 +121,29 @@ class ApiService {
     }
   }
 
+  static Future<dynamic> _put(String path, Map<String, dynamic> body) async {
+    try {
+      final headers = await _getHeaders();
+      final response = await http.put(
+        Uri.parse('$baseUrl$path'),
+        headers: headers,
+        body: jsonEncode(body),
+      );
+      return await _handleResponse(response);
+    } catch (e) {
+      if (e.toString().contains('TOKEN_REFRESHED')) {
+        final headers = await _getHeaders();
+        final response = await http.put(
+          Uri.parse('$baseUrl$path'),
+          headers: headers,
+          body: jsonEncode(body),
+        );
+        return await _handleResponse(response);
+      }
+      rethrow;
+    }
+  }
+
   // Auth
   static Future<Map<String, dynamic>> login(String username, String password) async {
     final response = await http.post(
@@ -138,6 +161,13 @@ class ApiService {
   static Future<Map<String, dynamic>> getProfile() async {
     final data = await _get('/auth/profile/');
     return data as Map<String, dynamic>;
+  }
+
+  static Future<void> resetPassword(String username, String newPassword) async {
+    await _put('/auth/reset-password/', {
+      'username': username,
+      'new_password': newPassword,
+    });
   }
 
   // Occurrences
@@ -241,6 +271,42 @@ class ApiService {
       return jsonDecode(response.body) as Map<String, dynamic>;
     }
     throw Exception(response.body.isNotEmpty ? jsonDecode(response.body).toString() : 'Failed to add employee');
+  }
+
+  static Future<void> updateEmployee({
+    required int employeeId,
+    String? firstName,
+    String? lastName,
+    String? phone,
+    String? aadhar,
+    File? photo,
+  }) async {
+    final token = await AuthService.getAccessToken();
+    final request = http.MultipartRequest('PATCH', Uri.parse('$baseUrl/employees/$employeeId/'));
+    request.headers['Authorization'] = 'Bearer $token';
+    if (firstName != null) request.fields['first_name'] = firstName;
+    if (lastName != null) request.fields['last_name'] = lastName;
+    if (phone != null) request.fields['phone'] = phone;
+    if (aadhar != null) request.fields['aadhar_number'] = aadhar;
+    if (photo != null) {
+      request.files.add(await http.MultipartFile.fromPath('photo', photo.path));
+    }
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception(response.body.isNotEmpty ? jsonDecode(response.body).toString() : 'Failed to update employee');
+    }
+  }
+
+  static Future<void> deleteEmployee(int employeeId) async {
+    final token = await AuthService.getAccessToken();
+    final response = await http.delete(
+      Uri.parse('$baseUrl/employees/$employeeId/'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception('Failed to delete employee');
+    }
   }
 
   // Activities

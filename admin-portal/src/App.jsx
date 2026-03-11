@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
+import { ToastProvider } from './components/Toast'
 import ProtectedRoute from './components/ProtectedRoute'
 import Layout from './components/Layout'
 import Login from './pages/Login'
@@ -10,12 +11,14 @@ import Activities from './pages/Activities'
 import ActivityDetail from './pages/ActivityDetail'
 import Payments from './pages/Payments'
 import Categories from './pages/Categories'
+import CategoryDetail from './pages/CategoryDetail'
 import PendingApprovals from './pages/PendingApprovals'
 
 function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <ToastProvider>
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
@@ -28,8 +31,10 @@ function App() {
             <Route path="payments" element={<Payments />} />
             <Route path="pending-approvals" element={<PendingApprovals />} />
             <Route path="categories" element={<Categories />} />
+            <Route path="categories/:id" element={<CategoryDetail />} />
           </Route>
         </Routes>
+        </ToastProvider>
       </AuthProvider>
     </BrowserRouter>
   )

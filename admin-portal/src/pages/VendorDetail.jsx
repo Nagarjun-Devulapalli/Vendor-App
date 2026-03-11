@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import api from '../services/api'
+import { useToast, parseApiError } from '../components/Toast'
 import { CameraOutlined, FileTextOutlined, CheckCircleOutlined } from '@ant-design/icons'
 
 const statusStyles = {
@@ -11,6 +12,7 @@ const statusStyles = {
 }
 
 export default function VendorDetail() {
+  const toast = useToast()
   const { id } = useParams()
   const navigate = useNavigate()
   const [vendor, setVendor] = useState(null)
@@ -70,7 +72,7 @@ export default function VendorDetail() {
       setEmpPhotoPreview(null)
       fetchData()
     } catch (err) {
-      alert(err.response?.data?.detail || JSON.stringify(err.response?.data) || 'Error')
+      toast.error(parseApiError(err, 'Error adding employee'))
     } finally {
       setSubmitting(false)
     }

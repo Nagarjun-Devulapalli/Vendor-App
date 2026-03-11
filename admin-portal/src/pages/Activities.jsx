@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
-import { ExclamationCircleOutlined } from '@ant-design/icons'
+import { useToast, parseApiError } from '../components/Toast'
+import { ExclamationCircleOutlined, SearchOutlined } from '@ant-design/icons'
 import Pagination from '../components/Pagination'
 
 const PAGE_SIZE = 10
@@ -20,6 +21,7 @@ const typeStyles = {
 }
 
 export default function Activities() {
+  const toast = useToast()
   const [activities, setActivities] = useState([])
   const [vendors, setVendors] = useState([])
   const [categories, setCategories] = useState([])
@@ -29,7 +31,11 @@ export default function Activities() {
   const [filterType, setFilterType] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [selectedActivityId, setSelectedActivityId] = useState(null)
   const navigate = useNavigate()
+  const searchRef = useRef(null)
 
   const [form, setForm] = useState({
     title: '', description: '', vendor: '', category: '', activity_type: 'one_time',
@@ -49,6 +55,17 @@ export default function Activities() {
     api.get('/categories/').then((res) => setCategories(res.data.results || res.data)).catch(console.error)
   }, [])
 
+  // Close suggestions when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setShowSuggestions(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setSubmitting(true)
@@ -61,22 +78,106 @@ export default function Activities() {
       setForm({ title: '', description: '', vendor: '', category: '', activity_type: 'one_time', start_date: '', end_date: '', recurrence_interval_days: '', expected_cost: '', payment_type: 'contract' })
       fetchActivities()
     } catch (err) {
-      alert(err.response?.data?.detail || JSON.stringify(err.response?.data) || 'Error')
+      toast.error(parseApiError(err, 'Error creating activity'))
     } finally {
       setSubmitting(false)
     }
   }
 
-  const pagedActivities = activities.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+  // Search and filter logic
+  const matchesSearch = (activity, query) => {
+    if (!query) return true
+    const q = query.toLowerCase()
+    const activityTitle = (activity.title || '').toLowerCase()
+    const vendorName = (activity.vendor_name || '').toLowerCase()
+    const categoryName = (activity.category_name || '').toLowerCase()
+
+    return activityTitle.includes(q) || vendorName.includes(q) || categoryName.includes(q)
+  }
+
+  const getSuggestions = () => {
+    if (!searchQuery.trim()) return []
+    return activities.filter(a => matchesSearch(a, searchQuery)).slice(0, 5)
+  }
+
+  const handleSearchChange = (value) => {
+    setSearchQuery(value)
+    setShowSuggestions(value.trim().length > 0)
+    setSelectedActivityId(null)
+    setCurrentPage(1)
+  }
+
+  const handleSuggestionClick = (activity) => {
+    setSearchQuery('')
+    setShowSuggestions(false)
+    setSelectedActivityId(activity.id)
+  }
+
+  const clearFilter = () => {
+    setSearchQuery('')
+    setSelectedActivityId(null)
+    setShowSuggestions(false)
+  }
+
+  const filteredActivities = selectedActivityId
+    ? activities.filter(a => a.id === selectedActivityId)
+    : activities.filter(a => matchesSearch(a, searchQuery))
+
+  const pagedActivities = filteredActivities.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+  const suggestions = getSuggestions()
 
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
+      <div className="grid grid-cols-[200px_1fr_auto] items-center gap-6">
         <div>
           <h3 className="font-serif text-lg font-bold">All Activities</h3>
           <p className="text-[13px] text-[#6b7280] mt-0.5">{activities.length} activities across all vendors</p>
         </div>
+
+        {/* Search Bar with Suggestions */}
+        <div ref={searchRef} className="relative">
+          <div className="relative">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              onFocus={() => searchQuery.trim() && setShowSuggestions(true)}
+              placeholder="Search activities..."
+              className="w-full border-[1.5px] border-[#e4e8ed] rounded-lg pl-10 pr-10 py-2.5 text-sm focus:border-orchid focus:outline-none transition-colors"
+            />
+            <SearchOutlined className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6b7280]" />
+            {(searchQuery || selectedActivityId) && (
+              <button
+                onClick={clearFilter}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6b7280] hover:text-[#1a1f2e] text-lg font-bold"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          {/* Suggestions Dropdown */}
+          {showSuggestions && suggestions.length > 0 && (
+            <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-[#e4e8ed] rounded-lg shadow-lg z-50 overflow-hidden">
+              {suggestions.map((activity) => (
+                <button
+                  key={activity.id}
+                  onClick={() => handleSuggestionClick(activity)}
+                  className="w-full px-4 py-3 text-left hover:bg-[#f6f7f9] transition-colors border-b border-[#e4e8ed] last:border-0"
+                >
+                  <div className="font-semibold text-[13px] text-[#1a1f2e]">
+                    {activity.title}
+                  </div>
+                  <div className="text-[11px] text-[#6b7280] mt-0.5">
+                    {activity.vendor_name} · {activity.category_name}
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
         <div className="flex gap-2.5">
           <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="border-[1.5px] border-[#e4e8ed] rounded-lg px-3 py-2 text-[13px] focus:border-orchid focus:outline-none">
             <option value="">All Types</option>
@@ -96,6 +197,17 @@ export default function Activities() {
           </button>
         </div>
       </div>
+
+      {/* Active filter indicator */}
+      {selectedActivityId && (
+        <div className="flex items-center gap-2 text-sm">
+          <span className="text-[#6b7280]">Showing:</span>
+          <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-orchid-light text-orchid rounded-lg font-medium">
+            {activities.find(a => a.id === selectedActivityId)?.title}
+            <button onClick={clearFilter} className="hover:text-orchid-dark">✕</button>
+          </span>
+        </div>
+      )}
 
       <div className="bg-white rounded-xl border border-[#e4e8ed] shadow-sm overflow-hidden">
         <table className="w-full">
@@ -149,12 +261,16 @@ export default function Activities() {
                 </td>
               </tr>
             ))}
-            {!loading && activities.length === 0 && <tr><td colSpan="6" className="px-4 py-8 text-center text-[13px] text-[#6b7280]">No activities found</td></tr>}
+            {!loading && filteredActivities.length === 0 && (
+              <tr><td colSpan="6" className="px-4 py-8 text-center text-[13px] text-[#6b7280]">
+                {searchQuery || selectedActivityId ? 'No activities match your search' : 'No activities found'}
+              </td></tr>
+            )}
           </tbody>
         </table>
         <Pagination
           currentPage={currentPage}
-          totalItems={activities.length}
+          totalItems={filteredActivities.length}
           pageSize={PAGE_SIZE}
           onPageChange={setCurrentPage}
         />
@@ -179,17 +295,17 @@ export default function Activities() {
               </div>
               <div className="grid grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block text-xs font-semibold text-[#1a1f2e] mb-1.5">Vendor *</label>
-                  <select value={form.vendor} onChange={(e) => setForm({ ...form, vendor: e.target.value, category: '' })} className="w-full border-[1.5px] border-[#e4e8ed] rounded-lg px-3.5 py-2.5 text-sm focus:border-orchid focus:outline-none transition-colors" required>
-                    <option value="">Select vendor</option>
-                    {vendors.map((v) => <option key={v.id} value={v.id}>{v.display_name || v.company_name || `${v.user?.first_name} ${v.user?.last_name}`}</option>)}
+                  <label className="block text-xs font-semibold text-[#1a1f2e] mb-1.5">Category *</label>
+                  <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value, vendor: '' })} className="w-full border-[1.5px] border-[#e4e8ed] rounded-lg px-3.5 py-2.5 text-sm focus:border-orchid focus:outline-none transition-colors" required>
+                    <option value="">Select category</option>
+                    {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-[#1a1f2e] mb-1.5">Category</label>
-                  <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="w-full border-[1.5px] border-[#e4e8ed] rounded-lg px-3.5 py-2.5 text-sm focus:border-orchid focus:outline-none transition-colors" disabled={!form.vendor}>
-                    <option value="">{form.vendor ? 'Select category' : 'Select vendor first'}</option>
-                    {(form.vendor ? categories.filter((c) => { const v = vendors.find((v) => v.id === Number(form.vendor)); return v?.categories?.includes(c.id) }) : []).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  <label className="block text-xs font-semibold text-[#1a1f2e] mb-1.5">Vendor *</label>
+                  <select value={form.vendor} onChange={(e) => setForm({ ...form, vendor: e.target.value })} className="w-full border-[1.5px] border-[#e4e8ed] rounded-lg px-3.5 py-2.5 text-sm focus:border-orchid focus:outline-none transition-colors" disabled={!form.category} required>
+                    <option value="">{form.category ? 'Select vendor' : 'Select category first'}</option>
+                    {(form.category ? vendors.filter((v) => v.categories?.includes(Number(form.category))) : []).map((v) => <option key={v.id} value={v.id}>{v.display_name || v.company_name || `${v.user?.first_name} ${v.user?.last_name}`}</option>)}
                   </select>
                 </div>
               </div>
@@ -227,7 +343,6 @@ export default function Activities() {
                 <div>
                   <label className="block text-xs font-semibold text-[#1a1f2e] mb-1.5">Payment Type *</label>
                   <select value={form.payment_type} onChange={(e) => setForm({ ...form, payment_type: e.target.value })} className="w-full border-[1.5px] border-[#e4e8ed] rounded-lg px-3.5 py-2.5 text-sm focus:border-orchid focus:outline-none transition-colors">
-                    <option value="hourly">Hourly</option>
                     <option value="daily">Daily</option>
                     <option value="contract">Contract</option>
                   </select>

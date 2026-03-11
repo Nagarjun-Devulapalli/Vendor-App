@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import api from '../services/api'
+import { useToast, parseApiError } from '../components/Toast'
 import { FileTextOutlined, UploadOutlined, CheckOutlined } from '@ant-design/icons'
 import Pagination from '../components/Pagination'
 
@@ -13,6 +14,7 @@ const statusStyles = {
 }
 
 export default function Payments() {
+  const toast = useToast()
   const [searchParams, setSearchParams] = useSearchParams()
   const [payments, setPayments] = useState([])
   const [activities, setActivities] = useState([])
@@ -57,7 +59,7 @@ export default function Payments() {
       setForm({ activity: '', expected_amount: '', actual_amount_paid: '', payment_status: 'pending', payment_date: '', notes: '' })
       fetchPayments()
     } catch (err) {
-      alert(err.response?.data?.detail || JSON.stringify(err.response?.data) || 'Error')
+      toast.error(parseApiError(err, 'Error recording payment'))
     } finally {
       setSubmitting(false)
     }
@@ -84,7 +86,7 @@ export default function Payments() {
       setPayNowModal(null)
       fetchPayments()
     } catch (err) {
-      alert(err.response?.data?.detail || JSON.stringify(err.response?.data) || 'Error updating payment')
+      toast.error(parseApiError(err, 'Error updating payment'))
     } finally {
       setPaySubmitting(false)
     }
@@ -103,7 +105,7 @@ export default function Payments() {
       setReceiptFile(null)
       fetchPayments()
     } catch (err) {
-      alert(err.response?.data?.error || 'Failed to upload receipt')
+      toast.error(parseApiError(err, 'Failed to upload receipt'))
     } finally {
       setReceiptUploading(false)
     }

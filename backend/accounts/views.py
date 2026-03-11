@@ -14,6 +14,13 @@ from .permissions import IsAdmin
 class LoginView(APIView):
     permission_classes = [AllowAny]
 
+    def _get_company_name(self, user):
+        if user.role == 'vendor_owner' and hasattr(user, 'vendor_profile'):
+            return user.vendor_profile.company_name or None
+        if user.role == 'vendor_employee' and hasattr(user, 'employee_profile'):
+            return user.employee_profile.vendor_owner.company_name or None
+        return None
+
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -31,6 +38,7 @@ class LoginView(APIView):
                 'branch': user.branch_id,
                 'branch_name': user.branch.name if user.branch else None,
                 'phone': user.phone,
+                'company_name': self._get_company_name(user),
             }
         })
 
@@ -69,8 +77,9 @@ class DashboardStatsView(APIView):
         payments_qs = Payment.objects.filter(activity__branch=branch) if branch else Payment.objects.all()
         employees_qs = Employee.objects.filter(vendor_owner__branch=branch) if branch else Employee.objects.all()
 
-        pending_payments = payments_qs.filter(payment_status='pending').aggregate(total=Sum('expected_amount'))['total'] or 0
-        completed_payments = payments_qs.filter(payment_status='completed').aggregate(total=Sum('actual_amount_paid'))['total'] or 0
+        # Compute payment totals from the new model
+        pending_payments = sum(p.balance_remaining for p in payments_qs.filter(payment_status__in=['pending', 'partial']))
+        completed_payments = sum(p.total_paid for p in payments_qs.all())
 
         overdue_count = sum(1 for a in activities_qs if a.is_overdue)
 
@@ -93,10 +102,12 @@ class SpendingTrendsView(APIView):
     permission_classes = [IsAuthenticated, IsAdmin]
 
     def get(self, request):
-        from payments.models import Payment
+        from payments.models import PaymentEntry
 
         branch = request.user.branch
-        payments_qs = Payment.objects.filter(activity__branch=branch) if branch else Payment.objects.all()
+        entries_qs = PaymentEntry.objects.all()
+        if branch:
+            entries_qs = entries_qs.filter(payment__activity__branch=branch)
 
         today = timezone.now().date()
         result = []
@@ -106,9 +117,9 @@ class SpendingTrendsView(APIView):
                 month_end = month_start.replace(year=month_start.year + 1, month=1, day=1)
             else:
                 month_end = month_start.replace(month=month_start.month + 1, day=1)
-            total = payments_qs.filter(
+            total = entries_qs.filter(
                 payment_date__gte=month_start, payment_date__lt=month_end
-            ).aggregate(total=Sum('actual_amount_paid'))['total'] or 0
+            ).aggregate(total=Sum('amount'))['total'] or 0
             result.append({
                 'month': month_start.strftime('%b %Y'),
                 'amount': float(total),

@@ -1,12 +1,14 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
+import { useToast, parseApiError } from '../components/Toast'
 import { DeleteOutlined, CameraOutlined, CheckCircleOutlined, FileTextOutlined } from '@ant-design/icons'
 import Pagination from '../components/Pagination'
 
 const PAGE_SIZE = 10
 
 export default function Vendors() {
+  const toast = useToast()
   const [vendors, setVendors] = useState([])
   const [branches, setBranches] = useState([])
   const [categories, setCategories] = useState([])
@@ -84,7 +86,7 @@ export default function Vendors() {
       setPhotoPreview(null)
       fetchVendors()
     } catch (err) {
-      alert(err.response?.data?.detail || JSON.stringify(err.response?.data) || 'Error creating vendor')
+      toast.error(parseApiError(err, 'Error creating vendor'))
     } finally {
       setSubmitting(false)
     }
@@ -103,7 +105,7 @@ export default function Vendors() {
       await api.delete(`/vendors/${id}/`)
       fetchVendors()
     } catch (err) {
-      alert('Error deleting vendor')
+      toast.error('Error deleting vendor')
     }
   }
 
@@ -145,9 +147,13 @@ export default function Vendors() {
     setShowSuggestions(false)
   }
 
-  const filteredVendors = selectedVendorId
-    ? vendors.filter(v => v.id === selectedVendorId)
-    : vendors.filter(v => matchesSearch(v, searchQuery))
+  // Calculate filtered vendors
+  let filteredVendors = vendors
+  if (selectedVendorId) {
+    filteredVendors = vendors.filter(v => v.id === selectedVendorId)
+  } else if (searchQuery && searchQuery.trim().length > 0) {
+    filteredVendors = vendors.filter(v => matchesSearch(v, searchQuery))
+  }
 
   const pagedVendors = filteredVendors.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
   const suggestions = getSuggestions()
@@ -171,7 +177,7 @@ export default function Vendors() {
               placeholder="Search vendors..."
               className="w-full border-[1.5px] border-[#e4e8ed] rounded-lg pl-10 pr-10 py-2.5 text-sm focus:border-orchid focus:outline-none transition-colors"
             />
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6b7280]">🔍</span>
+            <SearchOutlined className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6b7280]" />
             {(searchQuery || selectedVendorId) && (
               <button
                 onClick={clearFilter}
