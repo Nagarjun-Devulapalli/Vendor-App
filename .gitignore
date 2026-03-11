@@ -18,6 +18,7 @@ vendor-app/build/
 vendor-app/.packages
 vendor-app/pubspec.lock
 backend/venv
+backend/credentials
 
 # IDE
 .idea/

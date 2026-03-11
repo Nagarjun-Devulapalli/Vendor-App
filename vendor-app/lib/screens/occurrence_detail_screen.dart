@@ -1,6 +1,8 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'dart:math' show pi;
+
 import '../models/occurrence.dart';
 import '../models/work_log.dart';
 import '../services/api_service.dart';
@@ -243,13 +245,6 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
       );
     }
 
-    // Progress ring
-    final progress = occ.isCompleted
-        ? 1.0
-        : occ.status == 'in_progress'
-        ? 0.5
-        : (_workLogs.isNotEmpty ? 0.3 + (_workLogs.length * 0.1) : 0.0);
-
     return Scaffold(
       backgroundColor: AppColors.bg,
       body: Column(
@@ -258,7 +253,7 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
             title: occ.activityTitle,
             subtitle: '${occ.categoryName ?? 'Task'} · ${occ.scheduledDate}',
             onBack: () => Navigator.pop(context),
-            trailing: _progressRing(progress),
+            trailing: _statusBadge(occ.status),
           ),
           Expanded(
             child: RefreshIndicator(
@@ -389,6 +384,10 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
 
                   // Actions
                   _buildActionButton(occ),
+                  if (occ.status != 'completed') ...[
+                    const SizedBox(height: 12),
+                    _buildMarkJobCompleteButton(occ),
+                  ],
                   const SizedBox(height: 24),
                 ],
               ),
@@ -586,37 +585,127 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
     }
   }
 
-  Widget _progressRing(double progress) {
-    final pct = (progress * 100).toInt();
-    return Column(
-      children: [
-        SizedBox(
-          width: 56,
-          height: 56,
-          child: CustomPaint(
-            painter: _ProgressPainter(progress),
-            child: Center(
-              child: Text(
-                '$pct%',
-                style: GoogleFonts.fraunces(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.white,
-                ),
-              ),
+  Widget _buildMarkJobCompleteButton(Occurrence occ) {
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton.icon(
+        onPressed: _isUpdating ? null : () => _showMarkCompleteDialog(occ),
+        icon: const Icon(Icons.done_all_rounded, size: 18),
+        label: Text(
+          'Mark Job as Complete',
+          style: GoogleFonts.nunito(fontWeight: FontWeight.w800),
+        ),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppColors.green,
+          side: const BorderSide(color: AppColors.green, width: 1.5),
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showMarkCompleteDialog(Occurrence occ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(
+          'Mark Job as Complete?',
+          style: GoogleFonts.nunito(fontWeight: FontWeight.w800, fontSize: 16),
+        ),
+        content: Text(
+          'This will mark the entire activity "${occ.activityTitle}" as completed. No new daily tasks will be created for this job.',
+          style: GoogleFonts.nunito(fontSize: 13, height: 1.5),
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text('Cancel', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.green,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: Text('Complete', style: GoogleFonts.nunito(fontWeight: FontWeight.w800)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      setState(() => _isUpdating = true);
+      try {
+        await ApiService.markActivityComplete(occ.activityId);
+        await _loadData();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Job marked as complete!'),
+              backgroundColor: AppColors.green,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.red),
+          );
+        }
+      } finally {
+        setState(() => _isUpdating = false);
+      }
+    }
+  }
+
+  Widget _statusBadge(String status) {
+    final String label;
+    final IconData icon;
+    switch (status) {
+      case 'completed':
+        label = 'Completed';
+        icon = Icons.check_circle_rounded;
+        break;
+      case 'in_progress':
+        label = 'In Progress';
+        icon = Icons.schedule_rounded;
+        break;
+      case 'missed':
+        label = 'Overdue';
+        icon = Icons.warning_rounded;
+        break;
+      default:
+        label = 'Pending';
+        icon = Icons.schedule_rounded;
+    }
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: Colors.white),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: GoogleFonts.nunito(
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              color: Colors.white,
             ),
           ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          'DONE',
-          style: GoogleFonts.nunito(
-            fontSize: 9,
-            fontWeight: FontWeight.w700,
-            color: Colors.white.withOpacity(0.6),
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -956,7 +1045,6 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
     );
   }
 }
-
 class _AssignEmployeesSheet extends StatefulWidget {
   final List<dynamic> employees;
   final Set<int> initialSelected;
@@ -1160,3 +1248,4 @@ class _ProgressPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
+
