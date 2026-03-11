@@ -361,7 +361,57 @@ GET /api/vendors/by-category/?cat={category_id}
 
 ---
 
-### 4.4 Get / Update / Delete Vendor
+### 4.4 Activate / Deactivate Vendor
+```
+PATCH /api/vendors/{id}/toggle-active/
+```
+**Permission:** Admin only
+**When to use:** Deactivate a vendor and all their employees, or reactivate them. Deactivated users cannot log in.
+
+**Request Body (Deactivate):**
+```json
+{
+  "is_active": false
+}
+```
+
+**Response (200):**
+```json
+{
+  "message": "Vendor Kumar Facility Services and 2 employees deactivated",
+  "is_active": false,
+  "employees_affected": 2
+}
+```
+
+**Request Body (Reactivate):**
+```json
+{
+  "is_active": true
+}
+```
+
+**Response (200):**
+```json
+{
+  "message": "Vendor Kumar Facility Services and 2 employees activated",
+  "is_active": true,
+  "employees_affected": 2
+}
+```
+
+**Error (400):**
+```json
+{
+  "error": "is_active field is required"
+}
+```
+
+> **Note:** When a vendor is deactivated, ALL employees under that vendor are also deactivated automatically. Same applies for reactivation. The `is_active` field is now included in the vendor list/detail API response.
+
+---
+
+### 4.5 Get / Update / Delete Vendor
 ```
 GET    /api/vendors/{id}/
 PUT    /api/vendors/{id}/
