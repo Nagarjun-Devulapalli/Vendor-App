@@ -33,7 +33,9 @@ def ensure_today_occurrences(user):
         activity_type='recurring',
     ).exclude(status__in=['completed', 'cancelled'])
 
-    if user.role == 'admin' and user.branch:
+    if user.role == 'superadmin':
+        pass  # no filter, show all
+    elif user.role == 'admin' and user.branch:
         activities = activities.filter(branch=user.branch)
     elif user.role == 'vendor_owner':
         activities = activities.filter(vendor__user=user)
@@ -67,7 +69,11 @@ class ActivityViewSet(viewsets.ModelViewSet):
             occurrence_count=Count('occurrences')
         ).order_by('-created_at')
         user = self.request.user
-        if user.role == 'admin' and user.branch:
+        if user.role == 'superadmin':
+            branch_id = self.request.query_params.get('branch')
+            if branch_id:
+                qs = qs.filter(branch_id=branch_id)
+        elif user.role == 'admin' and user.branch:
             qs = qs.filter(branch=user.branch)
         elif user.role == 'vendor_owner':
             qs = qs.filter(vendor__user=user)
@@ -145,7 +151,11 @@ class OccurrenceViewSet(viewsets.ModelViewSet):
             work_log_count=Count('work_logs')
         )
         user = self.request.user
-        if user.role == 'admin' and user.branch:
+        if user.role == 'superadmin':
+            branch_id = self.request.query_params.get('branch')
+            if branch_id:
+                qs = qs.filter(activity__branch_id=branch_id)
+        elif user.role == 'admin' and user.branch:
             qs = qs.filter(activity__branch=user.branch)
         elif user.role == 'vendor_owner':
             qs = qs.filter(activity__vendor__user=user)
@@ -335,7 +345,7 @@ class WorkLogViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['patch'], url_path='review')
     def review(self, request, pk=None):
-        if request.user.role != 'admin':
+        if request.user.role not in ('admin', 'superadmin'):
             return Response(
                 {'detail': 'Only admins can review work logs.'},
                 status=status.HTTP_403_FORBIDDEN,
