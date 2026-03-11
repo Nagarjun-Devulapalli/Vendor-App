@@ -10,7 +10,6 @@ class Activity(models.Model):
         ('recurring', 'Recurring'),
     ]
     PAYMENT_TYPES = [
-        ('hourly', 'Hourly'),
         ('daily', 'Daily'),
         ('contract', 'Contract'),
     ]

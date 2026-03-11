@@ -411,14 +411,58 @@ PATCH /api/vendors/{id}/toggle-active/
 
 ---
 
-### 4.5 Get / Update / Delete Vendor
+### 4.5 Update Vendor Details
 ```
-GET    /api/vendors/{id}/
-PUT    /api/vendors/{id}/
-PATCH  /api/vendors/{id}/
+PATCH /api/vendors/{id}/
+```
+**Permission:** Admin only
+**When to use:** Edit vendor owner's personal details, company name, or categories.
+
+**Request Body (multipart/form-data) — all fields optional:**
+| Field | Type | Description |
+|-------|------|-------------|
+| `first_name` | string | Owner's first name |
+| `last_name` | string | Owner's last name |
+| `phone` | string | Phone number |
+| `aadhar_number` | string | Aadhar ID number |
+| `photo` | file | Profile photo |
+| `company_name` | string | Company name |
+| `branch` | integer | Branch ID |
+| `category_ids` | array | Category IDs, e.g. `[1, 2]` |
+
+**Response (200):**
+```json
+{
+  "id": 1,
+  "user": {
+    "id": 3,
+    "username": "vendor_9888703874",
+    "first_name": "Ramesh",
+    "last_name": "Kumar",
+    "role": "vendor_owner",
+    "phone": "9888703874",
+    "aadhar_number": "111122223333",
+    "photo": "https://storage.googleapis.com/..."
+  },
+  "branch": 1,
+  "company_name": "Kumar Facility Services",
+  "display_name": "Kumar Facility Services",
+  "categories": [1, 2],
+  "category_names": ["Facility Maintenance", "Infrastructure Repair"],
+  "is_active": true,
+  "created_at": "2026-01-20T09:00:00Z"
+}
+```
+
+> **Note:** Send only the fields you want to update. User-level fields (name, phone, aadhar, photo) are updated on the linked User model.
+
+---
+
+### 4.6 Delete Vendor
+```
 DELETE /api/vendors/{id}/
 ```
-**Permission:** Admin only (for write operations)
+**Permission:** Admin only
 
 ---
 
@@ -506,11 +550,97 @@ POST /api/employees/
 
 ---
 
-### 5.3 Get / Update / Delete Employee
+### 5.3 Update Employee Details
 ```
-GET    /api/employees/{id}/
-PUT    /api/employees/{id}/
-PATCH  /api/employees/{id}/
+PATCH /api/employees/{id}/
+```
+**Permission:** Authenticated users
+**When to use:** Edit an employee's personal details.
+
+**Request Body (multipart/form-data) — all fields optional:**
+| Field | Type | Description |
+|-------|------|-------------|
+| `first_name` | string | Employee's first name |
+| `last_name` | string | Employee's last name |
+| `phone` | string | Phone number |
+| `aadhar_number` | string | Aadhar ID number |
+| `photo` | file | Profile photo |
+| `vendor_owner` | integer | Change vendor assignment |
+
+**Response (200):**
+```json
+{
+  "id": 1,
+  "user": {
+    "id": 5,
+    "username": "emp_9781453723",
+    "first_name": "Arun",
+    "last_name": "Kumar",
+    "role": "vendor_employee",
+    "phone": "9781453723",
+    "aadhar_number": "444455556666",
+    "photo": "https://storage.googleapis.com/..."
+  },
+  "vendor_owner": 1,
+  "is_active": true,
+  "created_at": "2026-02-01T10:00:00Z"
+}
+```
+
+> **Note:** Send only the fields you want to update. User-level fields (name, phone, aadhar, photo) are updated on the linked User model.
+
+---
+
+### 5.4 Activate / Deactivate Employee
+```
+PATCH /api/employees/{id}/toggle-active/
+```
+**Permission:** Admin or Vendor owner (only their own employees)
+**When to use:** Vendor owner deactivates/activates an employee. Deactivated employees cannot log in.
+
+**Request Body (Deactivate):**
+```json
+{
+  "is_active": false
+}
+```
+
+**Response (200):**
+```json
+{
+  "message": "Employee Arun Kumar deactivated",
+  "is_active": false
+}
+```
+
+**Request Body (Reactivate):**
+```json
+{
+  "is_active": true
+}
+```
+
+**Response (200):**
+```json
+{
+  "message": "Employee Arun Kumar activated",
+  "is_active": true
+}
+```
+
+**Error (403):**
+```json
+{
+  "error": "You can only manage your own employees"
+}
+```
+
+> **Note:** The `is_active` field is included in the employee list/detail API response.
+
+---
+
+### 5.5 Delete Employee
+```
 DELETE /api/employees/{id}/
 ```
 
@@ -1103,8 +1233,11 @@ GET /api/dashboard/completion-rates/
 | Categories (CRUD) | Full | Read | Read |
 | Vendors (List) | Branch-filtered | Own only | — |
 | Vendors (Create/Edit/Delete) | Yes | No | No |
+| Vendors (Toggle Active) | Yes | No | No |
 | Employees (List) | Branch-filtered | Own employees | Self only |
 | Employees (Create) | Yes | Yes | No |
+| Employees (Edit) | Yes | Yes | No |
+| Employees (Toggle Active) | Yes | Own employees | No |
 | Activities (List) | Branch-filtered | Own activities | Vendor's activities |
 | Activities (Create/Edit/Delete) | Yes | No | No |
 | Occurrences (List/Today) | Branch-filtered | Own activities | Vendor's activities |
@@ -1145,7 +1278,19 @@ GET /api/dashboard/completion-rates/
 2. POST /api/employees/                 → Add employee under vendor (save credentials!)
 ```
 
-### Workflow 5: Admin Records Payment
+### Workflow 5: Vendor Owner Manages Employees
+```
+1. GET   /api/employees/?vendor_owner={id}           → List own employees
+2. PATCH /api/employees/{id}/                        → Edit employee details
+3. PATCH /api/employees/{id}/toggle-active/          → Deactivate/activate employee
+```
+
+### Workflow 6: Admin Deactivates Vendor
+```
+1. PATCH /api/vendors/{id}/toggle-active/            → Deactivate vendor + all employees
+```
+
+### Workflow 7: Admin Records Payment
 ```
 1. GET  /api/activities/                → Get activity list
 2. POST /api/payments/                  → Create payment record

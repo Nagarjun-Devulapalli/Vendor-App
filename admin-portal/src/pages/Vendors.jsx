@@ -1,7 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
-import { EyeOutlined, DeleteOutlined, CameraOutlined, CheckCircleOutlined, FileTextOutlined } from '@ant-design/icons'
+import { EyeOutlined, DeleteOutlined, CameraOutlined, CheckCircleOutlined, FileTextOutlined, SearchOutlined } from '@ant-design/icons'
+import Pagination from '../components/Pagination'
+
+const PAGE_SIZE = 10
 
 export default function Vendors() {
   const [vendors, setVendors] = useState([])
@@ -17,6 +20,7 @@ export default function Vendors() {
   const [searchQuery, setSearchQuery] = useState('')
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [selectedVendorId, setSelectedVendorId] = useState(null)
+  const [currentPage, setCurrentPage] = useState(1)
   const navigate = useNavigate()
   const searchRef = useRef(null)
 
@@ -116,6 +120,7 @@ export default function Vendors() {
     setSearchQuery(value)
     setShowSuggestions(value.trim().length > 0)
     setSelectedVendorId(null)
+    setCurrentPage(1)
   }
 
   const handleSuggestionClick = (vendor) => {
@@ -130,10 +135,15 @@ export default function Vendors() {
     setShowSuggestions(false)
   }
 
-  const filteredVendors = selectedVendorId
-    ? vendors.filter(v => v.id === selectedVendorId)
-    : vendors.filter(v => matchesSearch(v, searchQuery))
+  // Calculate filtered vendors
+  let filteredVendors = vendors
+  if (selectedVendorId) {
+    filteredVendors = vendors.filter(v => v.id === selectedVendorId)
+  } else if (searchQuery && searchQuery.trim().length > 0) {
+    filteredVendors = vendors.filter(v => matchesSearch(v, searchQuery))
+  }
 
+  const pagedVendors = filteredVendors.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
   const suggestions = getSuggestions()
 
   if (loading) return <div className="flex items-center justify-center h-64 text-[#6b7280]">Loading...</div>
@@ -157,7 +167,7 @@ export default function Vendors() {
               placeholder="Search vendors..."
               className="w-full border-[1.5px] border-[#e4e8ed] rounded-lg pl-10 pr-10 py-2.5 text-sm focus:border-orchid focus:outline-none transition-colors"
             />
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6b7280]">🔍</span>
+            <SearchOutlined className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6b7280]" />
             {(searchQuery || selectedVendorId) && (
               <button
                 onClick={clearFilter}
@@ -219,7 +229,7 @@ export default function Vendors() {
             </tr>
           </thead>
           <tbody>
-            {filteredVendors.map((v) => (
+            {pagedVendors.map((v) => (
               <tr key={v.id} className="border-b border-[#e4e8ed] last:border-0 hover:bg-[#f9fafb] transition-colors">
                 <td className="px-4 py-3.5">
                   <div className="flex items-center gap-3">
@@ -250,10 +260,14 @@ export default function Vendors() {
                     )}
                   </div>
                 </td>
-                <td className="px-4 py-3.5 text-[13px]">{v.employees?.length || '-'}</td>
+                <td className="px-4 py-3.5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[13px]">{v.employees?.length || ''}</span>
+                    <button onClick={() => navigate(`/vendors/${v.id}`)} className="w-[26px] h-[26px] rounded-lg border border-[#e4e8ed] inline-flex items-center justify-center text-sm text-[#6b7280] hover:bg-[#f6f7f9] transition-colors" title="View vendor"><EyeOutlined /></button>
+                  </div>
+                </td>
                 <td className="px-4 py-3.5 text-[13px]">{v.user?.phone}</td>
                 <td className="px-4 py-3.5 space-x-2">
-                  <button onClick={() => navigate(`/vendors/${v.id}`)} className="w-[30px] h-[30px] rounded-lg border border-[#e4e8ed] inline-flex items-center justify-center text-sm text-[#6b7280] hover:bg-[#f6f7f9] transition-colors"><EyeOutlined /></button>
                   <button onClick={() => handleDelete(v.id)} className="w-[30px] h-[30px] rounded-lg border border-[#e4e8ed] inline-flex items-center justify-center text-sm text-[#6b7280] hover:bg-[#fdecea] hover:text-[#c0392b] transition-colors"><DeleteOutlined /></button>
                 </td>
               </tr>
@@ -265,6 +279,12 @@ export default function Vendors() {
             )}
           </tbody>
         </table>
+        <Pagination
+          currentPage={currentPage}
+          totalItems={filteredVendors.length}
+          pageSize={PAGE_SIZE}
+          onPageChange={setCurrentPage}
+        />
       </div>
 
       {/* Add Vendor Modal */}
