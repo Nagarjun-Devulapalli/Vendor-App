@@ -47,7 +47,7 @@ class _VendorAppState extends State<VendorApp> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text('🏫', style: TextStyle(fontSize: 48)),
+                    const Icon(Icons.school_rounded, size: 48, color: Colors.white),
                     const SizedBox(height: 16),
                     Text('Orchids Vendor Portal', style: AppTheme.heading.copyWith(fontSize: 22)),
                     const SizedBox(height: 24),

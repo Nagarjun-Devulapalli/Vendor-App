@@ -215,7 +215,7 @@ class _WorkLogScreenState extends State<WorkLogScreen> {
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(12),
                                 child: Image.network(
-                                  'http://10.0.2.2:8000${widget.existingBeforePhotoUrl}',
+                                  ApiService.resolvePhotoUrl(widget.existingBeforePhotoUrl!),
                                   height: 120,
                                   width: double.infinity,
                                   fit: BoxFit.cover,

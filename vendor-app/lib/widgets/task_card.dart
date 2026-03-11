@@ -31,14 +31,14 @@ class TaskCard extends StatelessWidget {
     }
   }
 
-  String get _statusEmoji {
+  IconData get _statusIcon {
     switch (occurrence.status) {
       case 'completed':
-        return '✓';
+        return Icons.check_circle_rounded;
       case 'missed':
-        return '⚠️';
+        return Icons.warning_rounded;
       default:
-        return '●';
+        return Icons.schedule_rounded;
     }
   }
 
@@ -53,23 +53,23 @@ class TaskCard extends StatelessWidget {
     }
   }
 
-  String get _categoryIcon {
+  IconData get _categoryIcon {
     final cat = occurrence.categoryName?.toLowerCase() ?? '';
-    if (cat.contains('electric')) return '⚡';
-    if (cat.contains('plumb')) return '🔧';
-    if (cat.contains('clean') || cat.contains('housekeep')) return '🧹';
-    if (cat.contains('security')) return '🛡️';
-    if (cat.contains('pest')) return '🐛';
-    if (cat.contains('garden') || cat.contains('landscape')) return '🌿';
-    if (cat.contains('fire')) return '🔥';
-    if (cat.contains('it') || cat.contains('network')) return '💻';
-    if (cat.contains('transport')) return '🚐';
-    if (cat.contains('cafe') || cat.contains('kitchen')) return '🍽️';
-    if (cat.contains('waste')) return '♻️';
-    if (cat.contains('hvac') || cat.contains('ventil')) return '❄️';
-    if (cat.contains('civil') || cat.contains('structur')) return '🏗️';
-    if (cat.contains('event')) return '🎪';
-    return '📋';
+    if (cat.contains('electric')) return Icons.electrical_services_rounded;
+    if (cat.contains('plumb')) return Icons.plumbing_rounded;
+    if (cat.contains('clean') || cat.contains('housekeep')) return Icons.cleaning_services_rounded;
+    if (cat.contains('security')) return Icons.shield_rounded;
+    if (cat.contains('pest')) return Icons.pest_control_rounded;
+    if (cat.contains('garden') || cat.contains('landscape')) return Icons.yard_rounded;
+    if (cat.contains('fire')) return Icons.local_fire_department_rounded;
+    if (cat.contains('it') || cat.contains('network')) return Icons.computer_rounded;
+    if (cat.contains('transport')) return Icons.local_shipping_rounded;
+    if (cat.contains('cafe') || cat.contains('kitchen')) return Icons.restaurant_rounded;
+    if (cat.contains('waste')) return Icons.recycling_rounded;
+    if (cat.contains('hvac') || cat.contains('ventil')) return Icons.ac_unit_rounded;
+    if (cat.contains('civil') || cat.contains('structur')) return Icons.construction_rounded;
+    if (cat.contains('event')) return Icons.event_rounded;
+    return Icons.assignment_rounded;
   }
 
   @override
@@ -105,7 +105,7 @@ class TaskCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(13),
                     ),
                     alignment: Alignment.center,
-                    child: Text(_categoryIcon, style: const TextStyle(fontSize: 20)),
+                    child: Icon(_categoryIcon, size: 22, color: _statusColor),
                   ),
                   const SizedBox(width: 14),
                   // Body
@@ -143,13 +143,20 @@ class TaskCard extends StatelessWidget {
                                     : AppColors.amberLight,
                             borderRadius: BorderRadius.circular(20),
                           ),
-                          child: Text(
-                            '$_statusEmoji $_statusLabel',
-                            style: GoogleFonts.nunito(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w800,
-                              color: _statusColor,
-                            ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(_statusIcon, size: 12, color: _statusColor),
+                              const SizedBox(width: 3),
+                              Text(
+                                _statusLabel,
+                                style: GoogleFonts.nunito(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w800,
+                                  color: _statusColor,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],

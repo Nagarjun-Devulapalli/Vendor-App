@@ -5,6 +5,17 @@ import 'auth_service.dart';
 
 class ApiService {
   static const String baseUrl = 'http://10.0.2.2:8000/api';
+  static const String mediaBaseUrl = 'http://10.0.2.2:8000';
+
+  /// Resolves a photo URL from the API to a full URL.
+  /// Handles both relative paths (/media/...) and full URLs.
+  static String resolvePhotoUrl(String url) {
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url.replaceFirst('http://localhost:8000', mediaBaseUrl)
+                .replaceFirst('http://127.0.0.1:8000', mediaBaseUrl);
+    }
+    return '$mediaBaseUrl$url';
+  }
 
   static Future<Map<String, String>> _getHeaders({bool isJson = true}) async {
     final token = await AuthService.getAccessToken();
