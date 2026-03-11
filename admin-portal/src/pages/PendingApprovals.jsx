@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { EyeOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons'
 import api from '../services/api'
 import Pagination from '../components/Pagination'
+import BranchFilter from '../components/BranchFilter'
+import { useAuth } from '../context/AuthContext'
 
 const PAGE_SIZE = 10
 const statusStyles = {
@@ -18,11 +20,14 @@ export default function PendingApprovals() {
   const [detailModal, setDetailModal] = useState(null)
   const [rejectModal, setRejectModal] = useState(null)
   const [rejectReason, setRejectReason] = useState('')
+  const [selectedBranch, setSelectedBranch] = useState(null)
+  const { user } = useAuth()
 
   const fetchWorkLogs = () => {
     setLoading(true)
     // Fetch all occurrences with work logs
-    api.get('/occurrences/')
+    const params = selectedBranch ? `?branch=${selectedBranch}` : ''
+    api.get(`/occurrences/${params}`)
       .then((res) => {
         const occs = res.data.results || res.data
         const logs = []
@@ -44,7 +49,7 @@ export default function PendingApprovals() {
       .finally(() => setLoading(false))
   }
 
-  useEffect(() => { fetchWorkLogs() }, [])
+  useEffect(() => { fetchWorkLogs() }, [selectedBranch])
 
   // Only show completed work logs (after photo submitted) that need review, plus already reviewed ones
   const getApprovalStatus = (log) => {
@@ -112,6 +117,9 @@ export default function PendingApprovals() {
         <div>
           <h3 className="font-serif text-lg font-bold">Pending Approvals</h3>
           <p className="text-[13px] text-[#6b7280] mt-0.5">Review and approve work logs submitted by vendors</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <BranchFilter value={selectedBranch} onChange={(v) => { setSelectedBranch(v); setCurrentPage(1) }} />
         </div>
         {counts.pending > 0 && (
           <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[#fef3e0] text-[#b07200] rounded-lg text-[13px] font-semibold">

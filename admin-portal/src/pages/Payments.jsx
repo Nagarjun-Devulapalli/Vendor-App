@@ -3,6 +3,8 @@ import { useSearchParams } from 'react-router-dom'
 import api from '../services/api'
 import { FileTextOutlined, UploadOutlined, CheckOutlined } from '@ant-design/icons'
 import Pagination from '../components/Pagination'
+import BranchFilter from '../components/BranchFilter'
+import { useAuth } from '../context/AuthContext'
 
 const PAGE_SIZE = 10
 
@@ -28,14 +30,17 @@ export default function Payments() {
   const [receiptModal, setReceiptModal] = useState(null)
   const [receiptFile, setReceiptFile] = useState(null)
   const [receiptUploading, setReceiptUploading] = useState(false)
+  const [selectedBranch, setSelectedBranch] = useState(null)
+  const { user } = useAuth()
 
   const fetchPayments = () => {
-    let url = '/payments/'
-    if (activeTab) url += `?payment_status=${activeTab}`
+    let url = '/payments/?'
+    if (activeTab) url += `payment_status=${activeTab}&`
+    if (selectedBranch) url += `branch=${selectedBranch}&`
     api.get(url).then((res) => setPayments(res.data.results || res.data)).catch(console.error).finally(() => setLoading(false))
   }
 
-  useEffect(() => { fetchPayments(); setCurrentPage(1) }, [activeTab])
+  useEffect(() => { setLoading(true); fetchPayments(); setCurrentPage(1) }, [activeTab, selectedBranch])
   useEffect(() => {
     api.get('/activities/').then((res) => setActivities(res.data.results || res.data)).catch(console.error)
   }, [])
@@ -130,6 +135,9 @@ export default function Payments() {
         <div>
           <h3 className="font-serif text-lg font-bold">Payments</h3>
           <p className="text-[13px] text-[#6b7280] mt-0.5">Manage vendor payments for your branch</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <BranchFilter value={selectedBranch} onChange={(v) => { setSelectedBranch(v); setCurrentPage(1) }} />
         </div>
         <button onClick={() => setShowModal(true)} className="inline-flex items-center gap-1.5 px-4 py-2 bg-orchid text-white rounded-lg text-[13px] font-semibold hover:bg-orchid-mid transition-colors">
           + Record Payment
