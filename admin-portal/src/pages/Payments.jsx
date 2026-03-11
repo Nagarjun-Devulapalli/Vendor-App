@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import api from '../services/api'
+import { FileTextOutlined, UploadOutlined, CheckOutlined } from '@ant-design/icons'
 
 const statusStyles = {
   pending: 'bg-[#fdecea] text-[#c0392b]',
@@ -200,11 +201,11 @@ export default function Payments() {
                 <td className="px-4 py-3.5">
                   {p.receipt ? (
                     <a href={p.receipt} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 px-2.5 py-1 bg-[#e8f5ee] text-[#1a6b4a] rounded-lg text-[11px] font-semibold hover:bg-[#d0ebdb] transition-colors">
-                      📄 View
+                      <FileTextOutlined /> View
                     </a>
                   ) : p.payment_status === 'completed' ? (
                     <button onClick={() => setReceiptModal(p)} className="inline-flex items-center gap-1 px-2.5 py-1 border-[1.5px] border-dashed border-[#e4e8ed] rounded-lg text-[11px] font-semibold text-[#6b7280] hover:bg-[#f6f7f9] transition-colors">
-                      ⬆ Upload
+                      <UploadOutlined /> Upload
                     </button>
                   ) : (
                     <span className="text-[11px] text-[#6b7280]">—</span>
@@ -219,7 +220,7 @@ export default function Payments() {
                       Pay Now
                     </button>
                   ) : (
-                    <span className="text-[11px] text-orchid font-semibold">✓ Done</span>
+                    <span className="text-[11px] text-orchid font-semibold"><CheckOutlined /> Done</span>
                   )}
                 </td>
               </tr>

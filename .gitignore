@@ -27,6 +27,6 @@ vendor-app/pubspec.lock
 .env
 *.env
 .venv
-venv/
+backend/venv
 
 

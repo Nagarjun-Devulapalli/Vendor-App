@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import api from '../services/api'
+import { ExclamationCircleOutlined } from '@ant-design/icons'
 
 const statusStyles = {
   pending: 'bg-[#fef3e0] text-[#b07200]',
@@ -75,7 +76,7 @@ export default function ActivityDetail() {
           <div>
             <h1 className="font-serif text-2xl font-bold">{activity.title}</h1>
             {activity.is_overdue && (
-              <span className="badge inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#fdecea] text-[#c0392b] mt-1">⚠️ Overdue</span>
+              <span className="badge inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#fdecea] text-[#c0392b] mt-1"><ExclamationCircleOutlined /> Overdue</span>
             )}
           </div>
           <span className={`badge inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold ${statusStyles[activity.status] || 'bg-[#f0f1f3] text-[#555]'}`}>

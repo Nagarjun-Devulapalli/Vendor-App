@@ -1,11 +1,13 @@
 import { Outlet, useLocation } from 'react-router-dom'
 import Sidebar from './Sidebar'
+import { SearchOutlined } from '@ant-design/icons'
 
 const pageMeta = {
   '/dashboard': { title: 'Dashboard', sub: 'Overview of your branch activity' },
   '/vendors': { title: 'Vendors', sub: 'All registered vendors at your branch' },
   '/activities': { title: 'Activities', sub: 'All scheduled and ongoing work' },
   '/payments': { title: 'Payments', sub: 'Track and manage vendor payments' },
+  '/pending-approvals': { title: 'Pending Approvals', sub: 'Review and approve employee work logs' },
   '/categories': { title: 'Work Categories', sub: 'Define types of work your vendors do' },
 }
 
@@ -26,7 +28,7 @@ export default function Layout() {
           </div>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 px-3 py-2 bg-[#f6f7f9] border border-[#e4e8ed] rounded-lg text-[13px] text-[#6b7280] cursor-text w-[200px]">
-              <span>🔍</span> Search...
+              <SearchOutlined /> Search...
             </div>
           </div>
         </header>
