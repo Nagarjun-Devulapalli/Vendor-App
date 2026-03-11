@@ -81,6 +81,7 @@ class DashboardStatsView(APIView):
         partial_qs = payments_qs.filter(payment_status='partial')
         completed_qs = payments_qs.filter(payment_status='completed')
 
+        balance_remaining = sum(p.balance_remaining for p in payments_qs.exclude(payment_status='completed'))
         pending_payments_amount = sum(p.total_due for p in pending_qs)
         partial_payments_amount = sum(p.total_paid for p in partial_qs)
         completed_payments_amount = sum(p.total_paid for p in completed_qs)
@@ -95,8 +96,8 @@ class DashboardStatsView(APIView):
             'total_vendors': vendors_qs.count(),
             'total_activities': activities_qs.count(),
             'total_employees': employees_qs.count(),
-            'pending_payments_amount': float(pending_payments_amount),
-            'pending_payments_count': pending_qs.count(),
+            'balance_remaining_amount': float(balance_remaining),
+            'balance_remaining_count': payments_qs.exclude(payment_status='completed').count(),
             'partial_payments_amount': float(partial_payments_amount),
             'partial_payments_count': partial_qs.count(),
             'completed_payments_amount': float(completed_payments_amount),
