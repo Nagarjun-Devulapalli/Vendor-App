@@ -1,21 +1,40 @@
 import { useState, useEffect } from 'react'
 import api from '../services/api'
+import {
+  ToolOutlined,
+  ClearOutlined,
+  EnvironmentOutlined,
+  BugOutlined,
+  SafetyCertificateOutlined,
+  CloudOutlined,
+  LaptopOutlined,
+  BuildOutlined,
+  ThunderboltOutlined,
+  ReconciliationOutlined,
+  GiftOutlined,
+  CarOutlined,
+  CoffeeOutlined,
+  SettingOutlined,
+  InboxOutlined,
+  EditOutlined,
+  DeleteOutlined,
+} from '@ant-design/icons'
 
 const categoryIcons = {
-  'Facility Maintenance': '🔧',
-  'Cleaning & Housekeeping': '🧹',
-  'Grounds & Landscaping': '🌿',
-  'Pest Control': '🐛',
-  'Safety & Security Systems': '🛡️',
-  'HVAC & Climate Systems': '❄️',
-  'IT & Technical Services': '💻',
-  'Infrastructure Repair': '🏗️',
-  'Power & Utilities': '⚡',
-  'Waste & Sanitation Services': '♻️',
-  'Event & Facility Setup': '🎪',
-  'Transportation Services': '🚌',
-  'Food & Cafeteria Services': '🍽️',
-  'Equipment Maintenance': '🔩',
+  'Facility Maintenance': <ToolOutlined />,
+  'Cleaning & Housekeeping': <ClearOutlined />,
+  'Grounds & Landscaping': <EnvironmentOutlined />,
+  'Pest Control': <BugOutlined />,
+  'Safety & Security Systems': <SafetyCertificateOutlined />,
+  'HVAC & Climate Systems': <CloudOutlined />,
+  'IT & Technical Services': <LaptopOutlined />,
+  'Infrastructure Repair': <BuildOutlined />,
+  'Power & Utilities': <ThunderboltOutlined />,
+  'Waste & Sanitation Services': <ReconciliationOutlined />,
+  'Event & Facility Setup': <GiftOutlined />,
+  'Transportation Services': <CarOutlined />,
+  'Food & Cafeteria Services': <CoffeeOutlined />,
+  'Equipment Maintenance': <SettingOutlined />,
 }
 
 export default function Categories() {
@@ -89,7 +108,7 @@ export default function Categories() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {categories.map((c) => (
           <div key={c.id} className="bg-white rounded-xl border border-[#e4e8ed] shadow-sm p-5 hover:shadow-md transition-shadow">
-            <div className="text-[28px] mb-2.5">{categoryIcons[c.name] || '📦'}</div>
+            <div className="text-[28px] mb-2.5">{categoryIcons[c.name] || <InboxOutlined />}</div>
             <h4 className="font-serif text-base font-bold mb-1">{c.name}</h4>
             <p className="text-[13px] text-[#6b7280] mb-3.5 line-clamp-2">{c.description || 'No description'}</p>
             <div className="flex justify-between items-center">
@@ -97,8 +116,8 @@ export default function Categories() {
                 Category
               </span>
               <div className="flex gap-1.5">
-                <button onClick={() => openEdit(c)} className="w-[30px] h-[30px] rounded-lg border border-[#e4e8ed] inline-flex items-center justify-center text-sm text-[#6b7280] hover:bg-[#f6f7f9] hover:text-[#1a1f2e] transition-colors">✏️</button>
-                <button onClick={() => handleDelete(c.id)} className="w-[30px] h-[30px] rounded-lg border border-[#e4e8ed] inline-flex items-center justify-center text-sm text-[#6b7280] hover:bg-[#fdecea] hover:text-[#c0392b] transition-colors">🗑️</button>
+                <button onClick={() => openEdit(c)} className="w-[30px] h-[30px] rounded-lg border border-[#e4e8ed] inline-flex items-center justify-center text-sm text-[#6b7280] hover:bg-[#f6f7f9] hover:text-[#1a1f2e] transition-colors"><EditOutlined /></button>
+                <button onClick={() => handleDelete(c.id)} className="w-[30px] h-[30px] rounded-lg border border-[#e4e8ed] inline-flex items-center justify-center text-sm text-[#6b7280] hover:bg-[#fdecea] hover:text-[#c0392b] transition-colors"><DeleteOutlined /></button>
               </div>
             </div>
           </div>

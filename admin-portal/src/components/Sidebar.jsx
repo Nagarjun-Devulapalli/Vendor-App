@@ -1,15 +1,26 @@
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import {
+  DashboardOutlined,
+  ShopOutlined,
+  FileTextOutlined,
+  CreditCardOutlined,
+  AuditOutlined,
+  TagsOutlined,
+  BankOutlined,
+  LogoutOutlined,
+} from '@ant-design/icons'
 
 const navItems = [
-  { to: '/dashboard', label: 'Dashboard', icon: '📊' },
-  { to: '/vendors', label: 'Vendors', icon: '🏢' },
-  { to: '/activities', label: 'Activities', icon: '📋' },
-  { to: '/payments', label: 'Payments', icon: '💳' },
+  { to: '/dashboard', label: 'Dashboard', icon: <DashboardOutlined /> },
+  { to: '/vendors', label: 'Vendors', icon: <ShopOutlined /> },
+  { to: '/activities', label: 'Activities', icon: <FileTextOutlined /> },
+  { to: '/payments', label: 'Payments', icon: <CreditCardOutlined /> },
+  { to: '/pending-approvals', label: 'Pending Approvals', icon: <AuditOutlined /> },
 ]
 
 const settingsItems = [
-  { to: '/categories', label: 'Work Categories', icon: '🏷️' },
+  { to: '/categories', label: 'Work Categories', icon: <TagsOutlined /> },
 ]
 
 export default function Sidebar() {
@@ -22,7 +33,7 @@ export default function Sidebar() {
       {/* Brand */}
       <div className="px-5 pt-6 pb-5 border-b border-white/[0.12]">
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 bg-white/20 rounded-[10px] flex items-center justify-center text-lg">🏫</div>
+          <div className="w-9 h-9 bg-white/20 rounded-[10px] flex items-center justify-center text-lg text-white"><BankOutlined /></div>
           <div>
             <h1 className="font-serif text-[15px] text-white leading-tight font-bold">Orchids Schools</h1>
             <span className="text-[11px] text-white/60">Vendor Portal</span>
@@ -86,9 +97,7 @@ export default function Sidebar() {
             <span className="text-[10px] text-white/50">Branch Admin</span>
           </div>
           <button onClick={logout} className="text-white/50 hover:text-white/80 transition-colors" title="Logout">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
+            <LogoutOutlined style={{ fontSize: 16 }} />
           </button>
         </div>
       </div>
