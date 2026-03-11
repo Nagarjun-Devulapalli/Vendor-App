@@ -177,7 +177,6 @@ export default function Vendors() {
               placeholder="Search vendors..."
               className="w-full border-[1.5px] border-[#e4e8ed] rounded-lg pl-10 pr-10 py-2.5 text-sm focus:border-orchid focus:outline-none transition-colors"
             />
-            <SearchOutlined className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6b7280]" />
             {(searchQuery || selectedVendorId) && (
               <button
                 onClick={clearFilter}
