@@ -10,6 +10,7 @@ import Activities from './pages/Activities'
 import ActivityDetail from './pages/ActivityDetail'
 import Payments from './pages/Payments'
 import Categories from './pages/Categories'
+import CategoryDetail from './pages/CategoryDetail'
 import PendingApprovals from './pages/PendingApprovals'
 
 function App() {
@@ -28,6 +29,7 @@ function App() {
             <Route path="payments" element={<Payments />} />
             <Route path="pending-approvals" element={<PendingApprovals />} />
             <Route path="categories" element={<Categories />} />
+            <Route path="categories/:id" element={<CategoryDetail />} />
           </Route>
         </Routes>
       </AuthProvider>
