@@ -65,7 +65,7 @@ class ActivityViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         qs = Activity.objects.select_related('vendor', 'category', 'branch').annotate(
             occurrence_count=Count('occurrences')
-        )
+        ).order_by('-created_at')
         user = self.request.user
         if user.role == 'admin' and user.branch:
             qs = qs.filter(branch=user.branch)
