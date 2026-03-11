@@ -64,7 +64,7 @@ export default function Dashboard() {
     { label: 'Total Vendors', value: stats?.total_vendors || 0, sub: `${vendors.length} registered`, color: 'green', icon: <ShopOutlined />, onClick: () => navigate('/vendors') },
     { label: 'Open Activities', value: stats?.total_activities || 0, sub: `${activities.filter(a => a.status === 'in_progress').length} in progress`, color: 'amber', icon: <FileTextOutlined />, onClick: () => navigate('/activities') },
     { label: 'Partial Payments', value: `₹${((stats?.partial_payments_amount || 0) / 1000).toFixed(0)}K`, sub: `${stats?.partial_payments_count || 0} invoices`, color: 'amber', icon: <ExclamationCircleOutlined />, onClick: () => navigate('/payments?tab=partial') },
-    { label: 'Pending payments', value: `₹${((stats?.pending_payments_amount || 0) / 1000).toFixed(0)}K`, sub: `${stats?.pending_payments_count || 0} invoices`, color: 'blue', icon: <CreditCardOutlined />, onClick: () => navigate('/payments?tab=pending') },
+    { label: 'Balance Remaining', value: `₹${((stats?.balance_remaining_amount || 0) / 1000).toFixed(0)}K`, sub: `${stats?.balance_remaining_count || 0} outstanding`, color: 'blue', icon: <CreditCardOutlined />, onClick: () => navigate('/payments') },
   ]
 
   const colorMap = { green: { border: 'border-t-orchid', iconBg: 'bg-orchid-light', valueColor: 'text-orchid' }, amber: { border: 'border-t-[#e8a020]', iconBg: 'bg-[#fef3e0]', valueColor: 'text-[#e8a020]' }, red: { border: 'border-t-[#c0392b]', iconBg: 'bg-[#fdecea]', valueColor: 'text-[#c0392b]' }, blue: { border: 'border-t-[#2563a8]', iconBg: 'bg-[#e8f0fc]', valueColor: 'text-[#2563a8]' } }
