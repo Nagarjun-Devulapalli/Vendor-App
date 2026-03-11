@@ -31,4 +31,7 @@ backend/venv
 .venv
 backend/venv
 
+# Credentials
+backend/credentials/
+
 
