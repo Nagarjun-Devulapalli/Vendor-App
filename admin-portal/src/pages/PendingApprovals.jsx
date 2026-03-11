@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
 import { EyeOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons'
 import api from '../services/api'
+import { useAuth } from '../context/AuthContext'
 import { useToast, parseApiError } from '../components/Toast'
+import BranchFilter from '../components/BranchFilter'
 import Pagination from '../components/Pagination'
 
 const PAGE_SIZE = 10
@@ -12,10 +14,12 @@ const statusStyles = {
 }
 
 export default function PendingApprovals() {
+  const { user } = useAuth()
   const toast = useToast()
   const [workLogs, setWorkLogs] = useState([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('pending')
+  const [selectedBranch, setSelectedBranch] = useState(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [detailModal, setDetailModal] = useState(null)
   const [rejectModal, setRejectModal] = useState(null)
@@ -23,8 +27,9 @@ export default function PendingApprovals() {
 
   const fetchWorkLogs = () => {
     setLoading(true)
-    // Fetch all occurrences with work logs
-    api.get('/occurrences/')
+    let url = '/occurrences/'
+    if (selectedBranch) url += `?branch=${selectedBranch}`
+    api.get(url)
       .then((res) => {
         const occs = res.data.results || res.data
         const logs = []
@@ -46,7 +51,7 @@ export default function PendingApprovals() {
       .finally(() => setLoading(false))
   }
 
-  useEffect(() => { fetchWorkLogs() }, [])
+  useEffect(() => { fetchWorkLogs() }, [selectedBranch])
 
   // Only show completed work logs (after photo submitted) that need review, plus already reviewed ones
   const getApprovalStatus = (log) => {
@@ -111,9 +116,14 @@ export default function PendingApprovals() {
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <div>
-          <h3 className="font-serif text-lg font-bold">Pending Approvals</h3>
-          <p className="text-[13px] text-[#6b7280] mt-0.5">Review and approve work logs submitted by vendors</p>
+        <div className="flex items-center gap-6">
+          <div>
+            <h3 className="font-serif text-lg font-bold">Pending Approvals</h3>
+            <p className="text-[13px] text-[#6b7280] mt-0.5">Review and approve work logs submitted by vendors</p>
+          </div>
+          {user?.role === 'superadmin' && (
+            <BranchFilter value={selectedBranch} onChange={(val) => { setSelectedBranch(val); setCurrentPage(1) }} />
+          )}
         </div>
         {counts.pending > 0 && (
           <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[#fef3e0] text-[#b07200] rounded-lg text-[13px] font-semibold">

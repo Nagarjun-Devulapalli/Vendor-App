@@ -9,6 +9,9 @@ import {
   TagsOutlined,
   BankOutlined,
   LogoutOutlined,
+  TeamOutlined,
+  KeyOutlined,
+  SwapOutlined,
 } from '@ant-design/icons'
 
 const navItems = [
@@ -17,6 +20,11 @@ const navItems = [
   { to: '/activities', label: 'Activities', icon: <FileTextOutlined /> },
   { to: '/payments', label: 'Payments', icon: <CreditCardOutlined /> },
   { to: '/pending-approvals', label: 'Pending Approvals', icon: <AuditOutlined /> },
+]
+
+const superadminItems = [
+  { to: '/branch-admins', label: 'Branch Admins', icon: <TeamOutlined /> },
+  { to: '/credentials', label: 'Credentials', icon: <KeyOutlined /> },
 ]
 
 const settingsItems = [
@@ -51,7 +59,7 @@ export default function Sidebar({ collapsed }) {
       {!collapsed && (
         <div className="mx-3 mt-4 bg-white/10 rounded-lg px-3 py-2.5 flex items-center gap-2">
           <div className="w-2 h-2 rounded-full bg-[#5dde9c] flex-shrink-0" />
-          <span className="text-xs text-white/85 font-medium truncate">{user?.branch_name || 'Branch'}</span>
+          <span className="text-xs text-white/85 font-medium truncate">{user?.role === 'superadmin' ? 'All Branches' : (user?.branch_name || 'Branch')}</span>
         </div>
       )}
       {collapsed && (
@@ -109,7 +117,54 @@ export default function Sidebar({ collapsed }) {
             {!collapsed && item.label}
           </NavLink>
         ))}
+
+        {user?.role === 'superadmin' && (
+          <>
+            {!collapsed && (
+              <div className="text-[10px] font-semibold tracking-[0.08em] text-white/40 uppercase px-2 pb-1.5 pt-5">
+                Super Admin
+              </div>
+            )}
+            {collapsed && <div className="pt-3" />}
+            {superadminItems.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                title={collapsed ? item.label : undefined}
+                className={({ isActive }) =>
+                  `flex items-center ${collapsed ? 'justify-center px-0' : 'gap-2.5 px-3'} py-2.5 rounded-lg mb-0.5 text-sm font-medium transition-colors ${
+                    isActive
+                      ? 'bg-white/[0.18] text-white'
+                      : 'text-white/75 hover:bg-white/10 hover:text-white'
+                  }`
+                }
+              >
+                <span className="text-base w-5 text-center flex-shrink-0">{item.icon}</span>
+                {!collapsed && item.label}
+              </NavLink>
+            ))}
+          </>
+        )}
       </nav>
+
+      {/* Back to Super Admin */}
+      {localStorage.getItem('superadmin_session') && !collapsed && (
+        <div className="px-2 pb-2">
+          <button
+            onClick={() => {
+              const saved = JSON.parse(localStorage.getItem('superadmin_session'))
+              localStorage.setItem('access_token', saved.access)
+              localStorage.setItem('refresh_token', saved.refresh)
+              localStorage.setItem('user', saved.user)
+              localStorage.removeItem('superadmin_session')
+              window.location.href = '/dashboard'
+            }}
+            className="w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-xs font-semibold bg-[#fef3e0] text-[#7a5000] hover:bg-[#fde9c0] transition-colors"
+          >
+            <SwapOutlined /> Back to Super Admin
+          </button>
+        </div>
+      )}
 
       {/* Footer */}
       <div className="px-2 py-4 border-t border-white/[0.12]">
@@ -129,7 +184,7 @@ export default function Sidebar({ collapsed }) {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-xs text-white font-medium truncate">{user?.first_name} {user?.last_name}</p>
-              <span className="text-[10px] text-white/50">Branch Admin</span>
+              <span className="text-[10px] text-white/50">{user?.role === 'superadmin' ? 'Super Admin' : 'Branch Admin'}</span>
             </div>
             <button onClick={logout} className="text-white/50 hover:text-white/80 transition-colors" title="Logout">
               <LogoutOutlined style={{ fontSize: 16 }} />

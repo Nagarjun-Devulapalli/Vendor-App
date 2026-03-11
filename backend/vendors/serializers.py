@@ -67,9 +67,10 @@ class VendorSerializer(serializers.ModelSerializer):
             role='vendor_owner', phone=phone, aadhar_number=aadhar_number,
             branch=validated_data.get('branch'),
         )
+        user.password_plain = password
         if photo:
             user.photo = photo
-            user.save()
+        user.save()
 
         validated_data.pop('categories', None)
         vendor = Vendor.objects.create(user=user, **validated_data)
@@ -155,9 +156,10 @@ class EmployeeSerializer(serializers.ModelSerializer):
             role='vendor_employee', phone=phone, aadhar_number=aadhar_number,
             branch=vendor_owner.branch,
         )
+        user.password_plain = password
         if photo:
             user.photo = photo
-            user.save()
+        user.save()
 
         employee = Employee.objects.create(user=user, **validated_data)
         self._generated_password = password

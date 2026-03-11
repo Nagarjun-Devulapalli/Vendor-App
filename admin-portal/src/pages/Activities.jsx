@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
+import { useAuth } from '../context/AuthContext'
 import { useToast, parseApiError } from '../components/Toast'
+import BranchFilter from '../components/BranchFilter'
 import { ExclamationCircleOutlined, SearchOutlined } from '@ant-design/icons'
 import Pagination from '../components/Pagination'
 
@@ -21,6 +23,7 @@ const typeStyles = {
 }
 
 export default function Activities() {
+  const { user } = useAuth()
   const toast = useToast()
   const [activities, setActivities] = useState([])
   const [vendors, setVendors] = useState([])
@@ -29,6 +32,7 @@ export default function Activities() {
   const [showModal, setShowModal] = useState(false)
   const [filterStatus, setFilterStatus] = useState('')
   const [filterType, setFilterType] = useState('')
+  const [selectedBranch, setSelectedBranch] = useState(null)
   const [submitting, setSubmitting] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const [searchQuery, setSearchQuery] = useState('')
@@ -44,12 +48,13 @@ export default function Activities() {
 
   const fetchActivities = () => {
     let url = '/activities/?'
+    if (selectedBranch) url += `branch=${selectedBranch}&`
     if (filterStatus) url += `status=${filterStatus}&`
     if (filterType) url += `activity_type=${filterType}&`
     api.get(url).then((res) => setActivities(res.data.results || res.data)).catch(console.error).finally(() => setLoading(false))
   }
 
-  useEffect(() => { fetchActivities(); setCurrentPage(1) }, [filterStatus, filterType])
+  useEffect(() => { fetchActivities(); setCurrentPage(1) }, [filterStatus, filterType, selectedBranch])
   useEffect(() => {
     api.get('/vendors/').then((res) => setVendors(res.data.results || res.data)).catch(console.error)
     api.get('/categories/').then((res) => setCategories(res.data.results || res.data)).catch(console.error)
@@ -129,11 +134,14 @@ export default function Activities() {
 
   return (
     <div className="space-y-5">
-      <div className="grid grid-cols-[200px_1fr_auto] items-center gap-6">
-        <div>
+      <div className="flex items-center gap-6">
+        <div className="min-w-[160px]">
           <h3 className="font-serif text-lg font-bold">All Activities</h3>
           <p className="text-[13px] text-[#6b7280] mt-0.5">{activities.length} activities across all vendors</p>
         </div>
+        {user?.role === 'superadmin' && (
+          <BranchFilter value={selectedBranch} onChange={(val) => { setSelectedBranch(val); setCurrentPage(1) }} />
+        )}
 
         {/* Search Bar with Suggestions */}
         <div ref={searchRef} className="relative">

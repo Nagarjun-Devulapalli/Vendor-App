@@ -70,6 +70,10 @@ class ActivityViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if user.role == 'admin' and user.branch:
             qs = qs.filter(branch=user.branch)
+        elif user.role == 'superadmin':
+            branch_id = self.request.query_params.get('branch')
+            if branch_id:
+                qs = qs.filter(branch_id=branch_id)
         elif user.role == 'vendor_owner':
             qs = qs.filter(vendor__user=user)
         elif user.role == 'vendor_employee':
@@ -125,7 +129,13 @@ class ActivityViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         user = self.request.user
-        activity = serializer.save(branch=user.branch)
+        branch = user.branch
+        if not branch:
+            # Superadmin: derive branch from the selected vendor
+            vendor = serializer.validated_data.get('vendor')
+            if vendor:
+                branch = vendor.branch
+        activity = serializer.save(branch=branch)
         generate_initial_occurrence(activity)
         # Auto-create payment for the activity
         Payment.objects.get_or_create(activity=activity)
@@ -152,6 +162,10 @@ class OccurrenceViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if user.role == 'admin' and user.branch:
             qs = qs.filter(activity__branch=user.branch)
+        elif user.role == 'superadmin':
+            branch_id = self.request.query_params.get('branch')
+            if branch_id:
+                qs = qs.filter(activity__branch_id=branch_id)
         elif user.role == 'vendor_owner':
             qs = qs.filter(activity__vendor__user=user)
         elif user.role == 'vendor_employee':
@@ -340,7 +354,7 @@ class WorkLogViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['patch'], url_path='review')
     def review(self, request, pk=None):
-        if request.user.role != 'admin':
+        if request.user.role not in ('admin', 'superadmin'):
             return Response(
                 {'detail': 'Only admins can review work logs.'},
                 status=status.HTTP_403_FORBIDDEN,

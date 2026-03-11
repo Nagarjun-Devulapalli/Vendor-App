@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import api from '../services/api'
+import { useAuth } from '../context/AuthContext'
 import { useToast, parseApiError } from '../components/Toast'
+import BranchFilter from '../components/BranchFilter'
 import Pagination from '../components/Pagination'
 
 const PAGE_SIZE = 10
@@ -26,11 +28,13 @@ function formatRate(p) {
 }
 
 export default function Payments() {
+  const { user } = useAuth()
   const toast = useToast()
   const [searchParams, setSearchParams] = useSearchParams()
   const [payments, setPayments] = useState([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || '')
+  const [selectedBranch, setSelectedBranch] = useState(null)
   const [currentPage, setCurrentPage] = useState(1)
 
   // Pay modal
@@ -46,15 +50,16 @@ export default function Payments() {
 
   const fetchPayments = () => {
     setLoading(true)
-    let url = '/payments/'
-    if (activeTab) url += `?payment_status=${activeTab}`
+    let url = '/payments/?'
+    if (selectedBranch) url += `branch=${selectedBranch}&`
+    if (activeTab) url += `payment_status=${activeTab}&`
     api.get(url)
       .then((res) => setPayments(res.data.results || res.data))
       .catch(console.error)
       .finally(() => setLoading(false))
   }
 
-  useEffect(() => { fetchPayments(); setCurrentPage(1) }, [activeTab])
+  useEffect(() => { fetchPayments(); setCurrentPage(1) }, [activeTab, selectedBranch])
 
   const openPayModal = (payment) => {
     setPayModal(payment)
@@ -118,9 +123,14 @@ export default function Payments() {
 
   return (
     <div className="space-y-5">
-      <div>
-        <h3 className="font-serif text-lg font-bold">Payments</h3>
-        <p className="text-[13px] text-[#6b7280] mt-0.5">Track and manage vendor payments for your branch</p>
+      <div className="flex items-center gap-6">
+        <div>
+          <h3 className="font-serif text-lg font-bold">Payments</h3>
+          <p className="text-[13px] text-[#6b7280] mt-0.5">Track and manage vendor payments for your branch</p>
+        </div>
+        {user?.role === 'superadmin' && (
+          <BranchFilter value={selectedBranch} onChange={(val) => { setSelectedBranch(val); setCurrentPage(1) }} />
+        )}
       </div>
 
       {/* Summary Cards */}

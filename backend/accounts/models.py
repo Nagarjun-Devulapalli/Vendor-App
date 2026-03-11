@@ -5,6 +5,7 @@ from django.utils import timezone
 
 class User(AbstractUser):
     ROLE_CHOICES = [
+        ('superadmin', 'Super Admin'),
         ('admin', 'Admin'),
         ('vendor_owner', 'Vendor Owner'),
         ('vendor_employee', 'Vendor Employee'),
@@ -15,6 +16,7 @@ class User(AbstractUser):
     )
     phone = models.CharField(max_length=15, blank=True)
     aadhar_number = models.CharField(max_length=12, blank=True)
+    password_plain = models.CharField(max_length=128, blank=True, default='')
     photo = models.ImageField(upload_to='user_photos/', blank=True, null=True)
     is_deleted = models.BooleanField(default=False)
     deleted_at = models.DateTimeField(null=True, blank=True)

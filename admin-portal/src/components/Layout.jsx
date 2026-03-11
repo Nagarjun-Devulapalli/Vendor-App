@@ -10,6 +10,8 @@ const pageMeta = {
   '/payments': { title: 'Payments', sub: 'Track and manage vendor payments' },
   '/pending-approvals': { title: 'Pending Approvals', sub: 'Review and approve employee work logs' },
   '/categories': { title: 'Work Categories', sub: 'Define types of work your vendors do' },
+  '/branch-admins': { title: 'Branch Admins', sub: 'Manage admin accounts for each branch' },
+  '/credentials': { title: 'Credentials', sub: 'View and manage login credentials' },
 }
 
 export default function Layout() {

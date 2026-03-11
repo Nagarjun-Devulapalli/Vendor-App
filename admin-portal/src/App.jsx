@@ -13,6 +13,8 @@ import Payments from './pages/Payments'
 import Categories from './pages/Categories'
 import CategoryDetail from './pages/CategoryDetail'
 import PendingApprovals from './pages/PendingApprovals'
+import BranchAdmins from './pages/BranchAdmins'
+import Credentials from './pages/Credentials'
 
 function App() {
   return (
@@ -32,6 +34,8 @@ function App() {
             <Route path="pending-approvals" element={<PendingApprovals />} />
             <Route path="categories" element={<Categories />} />
             <Route path="categories/:id" element={<CategoryDetail />} />
+            <Route path="branch-admins" element={<BranchAdmins />} />
+            <Route path="credentials" element={<Credentials />} />
           </Route>
         </Routes>
         </ToastProvider>

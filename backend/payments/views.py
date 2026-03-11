@@ -21,6 +21,10 @@ class PaymentViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if user.role == 'admin' and user.branch:
             qs = qs.filter(activity__branch=user.branch)
+        elif user.role == 'superadmin':
+            branch_id = self.request.query_params.get('branch')
+            if branch_id:
+                qs = qs.filter(activity__branch_id=branch_id)
         elif user.role == 'vendor_owner':
             qs = qs.filter(activity__vendor__user=user)
         elif user.role == 'vendor_employee':
@@ -34,7 +38,7 @@ class PaymentViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'], url_path='pay')
     def pay(self, request, pk=None):
         """Record a payment entry for this payment."""
-        if request.user.role != 'admin':
+        if request.user.role not in ('admin', 'superadmin'):
             return Response(
                 {'detail': 'Only admins can record payments.'},
                 status=status.HTTP_403_FORBIDDEN,

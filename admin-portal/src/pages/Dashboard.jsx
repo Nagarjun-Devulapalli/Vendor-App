@@ -2,26 +2,33 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import api from '../services/api'
+import { useAuth } from '../context/AuthContext'
+import BranchFilter from '../components/BranchFilter'
 import { ShopOutlined, FileTextOutlined, ExclamationCircleOutlined, CreditCardOutlined, EyeOutlined } from '@ant-design/icons'
 
 const PIE_COLORS = { pending: '#e8a020', in_progress: '#2563a8', completed: '#1a6b4a', cancelled: '#c0392b' }
 
 export default function Dashboard() {
+  const { user } = useAuth()
   const [stats, setStats] = useState(null)
   const [spending, setSpending] = useState([])
   const [completion, setCompletion] = useState([])
   const [vendors, setVendors] = useState([])
   const [activities, setActivities] = useState([])
   const [loading, setLoading] = useState(true)
+  const [selectedBranch, setSelectedBranch] = useState(null)
   const navigate = useNavigate()
 
   useEffect(() => {
+    setLoading(true)
+    const branchParam = selectedBranch ? `?branch=${selectedBranch}` : ''
+    const branchAmp = selectedBranch ? `branch=${selectedBranch}&` : ''
     Promise.all([
-      api.get('/dashboard/stats/'),
-      api.get('/dashboard/spending-trends/'),
-      api.get('/dashboard/completion-rates/'),
-      api.get('/vendors/'),
-      api.get('/activities/'),
+      api.get(`/dashboard/stats/${branchParam}`),
+      api.get(`/dashboard/spending-trends/${branchParam}`),
+      api.get(`/dashboard/completion-rates/${branchParam}`),
+      api.get(`/vendors/${branchParam}`),
+      api.get(`/activities/${branchParam}`),
     ])
       .then(([statsRes, spendingRes, completionRes, vendorsRes, actRes]) => {
         setStats(statsRes.data)
@@ -32,7 +39,7 @@ export default function Dashboard() {
       })
       .catch(console.error)
       .finally(() => setLoading(false))
-  }, [])
+  }, [selectedBranch])
 
   if (loading) return (
     <div className="space-y-6">
@@ -88,6 +95,14 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
+      {/* Branch Filter for superadmin */}
+      {user?.role === 'superadmin' && (
+        <div className="flex items-center gap-4">
+          <span className="text-[13px] font-medium text-[#6b7280]">Filter by Branch:</span>
+          <BranchFilter value={selectedBranch} onChange={setSelectedBranch} />
+        </div>
+      )}
+
       {/* Stat Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {statCards.map((card, i) => {

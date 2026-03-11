@@ -1,17 +1,21 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
+import { useAuth } from '../context/AuthContext'
 import { useToast, parseApiError } from '../components/Toast'
+import BranchFilter from '../components/BranchFilter'
 import { DeleteOutlined, CameraOutlined, CheckCircleOutlined, FileTextOutlined } from '@ant-design/icons'
 import Pagination from '../components/Pagination'
 
 const PAGE_SIZE = 10
 
 export default function Vendors() {
+  const { user } = useAuth()
   const toast = useToast()
   const [vendors, setVendors] = useState([])
   const [branches, setBranches] = useState([])
   const [categories, setCategories] = useState([])
+  const [selectedBranch, setSelectedBranch] = useState(null)
   const [employeeCountMap, setEmployeeCountMap] = useState({})
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
@@ -28,11 +32,17 @@ export default function Vendors() {
   const searchRef = useRef(null)
 
   const fetchVendors = () => {
-    api.get('/vendors/').then((res) => setVendors(res.data.results || res.data)).catch(console.error).finally(() => setLoading(false))
+    setLoading(true)
+    let url = '/vendors/'
+    if (selectedBranch) url += `?branch=${selectedBranch}`
+    api.get(url).then((res) => setVendors(res.data.results || res.data)).catch(console.error).finally(() => setLoading(false))
   }
 
   useEffect(() => {
     fetchVendors()
+  }, [selectedBranch])
+
+  useEffect(() => {
     api.get('/branches/').then((res) => setBranches(res.data.results || res.data)).catch(console.error)
     api.get('/categories/').then((res) => setCategories(res.data.results || res.data)).catch(console.error)
     api.get('/employees/').then((res) => {
@@ -160,11 +170,14 @@ export default function Vendors() {
 
   return (
     <div className="space-y-5">
-      <div className="grid grid-cols-[200px_1fr_200px] items-center gap-6">
-        <div>
+      <div className="flex items-center gap-6">
+        <div className="min-w-[160px]">
           <h3 className="font-serif text-lg font-bold">All Vendors</h3>
           <p className="text-[13px] text-[#6b7280] mt-0.5">{vendors.length} vendors registered</p>
         </div>
+        {user?.role === 'superadmin' && (
+          <BranchFilter value={selectedBranch} onChange={(val) => { setSelectedBranch(val); setCurrentPage(1) }} />
+        )}
 
         {/* Search Bar with Suggestions */}
         <div ref={searchRef} className="relative">
