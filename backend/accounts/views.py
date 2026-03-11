@@ -77,9 +77,13 @@ class DashboardStatsView(APIView):
         payments_qs = Payment.objects.filter(activity__branch=branch) if branch else Payment.objects.all()
         employees_qs = Employee.objects.filter(vendor_owner__branch=branch) if branch else Employee.objects.all()
 
-        # Compute payment totals from the new model
-        pending_payments = sum(p.balance_remaining for p in payments_qs.filter(payment_status__in=['pending', 'partial']))
-        completed_payments = sum(p.total_paid for p in payments_qs.all())
+        pending_qs = payments_qs.filter(payment_status='pending')
+        partial_qs = payments_qs.filter(payment_status='partial')
+        completed_qs = payments_qs.filter(payment_status='completed')
+
+        pending_payments_amount = sum(p.total_due for p in pending_qs)
+        partial_payments_amount = sum(p.total_paid for p in partial_qs)
+        completed_payments_amount = sum(p.total_paid for p in completed_qs)
 
         overdue_count = sum(1 for a in activities_qs if a.is_overdue)
 
@@ -91,8 +95,11 @@ class DashboardStatsView(APIView):
             'total_vendors': vendors_qs.count(),
             'total_activities': activities_qs.count(),
             'total_employees': employees_qs.count(),
-            'pending_payments_amount': float(pending_payments),
-            'completed_payments_amount': float(completed_payments),
+            'pending_payments_amount': float(pending_payments_amount),
+            'pending_payments_count': pending_qs.count(),
+            'partial_payments_amount': float(partial_payments_amount),
+            'partial_payments_count': partial_qs.count(),
+            'completed_payments_amount': float(completed_payments_amount),
             'overdue_activities_count': overdue_count,
             'activities_by_status': status_counts,
         })
