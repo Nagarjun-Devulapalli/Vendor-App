@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { EyeOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons'
 import api from '../services/api'
+import { useToast, parseApiError } from '../components/Toast'
 import Pagination from '../components/Pagination'
 
 const PAGE_SIZE = 10
@@ -11,6 +12,7 @@ const statusStyles = {
 }
 
 export default function PendingApprovals() {
+  const toast = useToast()
   const [workLogs, setWorkLogs] = useState([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('pending')
@@ -76,7 +78,7 @@ export default function PendingApprovals() {
         fetchWorkLogs()
         setDetailModal(null)
       })
-      .catch((err) => alert(err.response?.data?.detail || 'Error'))
+      .catch((err) => toast.error(parseApiError(err)))
   }
 
   const handleReject = () => {
@@ -91,7 +93,7 @@ export default function PendingApprovals() {
         setDetailModal(null)
         fetchWorkLogs()
       })
-      .catch((err) => alert(err.response?.data?.detail || 'Error'))
+      .catch((err) => toast.error(parseApiError(err)))
   }
 
   const openReject = (log) => {

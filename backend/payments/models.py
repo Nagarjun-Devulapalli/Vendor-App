@@ -1,7 +1,8 @@
 from django.db import models
+from vendor_portal.mixins import SoftDeleteModel
 
 
-class Payment(models.Model):
+class Payment(SoftDeleteModel):
     STATUS_CHOICES = [
         ('pending', 'Pending'),
         ('partial', 'Partial'),

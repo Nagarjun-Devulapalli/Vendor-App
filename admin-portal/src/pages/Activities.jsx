@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
+import { useToast, parseApiError } from '../components/Toast'
 import { ExclamationCircleOutlined, SearchOutlined } from '@ant-design/icons'
 import Pagination from '../components/Pagination'
 
@@ -20,6 +21,7 @@ const typeStyles = {
 }
 
 export default function Activities() {
+  const toast = useToast()
   const [activities, setActivities] = useState([])
   const [vendors, setVendors] = useState([])
   const [categories, setCategories] = useState([])
@@ -76,7 +78,7 @@ export default function Activities() {
       setForm({ title: '', description: '', vendor: '', category: '', activity_type: 'one_time', start_date: '', end_date: '', recurrence_interval_days: '', expected_cost: '', payment_type: 'contract' })
       fetchActivities()
     } catch (err) {
-      alert(err.response?.data?.detail || JSON.stringify(err.response?.data) || 'Error')
+      toast.error(parseApiError(err, 'Error creating activity'))
     } finally {
       setSubmitting(false)
     }

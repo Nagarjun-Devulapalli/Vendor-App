@@ -11,35 +11,6 @@ class PaymentViewSet(viewsets.ModelViewSet):
     serializer_class = PaymentSerializer
     permission_classes = [IsAuthenticated]
 
-    def perform_create(self, serializer):
-        self._validate_payment_allowed(serializer.validated_data)
-        serializer.save()
-
-    def perform_update(self, serializer):
-        self._validate_payment_allowed(serializer.validated_data, instance=serializer.instance)
-        serializer.save()
-
-    def _validate_payment_allowed(self, validated_data, instance=None):
-        """Block payment if activity work is not completed, unless payment_type is daily."""
-        activity = validated_data.get('activity') or (instance.activity if instance else None)
-        if not activity:
-            return
-
-        payment_status = validated_data.get('payment_status') or (instance.payment_status if instance else 'pending')
-
-        # Only validate when trying to mark payment as completed or partial
-        if payment_status in ('completed', 'partial'):
-            # Daily payment type is exempt — can be paid anytime
-            if activity.payment_type == 'daily':
-                return
-            # For contract and other types, activity must be completed
-            if activity.status != 'completed':
-                from rest_framework.exceptions import ValidationError
-                raise ValidationError(
-                    {'detail': 'Payment cannot be recorded until the activity work is completed. '
-                               'Only daily payment type activities can be paid before completion.'}
-                )
-
     def get_queryset(self):
         qs = Payment.objects.select_related('activity', 'activity__vendor').all()
         user = self.request.user

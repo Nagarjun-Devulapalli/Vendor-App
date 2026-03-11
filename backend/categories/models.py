@@ -1,7 +1,8 @@
 from django.db import models
+from vendor_portal.mixins import SoftDeleteModel
 
 
-class WorkCategory(models.Model):
+class WorkCategory(SoftDeleteModel):
     name = models.CharField(max_length=100, unique=True)
     description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
