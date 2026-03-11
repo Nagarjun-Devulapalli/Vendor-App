@@ -1,9 +1,10 @@
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
+from vendor_portal.mixins import SoftDeleteModel
 
 
-class Activity(models.Model):
+class Activity(SoftDeleteModel):
     ACTIVITY_TYPES = [
         ('one_time', 'One Time'),
         ('long_term', 'Long Term'),
@@ -49,7 +50,7 @@ class Activity(models.Model):
         return False
 
 
-class ActivityOccurrence(models.Model):
+class ActivityOccurrence(SoftDeleteModel):
     STATUS_CHOICES = [
         ('pending', 'Pending'),
         ('in_progress', 'In Progress'),
@@ -85,7 +86,7 @@ class OccurrenceAssignment(models.Model):
         return f"{self.employee.get_full_name()} -> {self.occurrence}"
 
 
-class WorkLog(models.Model):
+class WorkLog(SoftDeleteModel):
     STATUS_CHOICES = [
         ('in_progress', 'In Progress'),
         ('completed', 'Completed'),

@@ -1,12 +1,14 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
+import { useToast, parseApiError } from '../components/Toast'
 import { EyeOutlined, DeleteOutlined, CameraOutlined, CheckCircleOutlined, FileTextOutlined, SearchOutlined } from '@ant-design/icons'
 import Pagination from '../components/Pagination'
 
 const PAGE_SIZE = 10
 
 export default function Vendors() {
+  const toast = useToast()
   const [vendors, setVendors] = useState([])
   const [branches, setBranches] = useState([])
   const [categories, setCategories] = useState([])
@@ -74,7 +76,7 @@ export default function Vendors() {
       setPhotoPreview(null)
       fetchVendors()
     } catch (err) {
-      alert(err.response?.data?.detail || JSON.stringify(err.response?.data) || 'Error creating vendor')
+      toast.error(parseApiError(err, 'Error creating vendor'))
     } finally {
       setSubmitting(false)
     }
@@ -93,7 +95,7 @@ export default function Vendors() {
       await api.delete(`/vendors/${id}/`)
       fetchVendors()
     } catch (err) {
-      alert('Error deleting vendor')
+      toast.error('Error deleting vendor')
     }
   }
 
