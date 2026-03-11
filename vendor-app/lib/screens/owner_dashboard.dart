@@ -22,6 +22,7 @@ class OwnerDashboard extends StatefulWidget {
 
 class _OwnerDashboardState extends State<OwnerDashboard> {
   int _navIndex = 0;
+  int _taskTabIndex = 0;
   List<Employee> _employees = [];
 
   @override
@@ -411,6 +412,9 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
   Widget _buildTaskList() {
     return Consumer<ActivityProvider>(
       builder: (ctx, provider, _) {
+        final filteredTasks = _taskTabIndex == 0
+            ? provider.todayTasks.where((t) => !t.isCompleted).toList()
+            : provider.todayTasks.where((t) => t.isCompleted).toList();
         return Column(
           children: [
             // Header
@@ -436,6 +440,24 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                 ],
               ),
             ),
+            // Tab bar
+            Container(
+              color: Colors.white,
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: AppColors.bg,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                padding: const EdgeInsets.all(4),
+                child: Row(
+                  children: [
+                    _buildTaskTab('Pending', 0),
+                    _buildTaskTab('Completed', 1),
+                  ],
+                ),
+              ),
+            ),
             Expanded(
               child: RefreshIndicator(
                 color: AppColors.green,
@@ -446,17 +468,21 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                           color: AppColors.green,
                         ),
                       )
-                    : provider.todayTasks.isEmpty
+                    : filteredTasks.isEmpty
                     ? ListView(
                         children: [
                           const SizedBox(height: 120),
-                          const Center(
-                            child: Icon(Icons.check_circle_rounded, size: 48, color: AppColors.green),
+                          Center(
+                            child: Icon(
+                              _taskTabIndex == 0 ? Icons.task_alt_rounded : Icons.check_circle_rounded,
+                              size: 48,
+                              color: AppColors.green,
+                            ),
                           ),
                           const SizedBox(height: 12),
                           Center(
                             child: Text(
-                              'All clear!',
+                              _taskTabIndex == 0 ? 'No pending tasks' : 'No completed tasks',
                               style: GoogleFonts.nunito(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w700,
@@ -468,9 +494,9 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                       )
                     : ListView.builder(
                         padding: const EdgeInsets.all(16),
-                        itemCount: provider.todayTasks.length,
+                        itemCount: filteredTasks.length,
                         itemBuilder: (ctx, i) {
-                          final task = provider.todayTasks[i];
+                          final task = filteredTasks[i];
                           return TaskCard(
                             occurrence: task,
                             onTap: () async {
@@ -493,6 +519,32 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
           ],
         );
       },
+    );
+  }
+
+  Widget _buildTaskTab(String label, int index) {
+    final isActive = _taskTabIndex == index;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => setState(() => _taskTabIndex = index),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            color: isActive ? AppColors.green : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Center(
+            child: Text(
+              label,
+              style: GoogleFonts.nunito(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: isActive ? Colors.white : AppColors.muted,
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -522,6 +574,10 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
             ],
           ),
         ),
+        Expanded(
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
         const SizedBox(height: 24),
         // Avatar
         Container(
@@ -583,6 +639,8 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
+                _infoRow('Company', user?.companyName ?? 'N/A'),
+                _divider(),
                 _infoRow('Branch', user?.branchName ?? 'N/A'),
                 _divider(),
                 _infoRow('Phone', user?.phone ?? 'N/A'),
@@ -592,7 +650,7 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
             ),
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: SizedBox(
@@ -617,7 +675,114 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
             ),
           ),
         ),
+              ],
+            ),
+          ),
+        ),
       ],
+    );
+  }
+
+  void _showChangePasswordDialog(String username) {
+    final controller = TextEditingController();
+    bool isLoading = false;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Change Password',
+                    style: GoogleFonts.fraunces(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.text,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  TextField(
+                    controller: controller,
+                    obscureText: true,
+                    style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w600),
+                    decoration: InputDecoration(
+                      labelText: 'New Password',
+                      labelStyle: GoogleFonts.nunito(fontSize: 13, color: AppColors.muted),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: AppColors.border),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: AppColors.green, width: 1.5),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: isLoading
+                          ? null
+                          : () async {
+                              final password = controller.text.trim();
+                              if (password.isEmpty) return;
+                              setDialogState(() => isLoading = true);
+                              try {
+                                await ApiService.resetPassword(username, password);
+                                if (ctx.mounted) Navigator.pop(ctx);
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Password updated successfully', style: GoogleFonts.nunito(fontWeight: FontWeight.w600)),
+                                      backgroundColor: AppColors.green,
+                                      behavior: SnackBarBehavior.floating,
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                    ),
+                                  );
+                                }
+                              } catch (e) {
+                                setDialogState(() => isLoading = false);
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(e.toString().replaceFirst('Exception: ', ''), style: GoogleFonts.nunito(fontWeight: FontWeight.w600)),
+                                      backgroundColor: AppColors.red,
+                                      behavior: SnackBarBehavior.floating,
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                    ),
+                                  );
+                                }
+                              }
+                            },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.green,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                      child: isLoading
+                          ? const SizedBox(
+                              width: 20, height: 20,
+                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                            )
+                          : Text('Update Password', style: GoogleFonts.nunito(fontWeight: FontWeight.w800, fontSize: 15)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 

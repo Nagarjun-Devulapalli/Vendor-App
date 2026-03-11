@@ -50,14 +50,22 @@ class ResetPasswordSerializer(serializers.Serializer):
 class ProfileSerializer(serializers.ModelSerializer):
     branch_name = serializers.CharField(source='branch.name', read_only=True, default=None)
     vendor_id = serializers.SerializerMethodField()
+    company_name = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'first_name', 'last_name', 'email', 'role', 'branch', 'branch_name', 'phone', 'aadhar_number', 'photo', 'vendor_id']
+        fields = ['id', 'username', 'first_name', 'last_name', 'email', 'role', 'branch', 'branch_name', 'phone', 'aadhar_number', 'photo', 'vendor_id', 'company_name']
 
     def get_vendor_id(self, obj):
         if obj.role == 'vendor_owner' and hasattr(obj, 'vendor_profile'):
             return obj.vendor_profile.id
         if obj.role == 'vendor_employee' and hasattr(obj, 'employee_profile'):
             return obj.employee_profile.vendor_owner_id
+        return None
+
+    def get_company_name(self, obj):
+        if obj.role == 'vendor_owner' and hasattr(obj, 'vendor_profile'):
+            return obj.vendor_profile.company_name or None
+        if obj.role == 'vendor_employee' and hasattr(obj, 'employee_profile'):
+            return obj.employee_profile.vendor_owner.company_name or None
         return None
