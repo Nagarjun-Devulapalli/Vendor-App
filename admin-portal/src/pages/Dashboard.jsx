@@ -56,6 +56,12 @@ export default function Dashboard() {
     ? Object.entries(stats.activities_by_status).map(([name, value]) => ({ name, value }))
     : []
 
+  const overdueActivities = activities.filter(a => a.is_overdue)
+  const pendingActivities = activities.filter(a => a.status === 'pending').slice(0, 3)
+  const alerts = [
+    ...overdueActivities.map(a => ({ type: 'red', text: `${a.title} is overdue`, sub: `${a.vendor_name} · Due ${a.end_date}` })),
+    ...pendingActivities.map(a => ({ type: 'amber', text: `${a.title} is pending`, sub: `${a.vendor_name} · Starts ${a.start_date}` })),
+  ].slice(0, 5)
 
   // Current month spending
   const currentMonth = spending.length > 0 ? spending[spending.length - 1] : null
@@ -162,7 +168,7 @@ export default function Dashboard() {
       </div>
 
       {/* Bottom Row */}
-      <div className="grid grid-cols-1 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Active Vendors */}
         <div className="bg-white rounded-xl border border-[#e4e8ed] shadow-sm animate-fade-up" style={{ animationDelay: '0.35s' }}>
           <div className="px-5 py-4 border-b border-[#e4e8ed] flex items-center justify-between">
@@ -206,6 +212,35 @@ export default function Dashboard() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Alerts */}
+        <div className="bg-white rounded-xl border border-[#e4e8ed] shadow-sm animate-fade-up" style={{ animationDelay: '0.4s' }}>
+          <div className="px-5 py-4 border-b border-[#e4e8ed] flex items-center justify-between">
+            <div>
+              <h3 className="font-serif text-base font-bold">Needs Attention</h3>
+              <p className="text-xs text-[#6b7280] mt-0.5">Recent alerts for your branch</p>
+            </div>
+            {overdueActivities.length > 0 && (
+              <span className="badge inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#fdecea] text-[#c0392b]">
+                {overdueActivities.length} urgent
+              </span>
+            )}
+          </div>
+          <div>
+            {alerts.map((alert, i) => (
+              <div key={i} className="flex items-start gap-3 px-5 py-3.5 border-b border-[#e4e8ed] last:border-0">
+                <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${alert.type === 'red' ? 'bg-[#c0392b]' : 'bg-[#e8a020]'}`} />
+                <div>
+                  <p className="text-[13px] font-medium leading-snug">{alert.text}</p>
+                  <span className="text-[11px] text-[#6b7280]">{alert.sub}</span>
+                </div>
+              </div>
+            ))}
+            {alerts.length === 0 && (
+              <div className="px-5 py-8 text-center text-[13px] text-[#6b7280]">No alerts</div>
+            )}
+          </div>
         </div>
       </div>
     </div>
