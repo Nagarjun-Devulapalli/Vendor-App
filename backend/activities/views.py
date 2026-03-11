@@ -11,24 +11,36 @@ from .serializers import ActivitySerializer, OccurrenceSerializer, WorkLogSerial
 from accounts.permissions import IsAdmin
 
 
-def generate_occurrences(activity):
-    """Generate occurrences based on activity type."""
-    occurrences = []
-    if activity.activity_type == 'one_time':
-        occurrences.append(ActivityOccurrence(activity=activity, scheduled_date=activity.start_date))
-    elif activity.activity_type == 'long_term':
-        if activity.end_date:
-            current = activity.start_date
-            while current <= activity.end_date:
-                occurrences.append(ActivityOccurrence(activity=activity, scheduled_date=current))
-                current += timedelta(days=1)
-    elif activity.activity_type == 'recurring':
-        if activity.end_date and activity.recurrence_interval_days:
-            current = activity.start_date
-            while current <= activity.end_date:
-                occurrences.append(ActivityOccurrence(activity=activity, scheduled_date=current))
-                current += timedelta(days=activity.recurrence_interval_days)
-    ActivityOccurrence.objects.bulk_create(occurrences)
+def generate_initial_occurrence(activity):
+    """Create the first occurrence on the activity's start_date."""
+    ActivityOccurrence.objects.get_or_create(
+        activity=activity,
+        scheduled_date=activity.start_date,
+    )
+
+
+def ensure_today_occurrences(user):
+    """Auto-create today's occurrence for all active (non-completed) activities.
+    Called on-the-fly when /occurrences/today/ is requested."""
+    today = timezone.localtime(timezone.now()).date()
+
+    # Get active activities scoped to user
+    activities = Activity.objects.exclude(status__in=['completed', 'cancelled'])
+    if user.role == 'admin' and user.branch:
+        activities = activities.filter(branch=user.branch)
+    elif user.role == 'vendor_owner':
+        activities = activities.filter(vendor__user=user)
+    elif user.role == 'vendor_employee':
+        activities = activities.filter(vendor__employees__user=user)
+
+    # Only for activities that have started
+    activities = activities.filter(start_date__lte=today)
+
+    for activity in activities:
+        ActivityOccurrence.objects.get_or_create(
+            activity=activity,
+            scheduled_date=today,
+        )
 
 
 class ActivityViewSet(viewsets.ModelViewSet):
@@ -63,10 +75,19 @@ class ActivityViewSet(viewsets.ModelViewSet):
             return [IsAdmin()]
         return [IsAuthenticated()]
 
+    @action(detail=True, methods=['patch'], url_path='mark-complete')
+    def mark_complete(self, request, pk=None):
+        """Mark an activity as completed. Stops new occurrences from being created."""
+        activity = self.get_object()
+        activity.status = 'completed'
+        activity.save(update_fields=['status'])
+        serializer = self.get_serializer(activity)
+        return Response(serializer.data)
+
     def perform_create(self, serializer):
         user = self.request.user
         activity = serializer.save(branch=user.branch)
-        generate_occurrences(activity)
+        generate_initial_occurrence(activity)
 
     @action(detail=True, methods=['get'])
     def occurrences(self, request, pk=None):
@@ -98,6 +119,8 @@ class OccurrenceViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def today(self, request):
+        # Auto-create today's occurrences for all active activities
+        ensure_today_occurrences(request.user)
         today = timezone.localtime(timezone.now()).date()
         qs = self.get_queryset().filter(scheduled_date=today)
         serializer = self.get_serializer(qs, many=True)
