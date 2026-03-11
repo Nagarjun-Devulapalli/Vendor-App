@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import api from '../services/api'
 import { FileTextOutlined, UploadOutlined, CheckOutlined } from '@ant-design/icons'
 
@@ -9,11 +10,12 @@ const statusStyles = {
 }
 
 export default function Payments() {
+  const [searchParams, setSearchParams] = useSearchParams()
   const [payments, setPayments] = useState([])
   const [activities, setActivities] = useState([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
-  const [activeTab, setActiveTab] = useState('')
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || '')
   const [submitting, setSubmitting] = useState(false)
   const [form, setForm] = useState({ activity: '', expected_amount: '', actual_amount_paid: '', payment_status: 'pending', payment_date: '', notes: '' })
   const [payNowModal, setPayNowModal] = useState(null)
@@ -156,7 +158,10 @@ export default function Payments() {
           {tabs.map((tab) => (
             <button
               key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
+              onClick={() => {
+                setActiveTab(tab.key)
+                setSearchParams(tab.key ? { tab: tab.key } : {})
+              }}
               className={`px-4 py-3 text-[13px] font-medium border-b-2 -mb-px transition-colors ${
                 activeTab === tab.key
                   ? 'text-orchid border-orchid font-semibold'
