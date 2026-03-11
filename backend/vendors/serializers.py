@@ -25,6 +25,7 @@ class VendorSerializer(serializers.ModelSerializer):
     display_name = serializers.CharField(read_only=True)
     branch_name = serializers.CharField(source='branch.name', read_only=True)
     category_names = serializers.SerializerMethodField()
+    is_active = serializers.BooleanField(source='user.is_active', read_only=True)
     # Write fields
     first_name = serializers.CharField(write_only=True, required=False)
     last_name = serializers.CharField(write_only=True, required=False)
@@ -37,7 +38,7 @@ class VendorSerializer(serializers.ModelSerializer):
         model = Vendor
         fields = [
             'id', 'user', 'display_name', 'branch', 'branch_name', 'company_name', 'categories',
-            'category_names', 'created_at',
+            'category_names', 'is_active', 'created_at',
             'first_name', 'last_name', 'phone', 'aadhar_number', 'photo', 'category_ids',
         ]
         read_only_fields = ['id', 'created_at', 'user', 'categories']
@@ -91,6 +92,7 @@ class VendorSerializer(serializers.ModelSerializer):
 
 class EmployeeSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
+    is_active = serializers.BooleanField(source='user.is_active', read_only=True)
     # Write fields
     first_name = serializers.CharField(write_only=True, required=False)
     last_name = serializers.CharField(write_only=True, required=False)
@@ -100,7 +102,7 @@ class EmployeeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Employee
-        fields = ['id', 'user', 'vendor_owner', 'created_at', 'first_name', 'last_name', 'phone', 'aadhar_number', 'photo']
+        fields = ['id', 'user', 'vendor_owner', 'is_active', 'created_at', 'first_name', 'last_name', 'phone', 'aadhar_number', 'photo']
         read_only_fields = ['id', 'created_at']
 
     def create(self, validated_data):

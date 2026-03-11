@@ -159,7 +159,7 @@ export default function ActivityDetail() {
                     {log.before_photo && (
                       <div>
                         <p className="text-[11px] text-[#6b7280] mb-1 font-medium">Before</p>
-                        <img src={`http://localhost:8000${log.before_photo}`} alt="Before" className="w-40 h-32 object-cover rounded-lg border border-[#e4e8ed]" />
+                        <img src={log.before_photo.startsWith('http') ? log.before_photo : `http://localhost:8000${log.before_photo}`} alt="Before" className="w-40 h-32 object-cover rounded-lg border border-[#e4e8ed]" />
                         {log.before_photo_taken_at && (
                           <p className="text-[10px] text-[#6b7280] mt-1">{new Date(log.before_photo_taken_at).toLocaleString()}</p>
                         )}
@@ -168,7 +168,7 @@ export default function ActivityDetail() {
                     {log.after_photo && (
                       <div>
                         <p className="text-[11px] text-[#6b7280] mb-1 font-medium">After</p>
-                        <img src={`http://localhost:8000${log.after_photo}`} alt="After" className="w-40 h-32 object-cover rounded-lg border border-[#e4e8ed]" />
+                        <img src={log.after_photo.startsWith('http') ? log.after_photo : `http://localhost:8000${log.after_photo}`} alt="After" className="w-40 h-32 object-cover rounded-lg border border-[#e4e8ed]" />
                         {log.after_photo_taken_at && (
                           <p className="text-[10px] text-[#6b7280] mt-1">{new Date(log.after_photo_taken_at).toLocaleString()}</p>
                         )}
