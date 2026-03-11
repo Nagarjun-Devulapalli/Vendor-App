@@ -6,9 +6,10 @@ from rest_framework.permissions import IsAuthenticated
 from django.db.models import Count
 from django.utils import timezone
 
-from .models import Activity, ActivityOccurrence, WorkLog
+from .models import Activity, ActivityOccurrence, OccurrenceAssignment, WorkLog
 from .serializers import ActivitySerializer, OccurrenceSerializer, WorkLogSerializer
 from accounts.permissions import IsAdmin
+from vendors.models import Employee
 
 
 def generate_occurrences(activity):
@@ -71,7 +72,7 @@ class ActivityViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['get'])
     def occurrences(self, request, pk=None):
         activity = self.get_object()
-        occ = activity.occurrences.select_related('completed_by').prefetch_related('work_logs__user').all()
+        occ = activity.occurrences.select_related('completed_by').prefetch_related('work_logs__user', 'assignments__employee').all()
         serializer = OccurrenceSerializer(occ, many=True)
         return Response(serializer.data)
 
@@ -79,12 +80,12 @@ class ActivityViewSet(viewsets.ModelViewSet):
 class OccurrenceViewSet(viewsets.ModelViewSet):
     serializer_class = OccurrenceSerializer
     permission_classes = [IsAuthenticated]
-    http_method_names = ['get', 'patch', 'head', 'options']
+    http_method_names = ['get', 'post', 'patch', 'head', 'options']
 
     def get_queryset(self):
         qs = ActivityOccurrence.objects.select_related(
             'activity', 'activity__category', 'activity__vendor', 'completed_by'
-        ).prefetch_related('work_logs__user').annotate(
+        ).prefetch_related('work_logs__user', 'assignments__employee').annotate(
             work_log_count=Count('work_logs')
         )
         user = self.request.user
@@ -109,6 +110,94 @@ class OccurrenceViewSet(viewsets.ModelViewSet):
             instance.completed_by = self.request.user
             instance.completed_at = timezone.now()
             instance.save()
+
+    @action(detail=True, methods=['post'])
+    def assign(self, request, pk=None):
+        if request.user.role != 'vendor_owner':
+            return Response(
+                {'detail': 'Only vendor owners can assign tasks.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        occurrence = self.get_object()
+
+        # Validate: occurrence's activity belongs to this vendor
+        try:
+            vendor = request.user.vendor_profile
+        except Exception:
+            return Response(
+                {'detail': 'Vendor profile not found.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if occurrence.activity.vendor_id != vendor.id:
+            return Response(
+                {'detail': 'This occurrence does not belong to your vendor.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        employee_id = request.data.get('employee_id')
+
+        if employee_id is None:
+            return Response(
+                {'detail': 'employee_id is required.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Validate: employee belongs to this vendor
+        try:
+            employee = Employee.objects.select_related('user').get(
+                id=employee_id, vendor_owner=vendor
+            )
+        except Employee.DoesNotExist:
+            return Response(
+                {'detail': 'Employee not found or does not belong to your vendor.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        OccurrenceAssignment.objects.get_or_create(
+            occurrence=occurrence, employee=employee.user
+        )
+        occurrence.refresh_from_db()
+        serializer = self.get_serializer(occurrence)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'])
+    def unassign(self, request, pk=None):
+        if request.user.role != 'vendor_owner':
+            return Response(
+                {'detail': 'Only vendor owners can unassign tasks.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        occurrence = self.get_object()
+
+        try:
+            vendor = request.user.vendor_profile
+        except Exception:
+            return Response(
+                {'detail': 'Vendor profile not found.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if occurrence.activity.vendor_id != vendor.id:
+            return Response(
+                {'detail': 'This occurrence does not belong to your vendor.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        employee_id = request.data.get('employee_id')
+
+        if employee_id is None:
+            # Unassign all
+            occurrence.assignments.all().delete()
+        else:
+            # Unassign specific employee
+            occurrence.assignments.filter(employee_id=employee_id).delete()
+
+        occurrence.refresh_from_db()
+        serializer = self.get_serializer(occurrence)
+        return Response(serializer.data)
 
 
 class WorkLogViewSet(viewsets.ModelViewSet):
