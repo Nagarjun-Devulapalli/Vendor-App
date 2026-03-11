@@ -118,7 +118,7 @@ class _EmployeeListScreenState extends State<EmployeeListScreen> {
                           padding: const EdgeInsets.all(32),
                           child: Column(
                             children: [
-                              const Text('👥', style: TextStyle(fontSize: 40)),
+                              const Icon(Icons.groups_rounded, size: 40, color: AppColors.muted),
                               const SizedBox(height: 12),
                               Text('No employees yet', style: GoogleFonts.nunito(
                                 fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.muted,
@@ -174,9 +174,15 @@ class _EmployeeListScreenState extends State<EmployeeListScreen> {
                                                   fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.text,
                                                 )),
                                                 const SizedBox(height: 1),
-                                                Text('📞 ${emp.phone}', style: GoogleFonts.nunito(
-                                                  fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.muted,
-                                                )),
+                                                Row(
+                                                  children: [
+                                                    const Icon(Icons.phone_rounded, size: 12, color: AppColors.muted),
+                                                    const SizedBox(width: 4),
+                                                    Text(emp.phone, style: GoogleFonts.nunito(
+                                                      fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.muted,
+                                                    )),
+                                                  ],
+                                                ),
                                                 if (emp.aadhar != null && emp.aadhar!.isNotEmpty)
                                                   Text('Aadhar: ${emp.aadhar}', style: GoogleFonts.nunito(
                                                     fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.muted,

@@ -58,7 +58,7 @@ class _LoginScreenState extends State<LoginScreen> {
             children: [
               const Spacer(flex: 2),
               // Logo & branding
-              const Text('🏫', style: TextStyle(fontSize: 56)),
+              const Icon(Icons.school_rounded, size: 56, color: Colors.white),
               const SizedBox(height: 16),
               Text(
                 'Orchids Vendor Portal',
@@ -149,9 +149,16 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         const SizedBox(height: 14),
                         Center(
-                          child: Text(
-                            '🔒 Credentials are provided by your school admin',
-                            style: GoogleFonts.nunito(fontSize: 11, color: AppColors.muted, fontWeight: FontWeight.w600),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.lock_rounded, size: 13, color: AppColors.muted),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Credentials are provided by your school admin',
+                                style: GoogleFonts.nunito(fontSize: 11, color: AppColors.muted, fontWeight: FontWeight.w600),
+                              ),
+                            ],
                           ),
                         ),
                       ],

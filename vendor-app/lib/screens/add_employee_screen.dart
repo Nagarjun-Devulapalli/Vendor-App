@@ -336,7 +336,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                       ),
                       child: Row(
                         children: [
-                          const Text('📋', style: TextStyle(fontSize: 16)),
+                          const Icon(Icons.info_outline_rounded, size: 18, color: Color(0xFF7a5000)),
                           const SizedBox(width: 8),
                           Expanded(child: Text(
                             'Login credentials will be auto-generated and shown once after saving.',
