@@ -134,10 +134,13 @@ export default function Vendors() {
                     )}
                   </div>
                 </td>
-                <td className="px-4 py-3.5 text-[13px]">{v.employees?.length || '-'}</td>
+                <td className="px-4 py-3.5 text-[13px]">
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => navigate(`/vendors/${v.id}`)} className="w-[30px] h-[30px] rounded-lg border border-[#e4e8ed] inline-flex items-center justify-center text-sm text-[#6b7280] hover:bg-[#f6f7f9] transition-colors">👁️</button>
+                  </div>
+                </td>
                 <td className="px-4 py-3.5 text-[13px]">{v.user?.phone}</td>
                 <td className="px-4 py-3.5 space-x-2">
-                  <button onClick={() => navigate(`/vendors/${v.id}`)} className="w-[30px] h-[30px] rounded-lg border border-[#e4e8ed] inline-flex items-center justify-center text-sm text-[#6b7280] hover:bg-[#f6f7f9] transition-colors">👁️</button>
                   <button onClick={() => handleDelete(v.id)} className="w-[30px] h-[30px] rounded-lg border border-[#e4e8ed] inline-flex items-center justify-center text-sm text-[#6b7280] hover:bg-[#fdecea] hover:text-[#c0392b] transition-colors">🗑️</button>
                 </td>
               </tr>
@@ -152,12 +155,12 @@ export default function Vendors() {
       {/* Add Vendor Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/40 modal-backdrop flex items-center justify-center z-[1000] p-4" onClick={(e) => e.target === e.currentTarget && setShowModal(false)}>
-          <div className="bg-white rounded-2xl shadow-xl w-[480px] max-w-[90vw]">
-            <div className="px-6 pt-5 pb-4 border-b border-[#e4e8ed] flex items-center justify-between">
+          <div className="bg-white rounded-2xl shadow-xl w-[480px] max-w-[90vw] max-h-[90vh] flex flex-col">
+            <div className="px-6 pt-5 pb-4 border-b border-[#e4e8ed] flex items-center justify-between flex-shrink-0">
               <h3 className="font-serif text-lg font-bold">Register New Vendor</h3>
               <button onClick={() => setShowModal(false)} className="w-7 h-7 bg-[#f6f7f9] rounded-md flex items-center justify-center text-sm text-[#6b7280] hover:text-[#1a1f2e]">✕</button>
             </div>
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+            <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto flex-1">
               <div>
                 <label className="block text-xs font-semibold text-[#1a1f2e] mb-1.5">Photo *</label>
                 <div className="flex items-center gap-4">
@@ -219,7 +222,7 @@ export default function Vendors() {
                 <p className="text-xs text-[#7a5000] mt-1">Username and password will be shown once after saving.</p>
               </div>
             </form>
-            <div className="px-6 py-4 border-t border-[#e4e8ed] flex justify-end gap-2.5">
+            <div className="px-6 py-4 border-t border-[#e4e8ed] flex justify-end gap-2.5 flex-shrink-0">
               <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 border-[1.5px] border-[#e4e8ed] rounded-lg text-[13px] font-semibold hover:bg-[#f6f7f9] transition-colors">Cancel</button>
               <button onClick={handleSubmit} disabled={submitting} className="px-4 py-2 bg-orchid text-white rounded-lg text-[13px] font-semibold hover:bg-orchid-mid disabled:opacity-50 transition-colors">
                 {submitting ? 'Saving...' : 'Save Vendor →'}
