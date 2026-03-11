@@ -1,5 +1,8 @@
 import { useState } from 'react'
 import { EyeOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons'
+import Pagination from '../components/Pagination'
+
+const PAGE_SIZE = 10
 
 const statusStyles = {
   pending: 'bg-[#fef3e0] text-[#b07200]',
@@ -92,11 +95,13 @@ const dummyWorkLogs = [
 export default function PendingApprovals() {
   const [workLogs, setWorkLogs] = useState(dummyWorkLogs)
   const [activeTab, setActiveTab] = useState('pending')
+  const [currentPage, setCurrentPage] = useState(1)
   const [detailModal, setDetailModal] = useState(null)
   const [rejectModal, setRejectModal] = useState(null)
   const [rejectReason, setRejectReason] = useState('')
 
   const filtered = workLogs.filter((log) => activeTab === 'all' || log.status === activeTab)
+  const pagedFiltered = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
 
   const counts = {
     pending: workLogs.filter((l) => l.status === 'pending').length,
@@ -171,7 +176,7 @@ export default function PendingApprovals() {
           {tabs.map((tab) => (
             <button
               key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
+              onClick={() => { setActiveTab(tab.key); setCurrentPage(1) }}
               className={`px-4 py-3 text-[13px] font-medium border-b-2 -mb-px transition-colors flex items-center gap-1.5 ${
                 activeTab === tab.key
                   ? 'text-orchid border-orchid font-semibold'
@@ -203,7 +208,7 @@ export default function PendingApprovals() {
             </tr>
           </thead>
           <tbody>
-            {filtered.map((log) => (
+            {pagedFiltered.map((log) => (
               <tr key={log.id} className="border-b border-[#e4e8ed] last:border-0 hover:bg-[#f9fafb] transition-colors">
                 <td className="px-4 py-3.5">
                   <div className="flex items-center gap-2.5">
@@ -262,6 +267,12 @@ export default function PendingApprovals() {
             )}
           </tbody>
         </table>
+        <Pagination
+          currentPage={currentPage}
+          totalItems={filtered.length}
+          pageSize={PAGE_SIZE}
+          onPageChange={setCurrentPage}
+        />
       </div>
 
       {/* Detail Modal */}

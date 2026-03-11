@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import api from '../services/api'
 import { FileTextOutlined, UploadOutlined, CheckOutlined } from '@ant-design/icons'
+import Pagination from '../components/Pagination'
+
+const PAGE_SIZE = 10
 
 const statusStyles = {
   pending: 'bg-[#fdecea] text-[#c0392b]',
@@ -16,6 +19,7 @@ export default function Payments() {
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || '')
+  const [currentPage, setCurrentPage] = useState(1)
   const [submitting, setSubmitting] = useState(false)
   const [form, setForm] = useState({ activity: '', expected_amount: '', actual_amount_paid: '', payment_status: 'pending', payment_date: '', notes: '' })
   const [payNowModal, setPayNowModal] = useState(null)
@@ -31,7 +35,7 @@ export default function Payments() {
     api.get(url).then((res) => setPayments(res.data.results || res.data)).catch(console.error).finally(() => setLoading(false))
   }
 
-  useEffect(() => { fetchPayments() }, [activeTab])
+  useEffect(() => { fetchPayments(); setCurrentPage(1) }, [activeTab])
   useEffect(() => {
     api.get('/activities/').then((res) => setActivities(res.data.results || res.data)).catch(console.error)
   }, [])
@@ -116,6 +120,8 @@ export default function Payments() {
     { key: 'partial', label: 'Partial' },
   ]
 
+  const pagedPayments = payments.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+
   if (loading) return <div className="flex items-center justify-center h-64 text-[#6b7280]">Loading...</div>
 
   return (
@@ -188,7 +194,7 @@ export default function Payments() {
             </tr>
           </thead>
           <tbody>
-            {payments.map((p) => (
+            {pagedPayments.map((p) => (
               <tr key={p.id} className="border-b border-[#e4e8ed] last:border-0 hover:bg-[#f9fafb] transition-colors">
                 <td className="px-4 py-3.5">
                   <span className="font-semibold text-[13px]">{p.activity_title || p.activity?.title}</span>
@@ -234,6 +240,12 @@ export default function Payments() {
             {payments.length === 0 && <tr><td colSpan="8" className="px-4 py-8 text-center text-[13px] text-[#6b7280]">No payments found</td></tr>}
           </tbody>
         </table>
+        <Pagination
+          currentPage={currentPage}
+          totalItems={payments.length}
+          pageSize={PAGE_SIZE}
+          onPageChange={setCurrentPage}
+        />
       </div>
 
       {/* Pay Now Modal */}
