@@ -4,8 +4,6 @@ import api from '../services/api'
 import Pagination from '../components/Pagination'
 
 const PAGE_SIZE = 10
-
-const PAGE_SIZE = 10
 const statusStyles = {
   pending: 'bg-[#fef3e0] text-[#b07200]',
   approved: 'bg-[#e8f5ee] text-[#1a6b4a]',
