@@ -353,17 +353,16 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
                     _assignmentsSection(occ),
                   ],
 
-                  // Work logs (not shown to vendor_owner)
-                  if (_userRole != 'vendor_owner') ...[
+                  // Work logs
                   const SizedBox(height: 12),
                   _sectionBlock(
-                    'WORK LOGS (${_workLogs.length})',
+                    'WORK LOG',
                     _workLogs.isEmpty
                         ? Padding(
                             padding: const EdgeInsets.all(8),
                             child: Center(
                               child: Text(
-                                'No logs yet for this occurrence',
+                                'No work log yet. Start work to create one.',
                                 style: GoogleFonts.nunito(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
@@ -378,16 +377,11 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
                                 .toList(),
                           ),
                   ),
-                  ], // end work logs if
 
                   const SizedBox(height: 16),
 
                   // Actions
                   _buildActionButton(occ),
-                  if (occ.status != 'completed') ...[
-                    const SizedBox(height: 12),
-                    _buildMarkJobCompleteButton(occ),
-                  ],
                   const SizedBox(height: 24),
                 ],
               ),
@@ -512,16 +506,11 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
 
     if (occ.status == 'missed') return const SizedBox.shrink();
 
-    // Find current user's own work log
-    final myLog = _currentUserId == null
-        ? null
-        : _workLogs.cast<WorkLog?>().firstWhere(
-            (log) => log!.userId == _currentUserId,
-            orElse: () => null,
-          );
+    // Find any existing work log for this occurrence (not per-user)
+    final existingLog = _workLogs.isEmpty ? null : _workLogs.first;
 
-    if (myLog == null) {
-      // Current user hasn't started yet — show Start Work
+    if (existingLog == null) {
+      // No work log — show Start Work (any vendor/employee can start)
       return SizedBox(
         width: double.infinity,
         child: ElevatedButton.icon(
@@ -542,8 +531,8 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
           style: AppTheme.greenButton,
         ),
       );
-    } else if (myLog.isInProgress) {
-      // Current user started but not completed — show Complete Work
+    } else if (existingLog.approvalStatus == 'rejected') {
+      // Work log rejected — allow resubmission of after photo
       return SizedBox(
         width: double.infinity,
         child: ElevatedButton.icon(
@@ -554,8 +543,34 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
                 builder: (_) => WorkLogScreen(
                   occurrenceId: widget.occurrenceId,
                   mode: WorkLogMode.complete,
-                  workLogId: myLog.id,
-                  existingBeforePhotoUrl: myLog.beforePhoto,
+                  workLogId: existingLog.id,
+                  existingBeforePhotoUrl: existingLog.beforePhoto,
+                ),
+              ),
+            );
+            if (result == true) _loadData();
+          },
+          icon: const Icon(Icons.refresh_rounded, size: 20),
+          label: Text('Resubmit After Photo', style: GoogleFonts.nunito(fontWeight: FontWeight.w800)),
+          style: AppTheme.greenButton.copyWith(
+            backgroundColor: const WidgetStatePropertyAll(AppColors.amber),
+          ),
+        ),
+      );
+    } else if (existingLog.isInProgress) {
+      // Work started but not completed — show Complete Work
+      return SizedBox(
+        width: double.infinity,
+        child: ElevatedButton.icon(
+          onPressed: () async {
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => WorkLogScreen(
+                  occurrenceId: widget.occurrenceId,
+                  mode: WorkLogMode.complete,
+                  workLogId: existingLog.id,
+                  existingBeforePhotoUrl: existingLog.beforePhoto,
                 ),
               ),
             );
@@ -566,8 +581,8 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
           style: AppTheme.greenButton,
         ),
       );
-    } else {
-      // Current user already submitted — awaiting admin review
+    } else if (existingLog.isCompleted && existingLog.approvalStatus != 'approved') {
+      // Submitted and awaiting admin review
       return SizedBox(
         width: double.infinity,
         child: ElevatedButton.icon(
@@ -582,6 +597,8 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
           ),
         ),
       );
+    } else {
+      return const SizedBox.shrink();
     }
   }
 

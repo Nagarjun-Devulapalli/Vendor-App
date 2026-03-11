@@ -169,17 +169,17 @@ export default function Activities() {
               </div>
               <div className="grid grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block text-xs font-semibold text-[#1a1f2e] mb-1.5">Vendor *</label>
-                  <select value={form.vendor} onChange={(e) => setForm({ ...form, vendor: e.target.value, category: '' })} className="w-full border-[1.5px] border-[#e4e8ed] rounded-lg px-3.5 py-2.5 text-sm focus:border-orchid focus:outline-none transition-colors" required>
-                    <option value="">Select vendor</option>
-                    {vendors.map((v) => <option key={v.id} value={v.id}>{v.display_name || v.company_name || `${v.user?.first_name} ${v.user?.last_name}`}</option>)}
+                  <label className="block text-xs font-semibold text-[#1a1f2e] mb-1.5">Category *</label>
+                  <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value, vendor: '' })} className="w-full border-[1.5px] border-[#e4e8ed] rounded-lg px-3.5 py-2.5 text-sm focus:border-orchid focus:outline-none transition-colors" required>
+                    <option value="">Select category</option>
+                    {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-[#1a1f2e] mb-1.5">Category</label>
-                  <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="w-full border-[1.5px] border-[#e4e8ed] rounded-lg px-3.5 py-2.5 text-sm focus:border-orchid focus:outline-none transition-colors" disabled={!form.vendor}>
-                    <option value="">{form.vendor ? 'Select category' : 'Select vendor first'}</option>
-                    {(form.vendor ? categories.filter((c) => { const v = vendors.find((v) => v.id === Number(form.vendor)); return v?.categories?.includes(c.id) }) : []).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  <label className="block text-xs font-semibold text-[#1a1f2e] mb-1.5">Vendor *</label>
+                  <select value={form.vendor} onChange={(e) => setForm({ ...form, vendor: e.target.value })} className="w-full border-[1.5px] border-[#e4e8ed] rounded-lg px-3.5 py-2.5 text-sm focus:border-orchid focus:outline-none transition-colors" disabled={!form.category} required>
+                    <option value="">{form.category ? 'Select vendor' : 'Select category first'}</option>
+                    {(form.category ? vendors.filter((v) => v.categories?.includes(Number(form.category))) : []).map((v) => <option key={v.id} value={v.id}>{v.display_name || v.company_name || `${v.user?.first_name} ${v.user?.last_name}`}</option>)}
                   </select>
                 </div>
               </div>
