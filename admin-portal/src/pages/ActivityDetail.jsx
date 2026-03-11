@@ -92,10 +92,7 @@ export default function ActivityDetail() {
           <div><span className="text-[#6b7280]">End:</span> <span className="font-medium">{activity.end_date || 'N/A'}</span></div>
           <div><span className="text-[#6b7280]">Payment:</span> <span className="font-medium capitalize">{activity.payment_type}</span></div>
           <div>
-            <span className="text-[#6b7280]">Progress:</span> <span className="font-medium">{completed}/{total}</span>
-            <div className="progress-bar mt-1">
-              <div className="progress-fill" style={{ width: `${progress}%`, background: progress === 100 ? '#1a6b4a' : '#2563a8' }} />
-            </div>
+            
           </div>
         </div>
       </div>

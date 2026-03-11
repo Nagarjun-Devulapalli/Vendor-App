@@ -43,8 +43,8 @@ export default function Dashboard() {
   )
 
   const statCards = [
-    { label: 'Active Vendors', value: stats?.total_vendors || 0, sub: `${vendors.length} registered`, color: 'green', icon: '🏢' },
-    { label: 'Open Activities', value: stats?.total_activities || 0, sub: `${activities.filter(a => a.status === 'in_progress').length} in progress`, color: 'amber', icon: '📋' },
+    { label: 'Total Vendors', value: stats?.total_vendors || 0, sub: `${vendors.length} registered`, color: 'green', icon: '🏢', route: '/vendors' },
+    { label: 'Open Activities', value: stats?.total_activities || 0, sub: `${activities.filter(a => a.status === 'in_progress').length} in progress`, color: 'amber', icon: '📋', route: '/activities' },
     { label: 'Overdue Tasks', value: stats?.overdue_activities_count || 0, sub: 'Action required', color: 'red', icon: '⚠️' },
     { label: 'Payments Pending', value: `₹${((stats?.pending_payments_amount || 0) / 1000).toFixed(0)}K`, sub: `${stats?.pending_payments_count || 0} invoices`, color: 'blue', icon: '💳' },
   ]
@@ -75,7 +75,7 @@ export default function Dashboard() {
         {statCards.map((card, i) => {
           const c = colorMap[card.color]
           return (
-            <div key={card.label} className={`bg-white rounded-xl border border-[#e4e8ed] shadow-sm p-5 border-t-[3px] ${c.border} animate-fade-up`} style={{ animationDelay: `${i * 0.05}s` }}>
+            <div key={card.label} onClick={() => card.route && navigate(card.route)} className={`bg-white rounded-xl border border-[#e4e8ed] shadow-sm p-5 border-t-[3px] ${c.border} animate-fade-up${card.route ? ' cursor-pointer hover:shadow-md transition-shadow' : ''}`} style={{ animationDelay: `${i * 0.05}s` }}>
               <div className={`w-10 h-10 rounded-[10px] flex items-center justify-center text-lg mb-3.5 ${c.iconBg}`}>
                 {card.icon}
               </div>
