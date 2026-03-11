@@ -14,6 +14,13 @@ from .permissions import IsAdmin
 class LoginView(APIView):
     permission_classes = [AllowAny]
 
+    def _get_company_name(self, user):
+        if user.role == 'vendor_owner' and hasattr(user, 'vendor_profile'):
+            return user.vendor_profile.company_name or None
+        if user.role == 'vendor_employee' and hasattr(user, 'employee_profile'):
+            return user.employee_profile.vendor_owner.company_name or None
+        return None
+
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -31,6 +38,7 @@ class LoginView(APIView):
                 'branch': user.branch_id,
                 'branch_name': user.branch.name if user.branch else None,
                 'phone': user.phone,
+                'company_name': self._get_company_name(user),
             }
         })
 

@@ -121,6 +121,29 @@ class ApiService {
     }
   }
 
+  static Future<dynamic> _put(String path, Map<String, dynamic> body) async {
+    try {
+      final headers = await _getHeaders();
+      final response = await http.put(
+        Uri.parse('$baseUrl$path'),
+        headers: headers,
+        body: jsonEncode(body),
+      );
+      return await _handleResponse(response);
+    } catch (e) {
+      if (e.toString().contains('TOKEN_REFRESHED')) {
+        final headers = await _getHeaders();
+        final response = await http.put(
+          Uri.parse('$baseUrl$path'),
+          headers: headers,
+          body: jsonEncode(body),
+        );
+        return await _handleResponse(response);
+      }
+      rethrow;
+    }
+  }
+
   // Auth
   static Future<Map<String, dynamic>> login(String username, String password) async {
     final response = await http.post(
@@ -138,6 +161,13 @@ class ApiService {
   static Future<Map<String, dynamic>> getProfile() async {
     final data = await _get('/auth/profile/');
     return data as Map<String, dynamic>;
+  }
+
+  static Future<void> resetPassword(String username, String newPassword) async {
+    await _put('/auth/reset-password/', {
+      'username': username,
+      'new_password': newPassword,
+    });
   }
 
   // Occurrences

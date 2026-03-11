@@ -7,6 +7,7 @@ class User {
   final String phone;
   final int? branchId;
   final String? branchName;
+  final String? companyName;
 
   User({
     required this.id,
@@ -17,6 +18,7 @@ class User {
     required this.phone,
     this.branchId,
     this.branchName,
+    this.companyName,
   });
 
   factory User.fromJson(Map<String, dynamic> json) => User(
@@ -28,6 +30,7 @@ class User {
         phone: json['phone'] ?? '',
         branchId: json['branch'],
         branchName: json['branch_name'],
+        companyName: json['company_name'],
       );
 
   Map<String, dynamic> toJson() => {
@@ -38,6 +41,7 @@ class User {
         'role': role,
         'phone': phone,
         'branch': branchId,
+        'company_name': companyName,
       };
 
   String get fullName => '$firstName $lastName'.trim();
