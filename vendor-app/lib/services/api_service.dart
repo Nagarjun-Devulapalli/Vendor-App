@@ -155,6 +155,12 @@ class ApiService {
     await _patch('/occurrences/$id/', {'status': status});
   }
 
+  // Mark activity as completed (stops new occurrences)
+  static Future<Map<String, dynamic>> markActivityComplete(int activityId) async {
+    final data = await _patch('/activities/$activityId/mark-complete/', {});
+    return data as Map<String, dynamic>;
+  }
+
   // Work Logs
   static Future<void> submitWorkLog({
     required int occurrenceId,
