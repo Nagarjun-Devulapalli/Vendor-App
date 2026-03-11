@@ -64,9 +64,9 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
             currentIndex: _navIndex,
             onTap: (i) => setState(() => _navIndex = i),
             items: const [
-              AppNavItem(icon: '🏠', label: 'Home'),
-              AppNavItem(icon: '📋', label: 'Tasks'),
-              AppNavItem(icon: '👤', label: 'Profile'),
+              AppNavItem(icon: Icons.home_rounded, label: 'Home'),
+              AppNavItem(icon: Icons.assignment_rounded, label: 'Tasks'),
+              AppNavItem(icon: Icons.person_rounded, label: 'Profile'),
             ],
           ),
         ],
@@ -88,7 +88,7 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
             slivers: [
               SliverToBoxAdapter(
                 child: HeroHeader(
-                  greeting: '${_getGreeting()}, 🛠️',
+                  greeting: '${_getGreeting()},',
                   name: user?.firstName ?? 'Employee',
                   subtitle: '$dateStr · ${user?.branchName ?? ''}',
                   initials: _getInitials(user?.fullName ?? ''),
@@ -123,7 +123,7 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
                     padding: const EdgeInsets.all(32),
                     child: Column(
                       children: [
-                        const Text('✅', style: TextStyle(fontSize: 48)),
+                        const Icon(Icons.check_circle_rounded, size: 48, color: AppColors.green),
                         const SizedBox(height: 12),
                         Text('No tasks for today', style: GoogleFonts.nunito(
                           fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.muted,
@@ -184,7 +184,7 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
                     : provider.todayTasks.isEmpty
                         ? ListView(children: [
                             const SizedBox(height: 120),
-                            const Center(child: Text('✅', style: TextStyle(fontSize: 48))),
+                            const Center(child: Icon(Icons.check_circle_rounded, size: 48, color: AppColors.green)),
                             const SizedBox(height: 12),
                             Center(child: Text('All clear!', style: GoogleFonts.nunito(
                               fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.muted,

@@ -34,7 +34,9 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
       final logsData = await ApiService.getWorkLogs(widget.occurrenceId);
       setState(() {
         _occurrence = Occurrence.fromJson(occData);
-        _workLogs = logsData.map((e) => WorkLog.fromJson(e as Map<String, dynamic>)).toList();
+        _workLogs = logsData
+            .map((e) => WorkLog.fromJson(e as Map<String, dynamic>))
+            .toList();
         _isLoading = false;
       });
     } catch (e) {
@@ -58,7 +60,9 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
             content: Text('Marked as $status'),
             backgroundColor: AppColors.green,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
       }
@@ -73,23 +77,29 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
     }
   }
 
-  String _categoryIcon(String? cat) {
+  IconData _categoryIcon(String? cat) {
     final c = cat?.toLowerCase() ?? '';
-    if (c.contains('electric')) return '⚡';
-    if (c.contains('plumb')) return '🔧';
-    if (c.contains('clean') || c.contains('housekeep')) return '🧹';
-    if (c.contains('security')) return '🛡️';
-    if (c.contains('pest')) return '🐛';
-    if (c.contains('garden') || c.contains('landscape')) return '🌿';
-    if (c.contains('fire')) return '🔥';
-    if (c.contains('it') || c.contains('network')) return '💻';
-    if (c.contains('transport')) return '🚐';
-    if (c.contains('cafe') || c.contains('kitchen')) return '🍽️';
-    if (c.contains('waste')) return '♻️';
-    if (c.contains('hvac') || c.contains('ventil')) return '❄️';
-    if (c.contains('civil') || c.contains('structur')) return '🏗️';
-    if (c.contains('event')) return '🎪';
-    return '📋';
+    if (c.contains('electric')) return Icons.electrical_services_rounded;
+    if (c.contains('plumb')) return Icons.plumbing_rounded;
+    if (c.contains('clean') || c.contains('housekeep'))
+      return Icons.cleaning_services_rounded;
+    if (c.contains('security')) return Icons.shield_rounded;
+    if (c.contains('pest')) return Icons.pest_control_rounded;
+    if (c.contains('garden') || c.contains('landscape'))
+      return Icons.yard_rounded;
+    if (c.contains('fire')) return Icons.local_fire_department_rounded;
+    if (c.contains('it') || c.contains('network'))
+      return Icons.computer_rounded;
+    if (c.contains('transport')) return Icons.local_shipping_rounded;
+    if (c.contains('cafe') || c.contains('kitchen'))
+      return Icons.restaurant_rounded;
+    if (c.contains('waste')) return Icons.recycling_rounded;
+    if (c.contains('hvac') || c.contains('ventil'))
+      return Icons.ac_unit_rounded;
+    if (c.contains('civil') || c.contains('structur'))
+      return Icons.construction_rounded;
+    if (c.contains('event')) return Icons.event_rounded;
+    return Icons.assignment_rounded;
   }
 
   @override
@@ -104,7 +114,11 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
               subtitle: '',
               onBack: () => Navigator.pop(context),
             ),
-            const Expanded(child: Center(child: CircularProgressIndicator(color: AppColors.green))),
+            const Expanded(
+              child: Center(
+                child: CircularProgressIndicator(color: AppColors.green),
+              ),
+            ),
           ],
         ),
       );
@@ -131,8 +145,8 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
     final progress = occ.isCompleted
         ? 1.0
         : occ.status == 'in_progress'
-            ? 0.5
-            : (_workLogs.isNotEmpty ? 0.3 + (_workLogs.length * 0.1) : 0.0);
+        ? 0.5
+        : (_workLogs.isNotEmpty ? 0.3 + (_workLogs.length * 0.1) : 0.0);
 
     return Scaffold(
       backgroundColor: AppColors.bg,
@@ -156,22 +170,43 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
                     spacing: 6,
                     runSpacing: 6,
                     children: [
-                      _chip(
-                        occ.status == 'completed' ? '✓ Completed'
-                            : occ.status == 'in_progress' ? '● In Progress'
-                            : occ.status == 'missed' ? '⚠️ Overdue'
-                            : '● Pending',
-                        occ.status == 'completed' ? AppColors.greenLight
-                            : occ.status == 'in_progress' ? AppColors.blueLight
-                            : occ.status == 'missed' ? AppColors.redLight
+                      _iconChip(
+                        occ.status == 'completed'
+                            ? Icons.check_circle_rounded
+                            : occ.status == 'in_progress'
+                            ? Icons.schedule_rounded
+                            : occ.status == 'missed'
+                            ? Icons.warning_rounded
+                            : Icons.schedule_rounded,
+                        occ.status == 'completed'
+                            ? 'Completed'
+                            : occ.status == 'in_progress'
+                            ? 'In Progress'
+                            : occ.status == 'missed'
+                            ? 'Overdue'
+                            : 'Pending',
+                        occ.status == 'completed'
+                            ? AppColors.greenLight
+                            : occ.status == 'in_progress'
+                            ? AppColors.blueLight
+                            : occ.status == 'missed'
+                            ? AppColors.redLight
                             : AppColors.amberLight,
-                        occ.status == 'completed' ? AppColors.green
-                            : occ.status == 'in_progress' ? AppColors.blue
-                            : occ.status == 'missed' ? AppColors.red
+                        occ.status == 'completed'
+                            ? AppColors.green
+                            : occ.status == 'in_progress'
+                            ? AppColors.blue
+                            : occ.status == 'missed'
+                            ? AppColors.red
                             : AppColors.amber,
                       ),
                       if (occ.categoryName != null)
-                        _chip('${_categoryIcon(occ.categoryName)} ${occ.categoryName}', AppColors.greenLight, AppColors.green),
+                        _iconChip(
+                          _categoryIcon(occ.categoryName),
+                          occ.categoryName!,
+                          AppColors.greenLight,
+                          AppColors.green,
+                        ),
                     ],
                   ),
                   const SizedBox(height: 14),
@@ -179,26 +214,40 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
                   // Info block
                   _infoBlock([
                     _infoRow('Scheduled Date', occ.scheduledDate),
-                    _infoRow('Status',
-                      occ.status == 'in_progress' ? 'In Progress'
-                          : occ.status[0].toUpperCase() + occ.status.substring(1),
-                      valueColor: occ.status == 'completed' ? AppColors.green
-                          : occ.status == 'in_progress' ? AppColors.blue
-                          : occ.status == 'missed' ? AppColors.red : AppColors.amber),
+                    _infoRow(
+                      'Status',
+                      occ.status == 'in_progress'
+                          ? 'In Progress'
+                          : occ.status[0].toUpperCase() +
+                                occ.status.substring(1),
+                      valueColor: occ.status == 'completed'
+                          ? AppColors.green
+                          : occ.status == 'in_progress'
+                          ? AppColors.blue
+                          : occ.status == 'missed'
+                          ? AppColors.red
+                          : AppColors.amber,
+                    ),
                     if (occ.completedByName != null)
                       _infoRow('Completed By', occ.completedByName!),
                   ]),
 
                   // Description
-                  if (occ.activityDescription != null && occ.activityDescription!.isNotEmpty) ...[
+                  if (occ.activityDescription != null &&
+                      occ.activityDescription!.isNotEmpty) ...[
                     const SizedBox(height: 12),
-                    _sectionBlock('DESCRIPTION', Text(
-                      occ.activityDescription!,
-                      style: GoogleFonts.nunito(
-                        fontSize: 13, fontWeight: FontWeight.w600,
-                        color: AppColors.text, height: 1.6,
+                    _sectionBlock(
+                      'DESCRIPTION',
+                      Text(
+                        occ.activityDescription!,
+                        style: GoogleFonts.nunito(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.text,
+                          height: 1.6,
+                        ),
                       ),
-                    )),
+                    ),
                   ],
 
                   // Work logs
@@ -208,13 +257,21 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
                     _workLogs.isEmpty
                         ? Padding(
                             padding: const EdgeInsets.all(8),
-                            child: Center(child: Text(
-                              'No logs yet for this occurrence',
-                              style: GoogleFonts.nunito(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.muted),
-                            )),
+                            child: Center(
+                              child: Text(
+                                'No logs yet for this occurrence',
+                                style: GoogleFonts.nunito(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.muted,
+                                ),
+                              ),
+                            ),
                           )
                         : Column(
-                            children: _workLogs.map((log) => _workLogCard(log)).toList(),
+                            children: _workLogs
+                                .map((log) => _workLogCard(log))
+                                .toList(),
                           ),
                   ),
 
@@ -245,37 +302,50 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
         width: double.infinity,
         child: ElevatedButton.icon(
           onPressed: () async {
-            final result = await Navigator.push(context, MaterialPageRoute(
-              builder: (_) => WorkLogScreen(
-                occurrenceId: widget.occurrenceId,
-                mode: WorkLogMode.start,
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => WorkLogScreen(
+                  occurrenceId: widget.occurrenceId,
+                  mode: WorkLogMode.start,
+                ),
               ),
-            ));
+            );
             if (result == true) _loadData();
           },
           icon: const Icon(Icons.play_arrow_rounded, size: 20),
-          label: Text('Start Work', style: GoogleFonts.nunito(fontWeight: FontWeight.w800)),
+          label: Text(
+            'Start Work',
+            style: GoogleFonts.nunito(fontWeight: FontWeight.w800),
+          ),
           style: AppTheme.greenButton,
         ),
       );
-    } else if ((occ.status == 'in_progress' || occ.status == 'pending') && inProgressLog != null) {
+    } else if ((occ.status == 'in_progress' || occ.status == 'pending') &&
+        inProgressLog != null) {
       // Work in progress - show Complete Work button
       return SizedBox(
         width: double.infinity,
         child: ElevatedButton.icon(
           onPressed: () async {
-            final result = await Navigator.push(context, MaterialPageRoute(
-              builder: (_) => WorkLogScreen(
-                occurrenceId: widget.occurrenceId,
-                mode: WorkLogMode.complete,
-                workLogId: inProgressLog.id,
-                existingBeforePhotoUrl: inProgressLog.beforePhoto,
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => WorkLogScreen(
+                  occurrenceId: widget.occurrenceId,
+                  mode: WorkLogMode.complete,
+                  workLogId: inProgressLog.id,
+                  existingBeforePhotoUrl: inProgressLog.beforePhoto,
+                ),
               ),
-            ));
+            );
             if (result == true) _loadData();
           },
           icon: const Icon(Icons.check_circle_outline_rounded, size: 20),
-          label: Text('Complete Work', style: GoogleFonts.nunito(fontWeight: FontWeight.w800)),
+          label: Text(
+            'Complete Work',
+            style: GoogleFonts.nunito(fontWeight: FontWeight.w800),
+          ),
           style: AppTheme.greenButton,
         ),
       );
@@ -286,7 +356,10 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
         child: ElevatedButton.icon(
           onPressed: null,
           icon: const Icon(Icons.check_circle, size: 20),
-          label: Text('Completed', style: GoogleFonts.nunito(fontWeight: FontWeight.w800)),
+          label: Text(
+            'Completed',
+            style: GoogleFonts.nunito(fontWeight: FontWeight.w800),
+          ),
           style: AppTheme.greenButton.copyWith(
             backgroundColor: WidgetStatePropertyAll(AppColors.border),
             foregroundColor: WidgetStatePropertyAll(AppColors.muted),
@@ -306,32 +379,57 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
     return Column(
       children: [
         SizedBox(
-          width: 56, height: 56,
+          width: 56,
+          height: 56,
           child: CustomPaint(
             painter: _ProgressPainter(progress),
             child: Center(
               child: Text(
                 '$pct%',
                 style: GoogleFonts.fraunces(
-                  fontSize: 13, fontWeight: FontWeight.w800, color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
                 ),
               ),
             ),
           ),
         ),
         const SizedBox(height: 4),
-        Text('DONE', style: GoogleFonts.nunito(
-          fontSize: 9, fontWeight: FontWeight.w700, color: Colors.white.withOpacity(0.6),
-        )),
+        Text(
+          'DONE',
+          style: GoogleFonts.nunito(
+            fontSize: 9,
+            fontWeight: FontWeight.w700,
+            color: Colors.white.withOpacity(0.6),
+          ),
+        ),
       ],
     );
   }
 
-  Widget _chip(String text, Color bg, Color fg) {
+  Widget _iconChip(IconData icon, String text, Color bg, Color fg) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(20)),
-      child: Text(text, style: GoogleFonts.nunito(fontSize: 11, fontWeight: FontWeight.w800, color: fg)),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 13, color: fg),
+          const SizedBox(width: 4),
+          Text(
+            text,
+            style: GoogleFonts.nunito(
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              color: fg,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -352,8 +450,22 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: GoogleFonts.nunito(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.muted)),
-          Text(value, style: GoogleFonts.nunito(fontSize: 13, fontWeight: FontWeight.w700, color: valueColor ?? AppColors.text)),
+          Text(
+            label,
+            style: GoogleFonts.nunito(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: AppColors.muted,
+            ),
+          ),
+          Text(
+            value,
+            style: GoogleFonts.nunito(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: valueColor ?? AppColors.text,
+            ),
+          ),
         ],
       ),
     );
@@ -388,51 +500,91 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('By: ${log.userName ?? 'Unknown'}', style: GoogleFonts.nunito(
-                fontSize: 12, fontWeight: FontWeight.w800, color: AppColors.text,
-              )),
+              Text(
+                'By: ${log.userName ?? 'Unknown'}',
+                style: GoogleFonts.nunito(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.text,
+                ),
+              ),
               Row(
                 children: [
                   if (log.approvalStatus != null) ...[
                     _approvalBadge(log.approvalStatus!),
                     const SizedBox(width: 8),
                   ],
-                  Text(log.createdAt.split('T').first, style: GoogleFonts.nunito(
-                    fontSize: 11, color: AppColors.muted, fontWeight: FontWeight.w600,
-                  )),
+                  Text(
+                    log.createdAt.split('T').first,
+                    style: GoogleFonts.nunito(
+                      fontSize: 11,
+                      color: AppColors.muted,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ],
               ),
             ],
           ),
-          if (log.approvalStatus == 'rejected' && log.rejectionReason != null && log.rejectionReason!.isNotEmpty) ...[
+          if (log.approvalStatus == 'rejected' &&
+              log.rejectionReason != null &&
+              log.rejectionReason!.isNotEmpty) ...[
             const SizedBox(height: 4),
             Text(
               'Rejected: ${log.rejectionReason}',
-              style: GoogleFonts.nunito(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.red),
+              style: GoogleFonts.nunito(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: AppColors.red,
+              ),
             ),
           ],
-          if (log.approvalStatus == 'approved' && log.reviewedByName != null) ...[
+          if (log.approvalStatus == 'approved' &&
+              log.reviewedByName != null) ...[
             const SizedBox(height: 4),
             Text(
               'Approved by ${log.reviewedByName}',
-              style: GoogleFonts.nunito(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.green),
+              style: GoogleFonts.nunito(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: AppColors.green,
+              ),
             ),
           ],
           if (log.description.isNotEmpty) ...[
             const SizedBox(height: 6),
-            Text(log.description, style: GoogleFonts.nunito(
-              fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.text, height: 1.4,
-            )),
+            Text(
+              log.description,
+              style: GoogleFonts.nunito(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: AppColors.text,
+                height: 1.4,
+              ),
+            ),
           ],
           if (log.beforePhoto != null || log.afterPhoto != null) ...[
             const SizedBox(height: 8),
             Row(
               children: [
                 if (log.beforePhoto != null)
-                  Expanded(child: _photoThumb('Before', log.beforePhoto!, log.formattedBeforeTime)),
-                if (log.beforePhoto != null && log.afterPhoto != null) const SizedBox(width: 8),
+                  Expanded(
+                    child: _photoThumb(
+                      'Before',
+                      log.beforePhoto!,
+                      log.formattedBeforeTime,
+                    ),
+                  ),
+                if (log.beforePhoto != null && log.afterPhoto != null)
+                  const SizedBox(width: 8),
                 if (log.afterPhoto != null)
-                  Expanded(child: _photoThumb('After', log.afterPhoto!, log.formattedAfterTime)),
+                  Expanded(
+                    child: _photoThumb(
+                      'After',
+                      log.afterPhoto!,
+                      log.formattedAfterTime,
+                    ),
+                  ),
               ],
             ),
           ],
@@ -445,51 +597,148 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
     final Color bg;
     final Color fg;
     final String label;
+    final IconData icon;
     switch (status) {
       case 'approved':
         bg = AppColors.greenLight;
         fg = AppColors.green;
-        label = '✓ Approved';
+        label = 'Approved';
+        icon = Icons.check_circle_rounded;
         break;
       case 'rejected':
         bg = AppColors.redLight;
         fg = AppColors.red;
-        label = '✗ Rejected';
+        label = 'Rejected';
+        icon = Icons.cancel_rounded;
         break;
       default:
         bg = AppColors.amberLight;
         fg = AppColors.amber;
-        label = '● Pending';
+        label = 'Pending';
+        icon = Icons.schedule_rounded;
     }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(10)),
-      child: Text(label, style: GoogleFonts.nunito(fontSize: 10, fontWeight: FontWeight.w800, color: fg)),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 11, color: fg),
+          const SizedBox(width: 3),
+          Text(
+            label,
+            style: GoogleFonts.nunito(
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+              color: fg,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _openFullScreenImage(String url, String label) {
+    final resolvedUrl = ApiService.resolvePhotoUrl(url);
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => Scaffold(
+          backgroundColor: Colors.black,
+          body: Stack(
+            children: [
+              Center(
+                child: InteractiveViewer(
+                  minScale: 0.5,
+                  maxScale: 4.0,
+                  child: Image.network(
+                    resolvedUrl,
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, __, ___) => const Icon(
+                      Icons.broken_image,
+                      color: Colors.white54,
+                      size: 64,
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: MediaQuery.of(context).padding.top + 8,
+                left: 8,
+                child: IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.close, color: Colors.white, size: 28),
+                  style: IconButton.styleFrom(backgroundColor: Colors.black54),
+                ),
+              ),
+              Positioned(
+                top: MediaQuery.of(context).padding.top + 14,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: Text(
+                    label,
+                    style: GoogleFonts.nunito(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
   Widget _photoThumb(String label, String url, String? timestamp) {
+    final resolvedUrl = ApiService.resolvePhotoUrl(url);
     return Column(
       children: [
-        Text(label, style: GoogleFonts.nunito(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.muted)),
+        Text(
+          label,
+          style: GoogleFonts.nunito(
+            fontSize: 10,
+            fontWeight: FontWeight.w700,
+            color: AppColors.muted,
+          ),
+        ),
         const SizedBox(height: 4),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: Image.network(
-            'http://10.0.2.2:8000$url',
-            height: 80,
-            width: double.infinity,
-            fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => Container(
+        GestureDetector(
+          onTap: () => _openFullScreenImage(url, label),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Image.network(
+              resolvedUrl,
               height: 80,
-              decoration: BoxDecoration(color: AppColors.border, borderRadius: BorderRadius.circular(8)),
-              child: const Icon(Icons.broken_image, color: AppColors.muted),
+              width: double.infinity,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Container(
+                height: 80,
+                decoration: BoxDecoration(
+                  color: AppColors.border,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.broken_image, color: AppColors.muted),
+              ),
             ),
           ),
         ),
         if (timestamp != null) ...[
           const SizedBox(height: 3),
-          Text(timestamp, style: GoogleFonts.nunito(fontSize: 9, color: AppColors.muted, fontWeight: FontWeight.w600)),
+          Text(
+            timestamp,
+            style: GoogleFonts.nunito(
+              fontSize: 9,
+              color: AppColors.muted,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ],
       ],
     );
@@ -507,7 +756,8 @@ class _ProgressPainter extends CustomPainter {
 
     // Background
     canvas.drawCircle(
-      center, radius,
+      center,
+      radius,
       Paint()
         ..color = Colors.white.withOpacity(0.2)
         ..style = PaintingStyle.stroke
