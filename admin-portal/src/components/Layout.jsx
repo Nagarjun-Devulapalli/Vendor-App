@@ -1,6 +1,5 @@
 import { Outlet, useLocation } from 'react-router-dom'
 import Sidebar from './Sidebar'
-import { SearchOutlined } from '@ant-design/icons'
 
 const pageMeta = {
   '/dashboard': { title: 'Dashboard', sub: 'Overview of your branch activity' },
@@ -25,11 +24,6 @@ export default function Layout() {
           <div>
             <h2 className="font-serif text-xl font-bold text-[#1a1f2e]">{meta.title}</h2>
             <p className="text-xs text-[#6b7280] mt-0.5">{meta.sub}</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 px-3 py-2 bg-[#f6f7f9] border border-[#e4e8ed] rounded-lg text-[13px] text-[#6b7280] cursor-text w-[200px]">
-              <SearchOutlined /> Search...
-            </div>
           </div>
         </header>
 
