@@ -44,10 +44,10 @@ export default function Dashboard() {
   )
 
   const statCards = [
-    { label: 'Active Vendors', value: stats?.total_vendors || 0, sub: `${vendors.length} registered`, color: 'green', icon: '🏢', onClick: null },
-    { label: 'Open Activities', value: stats?.total_activities || 0, sub: `${activities.filter(a => a.status === 'in_progress').length} in progress`, color: 'amber', icon: '📋', onClick: null },
-    { label: 'Partial Payments', value: `₹${((stats?.partial_payments_amount || 0) / 1000).toFixed(0)}K`, sub: `${stats?.partial_payments_count || 0} invoices`, color: 'amber', icon: '💰', onClick: () => navigate('/payments?tab=partial') },
-    { label: 'Pending payments', value: `₹${((stats?.pending_payments_amount || 0) / 1000).toFixed(0)}K`, sub: `${stats?.pending_payments_count || 0} invoices`, color: 'blue', icon: '💳', onClick: () => navigate('/payments?tab=pending') },
+    { label: 'Total Vendors', value: stats?.total_vendors || 0, sub: `${vendors.length} registered`, color: 'green', icon: <ShopOutlined />, onClick: () => navigate('/vendors') },
+    { label: 'Open Activities', value: stats?.total_activities || 0, sub: `${activities.filter(a => a.status === 'in_progress').length} in progress`, color: 'amber', icon: <FileTextOutlined />, onClick: () => navigate('/activities') },
+    { label: 'Partial Payments', value: `₹${((stats?.partial_payments_amount || 0) / 1000).toFixed(0)}K`, sub: `${stats?.partial_payments_count || 0} invoices`, color: 'amber', icon: <ExclamationCircleOutlined />, onClick: () => navigate('/payments?tab=partial') },
+    { label: 'Pending payments', value: `₹${((stats?.pending_payments_amount || 0) / 1000).toFixed(0)}K`, sub: `${stats?.pending_payments_count || 0} invoices`, color: 'blue', icon: <CreditCardOutlined />, onClick: () => navigate('/payments?tab=pending') },
   ]
 
   const colorMap = { green: { border: 'border-t-orchid', iconBg: 'bg-orchid-light', valueColor: 'text-orchid' }, amber: { border: 'border-t-[#e8a020]', iconBg: 'bg-[#fef3e0]', valueColor: 'text-[#e8a020]' }, red: { border: 'border-t-[#c0392b]', iconBg: 'bg-[#fdecea]', valueColor: 'text-[#c0392b]' }, blue: { border: 'border-t-[#2563a8]', iconBg: 'bg-[#e8f0fc]', valueColor: 'text-[#2563a8]' } }
@@ -83,7 +83,7 @@ export default function Dashboard() {
               className={`bg-white rounded-xl border border-[#e4e8ed] shadow-sm p-5 border-t-[3px] ${c.border} animate-fade-up ${card.onClick ? 'cursor-pointer hover:shadow-md transition-shadow text-left w-full' : ''}`}
               style={{ animationDelay: `${i * 0.05}s` }}
             >
-              <div className={`w-10 h-10 rounded-[10px] flex items-center justify-center text-lg mb-3.5 ${c.iconBg}`}>
+              <div className={`w-10 h-10 rounded-[10px] flex items-center justify-center text-xl mb-3.5 ${c.iconBg}`}>
                 {card.icon}
               </div>
               <div className={`font-serif text-[32px] font-bold leading-none mb-1 ${c.valueColor}`}>

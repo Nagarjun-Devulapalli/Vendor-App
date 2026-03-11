@@ -12,6 +12,7 @@ export default function PendingApprovals() {
   const [workLogs, setWorkLogs] = useState([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('pending')
+  const [currentPage, setCurrentPage] = useState(1)
   const [detailModal, setDetailModal] = useState(null)
   const [rejectModal, setRejectModal] = useState(null)
   const [rejectReason, setRejectReason] = useState('')
@@ -145,7 +146,7 @@ export default function PendingApprovals() {
           {tabs.map((tab) => (
             <button
               key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
+              onClick={() => { setActiveTab(tab.key); setCurrentPage(1) }}
               className={`px-4 py-3 text-[13px] font-medium border-b-2 -mb-px transition-colors flex items-center gap-1.5 ${
                 activeTab === tab.key
                   ? 'text-orchid border-orchid font-semibold'
@@ -239,6 +240,12 @@ export default function PendingApprovals() {
             )}
           </tbody>
         </table>
+        <Pagination
+          currentPage={currentPage}
+          totalItems={filtered.length}
+          pageSize={PAGE_SIZE}
+          onPageChange={setCurrentPage}
+        />
       </div>
 
       {/* Detail Modal */}
