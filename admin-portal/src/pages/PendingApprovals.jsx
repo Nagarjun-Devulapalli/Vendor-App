@@ -30,6 +30,61 @@ export default function PendingApprovals() {
   const [allGrouped, setAllGrouped] = useState({ pending: [], approved: [], rejected: [] })
   const [loading, setLoading] = useState(true)
 
+  useEffect(() => {
+    api.get('/activities/')
+      .then(async (actRes) => {
+        const allActivities = actRes.data.results || actRes.data
+
+        const occPromises = allActivities.map(a =>
+          api.get(`/activities/${a.id}/occurrences/`).catch(() => ({ data: [] }))
+        )
+        const occResults = await Promise.all(occPromises)
+        const allOccurrences = occResults.flatMap(res => res.data.results || res.data)
+
+        const counts = {}
+        for (const occ of allOccurrences) {
+          if (!occ.work_logs) continue
+          for (const log of occ.work_logs) {
+            const aid = occ.activity
+            if (!counts[aid]) counts[aid] = { pending: 0, approved: 0, rejected: 0, pendingLatest: '', approvedLatest: '', rejectedLatest: '' }
+            const ts = log.created_at || log.after_photo_taken_at || log.before_photo_taken_at || occ.scheduled_date || ''
+            if (log.approval_status === 'approved') {
+              counts[aid].approved++
+              if (ts > counts[aid].approvedLatest) counts[aid].approvedLatest = ts
+            } else if (log.approval_status === 'rejected') {
+              counts[aid].rejected++
+              if (ts > counts[aid].rejectedLatest) counts[aid].rejectedLatest = ts
+            } else if (!log.approval_status || log.approval_status === 'pending') {
+              counts[aid].pending++
+              if (ts > counts[aid].pendingLatest) counts[aid].pendingLatest = ts
+            }
+          }
+        }
+
+        const pending = []
+        const approved = []
+        const rejected = []
+
+        for (const a of allActivities) {
+          const c = counts[a.id]
+          if (!c) continue
+          if (c.pending > 0) pending.push({ ...a, log_count: c.pending, latest_log: c.pendingLatest })
+          if (c.approved > 0) approved.push({ ...a, log_count: c.approved, latest_log: c.approvedLatest })
+          if (c.rejected > 0) rejected.push({ ...a, log_count: c.rejected, latest_log: c.rejectedLatest })
+        }
+
+        const sortByRecent = (arr) => arr.sort((a, b) => (b.latest_log || '').localeCompare(a.latest_log || ''))
+
+        setAllGrouped({
+          pending: sortByRecent(pending),
+          approved: sortByRecent(approved),
+          rejected: sortByRecent(rejected),
+        })
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false))
+  }, [])
+
   const tabs = [
     { key: 'pending', label: 'Pending', count: allGrouped.pending.length },
     { key: 'approved', label: 'Approved', count: allGrouped.approved.length },
