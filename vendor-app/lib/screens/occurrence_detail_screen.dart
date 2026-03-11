@@ -468,22 +468,71 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
     );
   }
 
+  void _openFullScreenImage(String url, String label) {
+    final resolvedUrl = ApiService.resolvePhotoUrl(url);
+    Navigator.push(context, MaterialPageRoute(
+      builder: (_) => Scaffold(
+        backgroundColor: Colors.black,
+        body: Stack(
+          children: [
+            Center(
+              child: InteractiveViewer(
+                minScale: 0.5,
+                maxScale: 4.0,
+                child: Image.network(
+                  resolvedUrl,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => const Icon(
+                    Icons.broken_image, color: Colors.white54, size: 64,
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 8,
+              left: 8,
+              child: IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.close, color: Colors.white, size: 28),
+                style: IconButton.styleFrom(backgroundColor: Colors.black54),
+              ),
+            ),
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 14,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Text(label, style: GoogleFonts.nunito(
+                  fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white,
+                )),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ));
+  }
+
   Widget _photoThumb(String label, String url, String? timestamp) {
+    final resolvedUrl = ApiService.resolvePhotoUrl(url);
     return Column(
       children: [
         Text(label, style: GoogleFonts.nunito(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.muted)),
         const SizedBox(height: 4),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: Image.network(
-            'http://10.0.2.2:8000$url',
-            height: 80,
-            width: double.infinity,
-            fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => Container(
+        GestureDetector(
+          onTap: () => _openFullScreenImage(url, label),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Image.network(
+              resolvedUrl,
               height: 80,
-              decoration: BoxDecoration(color: AppColors.border, borderRadius: BorderRadius.circular(8)),
-              child: const Icon(Icons.broken_image, color: AppColors.muted),
+              width: double.infinity,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Container(
+                height: 80,
+                decoration: BoxDecoration(color: AppColors.border, borderRadius: BorderRadius.circular(8)),
+                child: const Icon(Icons.broken_image, color: AppColors.muted),
+              ),
             ),
           ),
         ),
