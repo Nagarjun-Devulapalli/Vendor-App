@@ -311,7 +311,14 @@ export default function Activities() {
               </div>
               <div>
                 <label className="block text-xs font-semibold text-[#1a1f2e] mb-1.5">Activity Type *</label>
-                <select value={form.activity_type} onChange={(e) => setForm({ ...form, activity_type: e.target.value })} className="w-full border-[1.5px] border-[#e4e8ed] rounded-lg px-3.5 py-2.5 text-sm focus:border-orchid focus:outline-none transition-colors">
+                <select
+                  value={form.activity_type}
+                  onChange={(e) => {
+                    const type = e.target.value
+                    const defaultPayment = type === 'recurring' ? 'per_occurrence' : 'contract'
+                    setForm({ ...form, activity_type: type, payment_type: defaultPayment })
+                  }}
+                  className="w-full border-[1.5px] border-[#e4e8ed] rounded-lg px-3.5 py-2.5 text-sm focus:border-orchid focus:outline-none transition-colors">
                   <option value="one_time">One Time</option>
                   <option value="long_term">Long Term</option>
                   <option value="recurring">Recurring</option>
@@ -337,14 +344,24 @@ export default function Activities() {
               </div>
               <div className="grid grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block text-xs font-semibold text-[#1a1f2e] mb-1.5">Expected Cost (₹) *</label>
+                  <label className="block text-xs font-semibold text-[#1a1f2e] mb-1.5">
+                    {form.payment_type === 'contract' ? 'Total Amount (₹) *' : form.payment_type === 'daily' ? 'Daily Rate (₹) *' : 'Rate Per Occurrence (₹) *'}
+                  </label>
                   <input type="number" value={form.expected_cost} onChange={(e) => setForm({ ...form, expected_cost: e.target.value })} className="w-full border-[1.5px] border-[#e4e8ed] rounded-lg px-3.5 py-2.5 text-sm focus:border-orchid focus:outline-none transition-colors" required />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-[#1a1f2e] mb-1.5">Payment Type *</label>
                   <select value={form.payment_type} onChange={(e) => setForm({ ...form, payment_type: e.target.value })} className="w-full border-[1.5px] border-[#e4e8ed] rounded-lg px-3.5 py-2.5 text-sm focus:border-orchid focus:outline-none transition-colors">
-                    <option value="daily">Daily</option>
-                    <option value="contract">Contract</option>
+                    {form.activity_type === 'recurring'
+                      ? <>
+                          <option value="per_occurrence">Per Occurrence</option>
+                          <option value="daily">Daily Wage</option>
+                        </>
+                      : <>
+                          <option value="contract">Contract</option>
+                          <option value="daily">Daily Wage</option>
+                        </>
+                    }
                   </select>
                 </div>
               </div>
