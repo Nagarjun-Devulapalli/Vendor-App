@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+backend/media/
+conversation_log.md
+
+# Node
+node_modules/
+dist/
+
+# Flutter
+vendor-app/.dart_tool/
+vendor-app/.flutter-plugins
+vendor-app/.flutter-plugins-dependencies
+vendor-app/build/
+vendor-app/.packages
+vendor-app/pubspec.lock
+
+# IDE
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# Env
+.env
+*.env
+.venv
+venv/
+
+
