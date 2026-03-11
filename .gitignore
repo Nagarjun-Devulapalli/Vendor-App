@@ -35,3 +35,8 @@ backend/venv
 # Credentials
 backend/credentials/
 
+# Internal docs
+prompts.md
+occurrence-changes.md
+payment-revamp-frontend.md
+

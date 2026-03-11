@@ -10,6 +10,7 @@ from .models import Activity, ActivityOccurrence, OccurrenceAssignment, WorkLog
 from .serializers import ActivitySerializer, OccurrenceSerializer, WorkLogSerializer
 from accounts.permissions import IsAdmin
 from vendors.models import Employee
+from payments.models import Payment
 
 
 def generate_initial_occurrence(activity):
@@ -108,7 +109,9 @@ class ActivityViewSet(viewsets.ModelViewSet):
                 )
 
         activity.status = 'completed'
-        activity.save(update_fields=['status'])
+        if activity.activity_type in ('one_time', 'long_term'):
+            activity.end_date = timezone.localtime(timezone.now()).date()
+        activity.save(update_fields=['status', 'end_date'])
 
         # Also mark all pending occurrences as completed
         activity.occurrences.exclude(status='completed').update(
@@ -124,6 +127,8 @@ class ActivityViewSet(viewsets.ModelViewSet):
         user = self.request.user
         activity = serializer.save(branch=user.branch)
         generate_initial_occurrence(activity)
+        # Auto-create payment for the activity
+        Payment.objects.get_or_create(activity=activity)
 
     @action(detail=True, methods=['get'])
     def occurrences(self, request, pk=None):
@@ -367,7 +372,8 @@ class WorkLogViewSet(viewsets.ModelViewSet):
             # For one_time/long_term: also mark the activity as completed
             if activity.activity_type in ('one_time', 'long_term'):
                 activity.status = 'completed'
-                activity.save(update_fields=['status'])
+                activity.end_date = timezone.localtime(timezone.now()).date()
+                activity.save(update_fields=['status', 'end_date'])
 
         elif approval_status == 'rejected':
             # Reset work log so vendor can resubmit after photo

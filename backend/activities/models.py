@@ -11,8 +11,9 @@ class Activity(SoftDeleteModel):
         ('recurring', 'Recurring'),
     ]
     PAYMENT_TYPES = [
-        ('daily', 'Daily'),
         ('contract', 'Contract'),
+        ('daily', 'Daily Wage'),
+        ('per_occurrence', 'Per Occurrence'),
     ]
     STATUS_CHOICES = [
         ('pending', 'Pending'),
