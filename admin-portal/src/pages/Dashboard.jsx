@@ -35,10 +35,27 @@ export default function Dashboard() {
   }, [])
 
   if (loading) return (
-    <div className="flex items-center justify-center h-64 text-[#6b7280]">
-      <div className="text-center">
-        <div className="w-8 h-8 border-2 border-orchid border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-        Loading dashboard...
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="bg-white rounded-xl border border-[#e4e8ed] shadow-sm p-5 animate-pulse">
+            <div className="flex items-start justify-between mb-4">
+              <div className="space-y-2"><div className="h-3 bg-[#e4e8ed] rounded w-24" /><div className="h-7 bg-[#e4e8ed] rounded w-16 mt-2" /></div>
+              <div className="w-10 h-10 bg-[#e4e8ed] rounded-xl" />
+            </div>
+            <div className="h-2.5 bg-[#e4e8ed] rounded w-20" />
+          </div>
+        ))}
+      </div>
+      <div className="grid grid-cols-3 gap-4">
+        <div className="col-span-2 bg-white rounded-xl border border-[#e4e8ed] shadow-sm p-5 h-64 animate-pulse">
+          <div className="h-4 bg-[#e4e8ed] rounded w-32 mb-4" />
+          <div className="h-40 bg-[#e4e8ed] rounded" />
+        </div>
+        <div className="bg-white rounded-xl border border-[#e4e8ed] shadow-sm p-5 h-64 animate-pulse">
+          <div className="h-4 bg-[#e4e8ed] rounded w-24 mb-4" />
+          <div className="space-y-3">{Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-8 bg-[#e4e8ed] rounded" />)}</div>
+        </div>
       </div>
     </div>
   )

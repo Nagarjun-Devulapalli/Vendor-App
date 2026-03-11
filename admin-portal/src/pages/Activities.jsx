@@ -39,7 +39,7 @@ export default function Activities() {
 
   const [form, setForm] = useState({
     title: '', description: '', vendor: '', category: '', activity_type: 'one_time',
-    start_date: '', end_date: '', recurrence_interval_days: '', expected_cost: '', payment_type: 'contract',
+    start_date: '', end_date: '', recurrence_interval_days: '', expected_cost: '', payment_type: '',
   })
 
   const fetchActivities = () => {
@@ -75,7 +75,7 @@ export default function Activities() {
       if (!payload.recurrence_interval_days) delete payload.recurrence_interval_days
       await api.post('/activities/', payload)
       setShowModal(false)
-      setForm({ title: '', description: '', vendor: '', category: '', activity_type: 'one_time', start_date: '', end_date: '', recurrence_interval_days: '', expected_cost: '', payment_type: 'contract' })
+      setForm({ title: '', description: '', vendor: '', category: '', activity_type: 'one_time', start_date: '', end_date: '', recurrence_interval_days: '', expected_cost: '', payment_type: '' })
       fetchActivities()
     } catch (err) {
       toast.error(parseApiError(err, 'Error creating activity'))
@@ -126,7 +126,6 @@ export default function Activities() {
   const pagedActivities = filteredActivities.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
   const suggestions = getSuggestions()
 
-  if (loading) return <div className="flex items-center justify-center h-64 text-[#6b7280]">Loading...</div>
 
   return (
     <div className="space-y-5">
@@ -223,8 +222,19 @@ export default function Activities() {
             </tr>
           </thead>
           <tbody>
-            {pagedActivities.map((a) => (
-              <tr key={a.id} className="border-b border-[#e4e8ed] last:border-0 hover:bg-[#f9fafb] cursor-pointer transition-colors" onClick={() => navigate(`/activities/${a.id}`)}>
+            {loading
+              ? Array.from({ length: 8 }).map((_, i) => (
+                  <tr key={i} className="border-b border-[#e4e8ed] animate-pulse">
+                    <td className="px-4 py-3.5"><div className="space-y-1.5"><div className="h-3 bg-[#e4e8ed] rounded w-36" /><div className="h-2.5 bg-[#e4e8ed] rounded w-20" /></div></td>
+                    <td className="px-4 py-3.5"><div className="h-3 bg-[#e4e8ed] rounded w-28" /></td>
+                    <td className="px-4 py-3.5"><div className="h-5 bg-[#e4e8ed] rounded-full w-16" /></td>
+                    <td className="px-4 py-3.5"><div className="h-3 bg-[#e4e8ed] rounded w-24" /></td>
+                    <td className="px-4 py-3.5"><div className="h-3 bg-[#e4e8ed] rounded w-16" /></td>
+                    <td className="px-4 py-3.5"><div className="h-5 bg-[#e4e8ed] rounded-full w-20" /></td>
+                  </tr>
+                ))
+              : pagedActivities.map((a, i) => (
+              <tr key={a.id} className="border-b border-[#e4e8ed] last:border-0 hover:bg-[#f9fafb] cursor-pointer animate-fade-in" style={{ animationDelay: `${i * 40}ms` }} onClick={() => navigate(`/activities/${a.id}`)}>
                 <td className="px-4 py-3.5">
                   <span className="font-semibold text-[13px] block">{a.title}</span>
                   <span className="text-[11px] text-[#6b7280]">{a.category_name || ''}</span>
@@ -251,7 +261,7 @@ export default function Activities() {
                 </td>
               </tr>
             ))}
-            {filteredActivities.length === 0 && (
+            {!loading && filteredActivities.length === 0 && (
               <tr><td colSpan="6" className="px-4 py-8 text-center text-[13px] text-[#6b7280]">
                 {searchQuery || selectedActivityId ? 'No activities match your search' : 'No activities found'}
               </td></tr>
@@ -301,7 +311,12 @@ export default function Activities() {
               </div>
               <div>
                 <label className="block text-xs font-semibold text-[#1a1f2e] mb-1.5">Activity Type *</label>
-                <select value={form.activity_type} onChange={(e) => setForm({ ...form, activity_type: e.target.value })} className="w-full border-[1.5px] border-[#e4e8ed] rounded-lg px-3.5 py-2.5 text-sm focus:border-orchid focus:outline-none transition-colors">
+                <select
+                  value={form.activity_type}
+                  onChange={(e) => {
+                    setForm({ ...form, activity_type: e.target.value, payment_type: '', expected_cost: '' })
+                  }}
+                  className="w-full border-[1.5px] border-[#e4e8ed] rounded-lg px-3.5 py-2.5 text-sm focus:border-orchid focus:outline-none transition-colors">
                   <option value="one_time">One Time</option>
                   <option value="long_term">Long Term</option>
                   <option value="recurring">Recurring</option>
@@ -327,15 +342,33 @@ export default function Activities() {
               </div>
               <div className="grid grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block text-xs font-semibold text-[#1a1f2e] mb-1.5">Expected Cost (₹) *</label>
-                  <input type="number" value={form.expected_cost} onChange={(e) => setForm({ ...form, expected_cost: e.target.value })} className="w-full border-[1.5px] border-[#e4e8ed] rounded-lg px-3.5 py-2.5 text-sm focus:border-orchid focus:outline-none transition-colors" required />
+                  <label className="block text-xs font-semibold text-[#1a1f2e] mb-1.5">Payment Type *</label>
+                  <select value={form.payment_type} onChange={(e) => setForm({ ...form, payment_type: e.target.value })} className="w-full border-[1.5px] border-[#e4e8ed] rounded-lg px-3.5 py-2.5 text-sm focus:border-orchid focus:outline-none transition-colors" required>
+                    <option value="">Select payment type</option>
+                    {form.activity_type === 'recurring'
+                      ? <>
+                          <option value="per_occurrence">Per Occurrence</option>
+                          <option value="daily">Daily Wage</option>
+                        </>
+                      : <>
+                          <option value="contract">Contract</option>
+                          <option value="daily">Daily Wage</option>
+                        </>
+                    }
+                  </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-[#1a1f2e] mb-1.5">Payment Type *</label>
-                  <select value={form.payment_type} onChange={(e) => setForm({ ...form, payment_type: e.target.value })} className="w-full border-[1.5px] border-[#e4e8ed] rounded-lg px-3.5 py-2.5 text-sm focus:border-orchid focus:outline-none transition-colors">
-                    <option value="daily">Daily</option>
-                    <option value="contract">Contract</option>
-                  </select>
+                  <label className="block text-xs font-semibold text-[#1a1f2e] mb-1.5">
+                    {form.payment_type === 'contract' ? 'Total Amount (₹) *' : form.payment_type === 'daily' ? 'Daily Rate (₹) *' : form.payment_type === 'per_occurrence' ? 'Rate Per Occurrence (₹) *' : 'Amount (₹) *'}
+                  </label>
+                  <input
+                    type="number"
+                    value={form.expected_cost}
+                    onChange={(e) => setForm({ ...form, expected_cost: e.target.value })}
+                    disabled={!form.payment_type}
+                    className={`w-full border-[1.5px] rounded-lg px-3.5 py-2.5 text-sm transition-colors ${!form.payment_type ? 'border-[#e4e8ed] bg-[#f6f7f9] opacity-50 cursor-not-allowed' : 'border-[#e4e8ed] focus:border-orchid focus:outline-none'}`}
+                    required
+                  />
                 </div>
               </div>
             </form>
