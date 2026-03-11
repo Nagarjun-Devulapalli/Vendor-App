@@ -35,6 +35,32 @@ class VendorViewSet(viewsets.ModelViewSet):
             return [IsAdmin()]
         return [IsAuthenticated()]
 
+    @action(detail=True, methods=['patch'], url_path='toggle-active')
+    def toggle_active(self, request, pk=None):
+        vendor = self.get_object()
+        is_active = request.data.get('is_active')
+        if is_active is None:
+            return Response({'error': 'is_active field is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        is_active = bool(is_active)
+
+        # Update vendor user
+        vendor.user.is_active = is_active
+        vendor.user.save()
+
+        # Cascade to all employees under this vendor
+        employee_users = [emp.user for emp in vendor.employees.select_related('user').all()]
+        for user in employee_users:
+            user.is_active = is_active
+            user.save()
+
+        action_text = 'activated' if is_active else 'deactivated'
+        return Response({
+            'message': f'Vendor {vendor.display_name} and {len(employee_users)} employees {action_text}',
+            'is_active': is_active,
+            'employees_affected': len(employee_users),
+        })
+
     @action(detail=False, methods=['get'], url_path='by-category')
     def by_category(self, request):
         cat_id = request.query_params.get('cat')
@@ -62,3 +88,28 @@ class EmployeeViewSet(viewsets.ModelViewSet):
         if vendor_owner:
             qs = qs.filter(vendor_owner_id=vendor_owner)
         return qs
+
+    @action(detail=True, methods=['patch'], url_path='toggle-active')
+    def toggle_active(self, request, pk=None):
+        employee = self.get_object()
+        user = request.user
+
+        # Only admin or the vendor owner of this employee can toggle
+        if user.role == 'vendor_owner' and employee.vendor_owner.user != user:
+            return Response({'error': 'You can only manage your own employees'}, status=status.HTTP_403_FORBIDDEN)
+        elif user.role == 'vendor_employee':
+            return Response({'error': 'Employees cannot perform this action'}, status=status.HTTP_403_FORBIDDEN)
+
+        is_active = request.data.get('is_active')
+        if is_active is None:
+            return Response({'error': 'is_active field is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        is_active = bool(is_active)
+        employee.user.is_active = is_active
+        employee.user.save()
+
+        action_text = 'activated' if is_active else 'deactivated'
+        return Response({
+            'message': f'Employee {employee.user.get_full_name()} {action_text}',
+            'is_active': is_active,
+        })

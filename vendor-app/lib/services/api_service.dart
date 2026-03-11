@@ -248,4 +248,13 @@ class ApiService {
     final data = await _get('/work-logs/?occurrence=$occurrenceId');
     return data is List ? data : (data['results'] ?? []);
   }
+
+  // Assignments
+  static Future<void> assignEmployee(int occurrenceId, int employeeId) async {
+    await _post('/occurrences/$occurrenceId/assign/', {'employee_id': employeeId});
+  }
+
+  static Future<void> unassignEmployee(int occurrenceId, int employeeId) async {
+    await _post('/occurrences/$occurrenceId/unassign/', {'employee_id': employeeId});
+  }
 }

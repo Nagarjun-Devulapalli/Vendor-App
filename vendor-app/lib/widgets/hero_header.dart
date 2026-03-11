@@ -8,6 +8,7 @@ class HeroHeader extends StatelessWidget {
   final String subtitle;
   final String initials;
   final int? notificationCount;
+  final VoidCallback? onAvatarTap;
 
   const HeroHeader({
     super.key,
@@ -16,6 +17,7 @@ class HeroHeader extends StatelessWidget {
     required this.subtitle,
     required this.initials,
     this.notificationCount,
+    this.onAvatarTap,
   });
 
   @override
@@ -76,7 +78,9 @@ class HeroHeader extends StatelessWidget {
                   ),
                 ),
                 // Avatar
-                Stack(
+                GestureDetector(
+                  onTap: onAvatarTap,
+                  child: Stack(
                   clipBehavior: Clip.none,
                   children: [
                     Container(
@@ -118,6 +122,7 @@ class HeroHeader extends StatelessWidget {
                         ),
                       ),
                   ],
+                  ),
                 ),
               ],
             ),

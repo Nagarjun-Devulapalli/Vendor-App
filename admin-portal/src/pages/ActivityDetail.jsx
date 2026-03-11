@@ -163,9 +163,77 @@ export default function ActivityDetail() {
                       <p className="text-[11px] text-[#6b7280]">{log.scheduled_date}</p>
                     </div>
                   </div>
-                  <span className={`badge inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${approvalStyles.pending}`}>
-                    Pending Review
-                  </span>
+                  <p className="text-[13px] text-[#1a1f2e] mb-3">{log.description}</p>
+                  <div className="flex gap-4">
+                    {log.before_photo && (
+                      <div>
+                        <p className="text-[11px] text-[#6b7280] mb-1 font-medium">Before</p>
+                        <img src={log.before_photo.startsWith('http') ? log.before_photo : `http://localhost:8000${log.before_photo}`} alt="Before" className="w-40 h-32 object-cover rounded-lg border border-[#e4e8ed]" />
+                        {log.before_photo_taken_at && (
+                          <p className="text-[10px] text-[#6b7280] mt-1">{new Date(log.before_photo_taken_at).toLocaleString()}</p>
+                        )}
+                      </div>
+                    )}
+                    {log.after_photo && (
+                      <div>
+                        <p className="text-[11px] text-[#6b7280] mb-1 font-medium">After</p>
+                        <img src={log.after_photo.startsWith('http') ? log.after_photo : `http://localhost:8000${log.after_photo}`} alt="After" className="w-40 h-32 object-cover rounded-lg border border-[#e4e8ed]" />
+                        {log.after_photo_taken_at && (
+                          <p className="text-[10px] text-[#6b7280] mt-1">{new Date(log.after_photo_taken_at).toLocaleString()}</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  {/* Approval Actions */}
+                  <div className="mt-3 pt-3 border-t border-[#e4e8ed]">
+                    {(!log.approval_status || log.approval_status === 'pending') && (
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleApprove(log.id)}
+                          className="px-3 py-1.5 rounded-lg text-[12px] font-semibold bg-[#e8f5ee] text-[#1a6b4a] hover:bg-[#d0ebdd] transition-colors"
+                        >
+                          Approve
+                        </button>
+                        {rejectingLogId === log.id ? (
+                          <div className="flex items-center gap-2 flex-1">
+                            <input
+                              type="text"
+                              value={rejectReason}
+                              onChange={(e) => setRejectReason(e.target.value)}
+                              placeholder="Reason for rejection..."
+                              className="flex-1 px-3 py-1.5 rounded-lg text-[12px] border border-[#e4e8ed] focus:outline-none focus:border-orchid"
+                            />
+                            <button
+                              onClick={() => handleReject(log.id, rejectReason)}
+                              disabled={!rejectReason.trim()}
+                              className="px-3 py-1.5 rounded-lg text-[12px] font-semibold bg-[#fdecea] text-[#c0392b] hover:bg-[#fad4d1] transition-colors disabled:opacity-50"
+                            >
+                              Confirm
+                            </button>
+                            <button
+                              onClick={() => { setRejectingLogId(null); setRejectReason('') }}
+                              className="px-3 py-1.5 rounded-lg text-[12px] font-semibold text-[#6b7280] hover:bg-[#f0f1f3] transition-colors"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setRejectingLogId(log.id)}
+                            className="px-3 py-1.5 rounded-lg text-[12px] font-semibold bg-[#fdecea] text-[#c0392b] hover:bg-[#fad4d1] transition-colors"
+                          >
+                            Reject
+                          </button>
+                        )}
+                      </div>
+                    )}
+                    {log.approval_status === 'rejected' && log.rejection_reason && (
+                      <p className="text-[12px] text-[#c0392b] mt-1">Reason: {log.rejection_reason}</p>
+                    )}
+                    {(log.approval_status === 'approved' || log.approval_status === 'rejected') && log.reviewed_by_name && (
+                      <p className="text-[11px] text-[#6b7280] mt-1">Reviewed by {log.reviewed_by_name}</p>
+                    )}
+                  </div>
                 </div>
 
                 {/* Log Details */}

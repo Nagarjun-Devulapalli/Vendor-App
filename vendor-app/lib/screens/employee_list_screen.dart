@@ -8,7 +8,8 @@ import 'add_employee_screen.dart';
 
 class EmployeeListScreen extends StatefulWidget {
   final bool embedded;
-  const EmployeeListScreen({super.key, this.embedded = false});
+  final VoidCallback? onBack;
+  const EmployeeListScreen({super.key, this.embedded = false, this.onBack});
   @override
   State<EmployeeListScreen> createState() => _EmployeeListScreenState();
 }
@@ -64,9 +65,13 @@ class _EmployeeListScreenState extends State<EmployeeListScreen> {
         if (widget.embedded)
           Container(
             color: AppColors.green,
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+            padding: const EdgeInsets.fromLTRB(8, 12, 20, 20),
             child: Row(
               children: [
+                IconButton(
+                  icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
+                  onPressed: widget.onBack,
+                ),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
