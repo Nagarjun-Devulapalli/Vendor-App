@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
 import { ExclamationCircleOutlined } from '@ant-design/icons'
+import Pagination from '../components/Pagination'
+
+const PAGE_SIZE = 10
 
 const statusStyles = {
   pending: 'bg-[#fef3e0] text-[#b07200]',
@@ -25,6 +28,7 @@ export default function Activities() {
   const [filterStatus, setFilterStatus] = useState('')
   const [filterType, setFilterType] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
   const navigate = useNavigate()
 
   const [form, setForm] = useState({
@@ -39,7 +43,7 @@ export default function Activities() {
     api.get(url).then((res) => setActivities(res.data.results || res.data)).catch(console.error).finally(() => setLoading(false))
   }
 
-  useEffect(() => { fetchActivities() }, [filterStatus, filterType])
+  useEffect(() => { fetchActivities(); setCurrentPage(1) }, [filterStatus, filterType])
   useEffect(() => {
     api.get('/vendors/').then((res) => setVendors(res.data.results || res.data)).catch(console.error)
     api.get('/categories/').then((res) => setCategories(res.data.results || res.data)).catch(console.error)
@@ -62,6 +66,8 @@ export default function Activities() {
       setSubmitting(false)
     }
   }
+
+  const pagedActivities = activities.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
 
   if (loading) return <div className="flex items-center justify-center h-64 text-[#6b7280]">Loading...</div>
 
@@ -105,7 +111,7 @@ export default function Activities() {
             </tr>
           </thead>
           <tbody>
-            {activities.map((a) => (
+            {pagedActivities.map((a) => (
               <tr key={a.id} className="border-b border-[#e4e8ed] last:border-0 hover:bg-[#f9fafb] cursor-pointer transition-colors" onClick={() => navigate(`/activities/${a.id}`)}>
                 <td className="px-4 py-3.5">
                   <span className="font-semibold text-[13px] block">{a.title}</span>
@@ -136,6 +142,12 @@ export default function Activities() {
             {activities.length === 0 && <tr><td colSpan="6" className="px-4 py-8 text-center text-[13px] text-[#6b7280]">No activities found</td></tr>}
           </tbody>
         </table>
+        <Pagination
+          currentPage={currentPage}
+          totalItems={activities.length}
+          pageSize={PAGE_SIZE}
+          onPageChange={setCurrentPage}
+        />
       </div>
 
       {/* Create Activity Modal */}
@@ -157,17 +169,17 @@ export default function Activities() {
               </div>
               <div className="grid grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block text-xs font-semibold text-[#1a1f2e] mb-1.5">Vendor *</label>
-                  <select value={form.vendor} onChange={(e) => setForm({ ...form, vendor: e.target.value, category: '' })} className="w-full border-[1.5px] border-[#e4e8ed] rounded-lg px-3.5 py-2.5 text-sm focus:border-orchid focus:outline-none transition-colors" required>
-                    <option value="">Select vendor</option>
-                    {vendors.map((v) => <option key={v.id} value={v.id}>{v.display_name || v.company_name || `${v.user?.first_name} ${v.user?.last_name}`}</option>)}
+                  <label className="block text-xs font-semibold text-[#1a1f2e] mb-1.5">Category *</label>
+                  <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value, vendor: '' })} className="w-full border-[1.5px] border-[#e4e8ed] rounded-lg px-3.5 py-2.5 text-sm focus:border-orchid focus:outline-none transition-colors" required>
+                    <option value="">Select category</option>
+                    {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-[#1a1f2e] mb-1.5">Category</label>
-                  <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="w-full border-[1.5px] border-[#e4e8ed] rounded-lg px-3.5 py-2.5 text-sm focus:border-orchid focus:outline-none transition-colors" disabled={!form.vendor}>
-                    <option value="">{form.vendor ? 'Select category' : 'Select vendor first'}</option>
-                    {(form.vendor ? categories.filter((c) => { const v = vendors.find((v) => v.id === Number(form.vendor)); return v?.categories?.includes(c.id) }) : []).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  <label className="block text-xs font-semibold text-[#1a1f2e] mb-1.5">Vendor *</label>
+                  <select value={form.vendor} onChange={(e) => setForm({ ...form, vendor: e.target.value })} className="w-full border-[1.5px] border-[#e4e8ed] rounded-lg px-3.5 py-2.5 text-sm focus:border-orchid focus:outline-none transition-colors" disabled={!form.category} required>
+                    <option value="">{form.category ? 'Select vendor' : 'Select category first'}</option>
+                    {(form.category ? vendors.filter((v) => v.categories?.includes(Number(form.category))) : []).map((v) => <option key={v.id} value={v.id}>{v.display_name || v.company_name || `${v.user?.first_name} ${v.user?.last_name}`}</option>)}
                   </select>
                 </div>
               </div>
