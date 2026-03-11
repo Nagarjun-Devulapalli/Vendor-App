@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/activity_provider.dart';
@@ -8,6 +9,7 @@ import 'screens/employee_dashboard.dart';
 import 'theme/app_theme.dart';
 
 void main() {
+  GoogleFonts.config.allowRuntimeFetching = false;
   runApp(
     MultiProvider(
       providers: [
