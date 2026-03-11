@@ -243,6 +243,42 @@ class ApiService {
     throw Exception(response.body.isNotEmpty ? jsonDecode(response.body).toString() : 'Failed to add employee');
   }
 
+  static Future<void> updateEmployee({
+    required int employeeId,
+    String? firstName,
+    String? lastName,
+    String? phone,
+    String? aadhar,
+    File? photo,
+  }) async {
+    final token = await AuthService.getAccessToken();
+    final request = http.MultipartRequest('PATCH', Uri.parse('$baseUrl/employees/$employeeId/'));
+    request.headers['Authorization'] = 'Bearer $token';
+    if (firstName != null) request.fields['first_name'] = firstName;
+    if (lastName != null) request.fields['last_name'] = lastName;
+    if (phone != null) request.fields['phone'] = phone;
+    if (aadhar != null) request.fields['aadhar_number'] = aadhar;
+    if (photo != null) {
+      request.files.add(await http.MultipartFile.fromPath('photo', photo.path));
+    }
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception(response.body.isNotEmpty ? jsonDecode(response.body).toString() : 'Failed to update employee');
+    }
+  }
+
+  static Future<void> deleteEmployee(int employeeId) async {
+    final token = await AuthService.getAccessToken();
+    final response = await http.delete(
+      Uri.parse('$baseUrl/employees/$employeeId/'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception('Failed to delete employee');
+    }
+  }
+
   // Activities
   static Future<List<dynamic>> getActivities() async {
     final data = await _get('/activities/');
