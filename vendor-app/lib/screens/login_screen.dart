@@ -15,6 +15,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  String _selectedRole = 'vendor_owner';
+  String? _errorMessage;
 
   @override
   void dispose() {
@@ -25,20 +27,17 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
+    setState(() => _errorMessage = null);
     final auth = context.read<AuthProvider>();
     final success = await auth.login(
       _usernameController.text.trim(),
       _passwordController.text,
+      expectedRole: _selectedRole,
     );
     if (!success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(auth.error ?? 'Login failed'),
-          backgroundColor: AppColors.red,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      );
+      _usernameController.text = '';
+      _passwordController.text = '';
+      setState(() => _errorMessage = auth.error ?? 'Login failed');
     }
   }
 
@@ -66,11 +65,11 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 6),
               Text(
-                'Sign in with the credentials\nprovided by your school admin',
+                'Sign in to continue',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.nunito(
                   fontSize: 13,
-                  color: Colors.white.withOpacity(0.55),
+                  color: Colors.white.withValues(alpha: 0.55),
                 ),
               ),
               const Spacer(),
@@ -84,7 +83,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.3),
+                        color: Colors.black.withValues(alpha: 0.3),
                         blurRadius: 60,
                         offset: const Offset(0, 20),
                       ),
@@ -96,6 +95,22 @@ class _LoginScreenState extends State<LoginScreen> {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // Role tab toggle
+                        Container(
+                          height: 46,
+                          decoration: BoxDecoration(
+                            color: AppColors.bg,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppColors.border),
+                          ),
+                          child: Row(
+                            children: [
+                              _roleTab('Vendor Owner', 'vendor_owner'),
+                              _roleTab('Employee', 'vendor_employee'),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 20),
                         Text('USERNAME', style: AppTheme.label),
                         const SizedBox(height: 6),
                         TextFormField(
@@ -124,6 +139,33 @@ class _LoginScreenState extends State<LoginScreen> {
                           validator: (v) => v == null || v.isEmpty ? 'Required' : null,
                           onFieldSubmitted: (_) => _login(),
                         ),
+                        if (_errorMessage != null) ...[
+                          const SizedBox(height: 12),
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: AppColors.redLight,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.error_rounded, color: AppColors.red, size: 16),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    _errorMessage!,
+                                    style: GoogleFonts.nunito(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.red,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                         const SizedBox(height: 20),
                         Consumer<AuthProvider>(
                           builder: (ctx, auth, _) => SizedBox(
@@ -168,6 +210,40 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 32),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _roleTab(String label, String role) {
+    final isSelected = _selectedRole == role;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          _usernameController.clear();
+          _passwordController.clear();
+          _formKey.currentState?.reset();
+          setState(() {
+            _selectedRole = role;
+            _errorMessage = null;
+          });
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          margin: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: isSelected ? AppColors.green : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            label,
+            style: GoogleFonts.nunito(
+              fontSize: 13,
+              fontWeight: FontWeight.w800,
+              color: isSelected ? Colors.white : AppColors.muted,
+            ),
           ),
         ),
       ),
