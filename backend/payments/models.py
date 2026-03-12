@@ -27,9 +27,15 @@ class Payment(SoftDeleteModel):
         elif activity.payment_type == 'daily':
             daily_rate = activity.expected_cost
             if activity.status == 'completed':
-                last_occ = activity.occurrences.filter(
-                    status='completed', completed_at__isnull=False
-                ).order_by('-completed_at').first()
+                # Use prefetched occurrences if available
+                occurrences = activity.occurrences.all()
+                if hasattr(activity, '_prefetched_objects_cache') and 'occurrences' in activity._prefetched_objects_cache:
+                    completed_occs = [o for o in occurrences if o.status == 'completed' and o.completed_at]
+                    last_occ = max(completed_occs, key=lambda o: o.completed_at, default=None) if completed_occs else None
+                else:
+                    last_occ = activity.occurrences.filter(
+                        status='completed', completed_at__isnull=False
+                    ).order_by('-completed_at').first()
                 if last_occ:
                     end = last_occ.completed_at.date()
                 else:
@@ -42,13 +48,20 @@ class Payment(SoftDeleteModel):
 
         elif activity.payment_type == 'per_occurrence':
             rate = activity.expected_cost
-            completed_count = activity.occurrences.filter(status='completed').count()
+            # Use prefetched occurrences if available
+            if hasattr(activity, '_prefetched_objects_cache') and 'occurrences' in activity._prefetched_objects_cache:
+                completed_count = sum(1 for o in activity.occurrences.all() if o.status == 'completed')
+            else:
+                completed_count = activity.occurrences.filter(status='completed').count()
             return rate * completed_count
 
         return activity.expected_cost
 
     @property
     def total_paid(self):
+        # Use prefetched entries if available to avoid extra DB query
+        if 'entries' in self.__dict__.get('_prefetched_objects_cache', {}):
+            return sum((e.amount for e in self.entries.all()), Decimal('0.00'))
         return self.entries.aggregate(total=models.Sum('amount'))['total'] or Decimal('0.00')
 
     @property

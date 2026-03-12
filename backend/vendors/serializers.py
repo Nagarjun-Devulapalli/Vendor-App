@@ -45,7 +45,7 @@ class VendorSerializer(serializers.ModelSerializer):
         extra_kwargs = {'company_name': {'required': False}}
 
     def get_category_names(self, obj):
-        return list(obj.categories.values_list('name', flat=True))
+        return [c.name for c in obj.categories.all()]
 
     def create(self, validated_data):
         first_name = validated_data.pop('first_name', '')
