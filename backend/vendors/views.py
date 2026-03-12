@@ -19,7 +19,7 @@ class VendorViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        qs = Vendor.objects.select_related('user', 'branch').prefetch_related('categories').all()
+        qs = Vendor.objects.select_related('user', 'user__branch', 'branch').prefetch_related('categories').all()
         user = self.request.user
         if user.role == 'admin' and user.branch:
             qs = qs.filter(branch=user.branch)
@@ -80,7 +80,7 @@ class EmployeeViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        qs = Employee.objects.select_related('user', 'vendor_owner').all()
+        qs = Employee.objects.select_related('user', 'user__branch', 'vendor_owner', 'vendor_owner__user').all()
         user = self.request.user
         if user.role == 'admin' and user.branch:
             qs = qs.filter(vendor_owner__branch=user.branch)

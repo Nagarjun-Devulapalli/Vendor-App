@@ -16,8 +16,8 @@ class PaymentViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         qs = Payment.objects.select_related(
-            'activity', 'activity__vendor'
-        ).prefetch_related('entries').all()
+            'activity', 'activity__vendor', 'activity__vendor__user'
+        ).prefetch_related('entries', 'activity__occurrences').all()
         user = self.request.user
         if user.role == 'admin' and user.branch:
             qs = qs.filter(activity__branch=user.branch)
