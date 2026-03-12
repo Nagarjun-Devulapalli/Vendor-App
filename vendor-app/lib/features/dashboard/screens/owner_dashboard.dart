@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
 import 'package:vendor_app/core/routes.dart';
-import '../../auth/providers/auth_provider.dart';
-import '../providers/activity_provider.dart';
+import '../../auth/cubit/auth_cubit.dart';
+import '../cubit/activity_cubit.dart';
 import '../../occurrences/models/occurrence.dart';
 import '../../employees/models/employee.dart';
 import '../../../core/services/api_service.dart';
@@ -30,7 +29,7 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
   void initState() {
     super.initState();
     Future.microtask(() {
-      context.read<ActivityProvider>().loadTodayTasks();
+      context.read<ActivityCubit>().loadTodayTasks();
       _loadEmployees();
     });
   }
@@ -65,8 +64,8 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
 
   @override
   Widget build(BuildContext context) {
-    final auth = context.watch<AuthProvider>();
-    final user = auth.user;
+    final authState = context.watch<AuthCubit>().state;
+    final user = authState.user;
     final now = DateTime.now();
     final dateStr = DateFormat('EEEE, d MMMM yyyy').format(now);
 
@@ -86,7 +85,7 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                 ? _buildTaskList()
                 : _navIndex == 2
                 ? EmployeeListScreen(embedded: true, onBack: () => setState(() => _navIndex = 0))
-                : _buildProfile(auth),
+                : _buildProfile(),
           ),
           AppBottomNav(
             currentIndex: _navIndex,
@@ -104,9 +103,9 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
   }
 
   Widget _buildHome(user, String dateStr) {
-    return Consumer<ActivityProvider>(
-      builder: (ctx, provider, _) {
-        final tasks = provider.todayTasks;
+    return BlocBuilder<ActivityCubit, ActivityState>(
+      builder: (ctx, activityState) {
+        final tasks = activityState.todayTasks;
         final doneTasks = tasks.where((t) => t.isCompleted).length;
         final overdueTasks = tasks.where((t) => t.isMissed).length;
 
@@ -115,7 +114,7 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
           child: RefreshIndicator(
           color: AppColors.green,
           onRefresh: () async {
-            await provider.loadTodayTasks();
+            await context.read<ActivityCubit>().loadTodayTasks();
             await _loadEmployees();
           },
           child: CustomScrollView(
@@ -126,7 +125,7 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                 child: HeroHeader(
                   greeting: _getGreeting(),
                   name: user?.firstName ?? 'Vendor',
-                  subtitle: '$dateStr · ${user?.branchName ?? ''}',
+                  subtitle: '$dateStr \u00b7 ${user?.branchName ?? ''}',
                   initials: _getInitials(user?.fullName ?? ''),
                   onAvatarTap: () => setState(() => _navIndex = 3),
                 ),
@@ -152,7 +151,7 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                         onTap: () => setState(() => _navIndex = 1),
                         child: Text(
                           'See All',
-                          style: GoogleFonts.nunito(
+                          style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
                             color: AppColors.green,
@@ -164,7 +163,7 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                 ),
               ),
               const SliverToBoxAdapter(child: SizedBox(height: 12)),
-              if (provider.isLoading)
+              if (activityState.isLoading)
                 const SliverToBoxAdapter(
                   child: Center(
                     child: Padding(
@@ -183,7 +182,7 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                         const SizedBox(height: 12),
                         Text(
                           'No tasks for today',
-                          style: GoogleFonts.nunito(
+                          style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
                             color: AppColors.muted,
@@ -205,9 +204,9 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                             VendorRoute.vendorOccurrenceDetail.name,
                             pathParameters: {'occurrenceId': tasks[i].id.toString()},
                           );
-                          if (mounted) provider.loadTodayTasks();
+                          if (mounted) context.read<ActivityCubit>().loadTodayTasks();
                         },
-                        onLongPress: () => _showMarkCompleteSheet(tasks[i], provider),
+                        onLongPress: () => _showMarkCompleteSheet(tasks[i]),
                       ),
                       childCount: tasks.length > 3 ? 3 : tasks.length,
                     ),
@@ -225,8 +224,8 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                       GestureDetector(
                         onTap: () => setState(() => _navIndex = 2),
                         child: Text(
-                          'See all →',
-                          style: GoogleFonts.nunito(
+                          'See all \u2192',
+                          style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
                             color: AppColors.green,
@@ -248,7 +247,7 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                           child: Center(
                             child: Text(
                               'No employees yet',
-                              style: GoogleFonts.nunito(
+                              style: TextStyle(
                                 color: AppColors.muted,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -290,7 +289,7 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
             alignment: Alignment.center,
             child: Text(
               _getInitials(emp.fullName),
-              style: GoogleFonts.nunito(
+              style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w900,
                 color: AppColors.green,
@@ -304,7 +303,7 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
               children: [
                 Text(
                   emp.fullName,
-                  style: GoogleFonts.nunito(
+                  style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w800,
                     color: AppColors.text,
@@ -317,7 +316,7 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                     const SizedBox(width: 4),
                     Text(
                       emp.phone,
-                      style: GoogleFonts.nunito(
+                      style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                         color: AppColors.muted,
@@ -333,7 +332,7 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
     );
   }
 
-  void _showMarkCompleteSheet(Occurrence task, ActivityProvider provider) {
+  void _showMarkCompleteSheet(Occurrence task) {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -358,7 +357,7 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                 child: Text(
                   task.activityTitle,
-                  style: GoogleFonts.nunito(
+                  style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w800,
                     color: AppColors.text,
@@ -371,24 +370,24 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                 leading: const Icon(Icons.done_all_rounded, color: AppColors.green),
                 title: Text(
                   'Mark Job as Complete',
-                  style: GoogleFonts.nunito(
+                  style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
                 subtitle: Text(
                   'No new daily tasks will be created for this job',
-                  style: GoogleFonts.nunito(fontSize: 11, color: AppColors.muted),
+                  style: TextStyle(fontSize: 11, color: AppColors.muted),
                 ),
                 onTap: () async {
                   Navigator.pop(ctx);
-                  final success = await provider.markActivityComplete(task.activityId);
+                  final success = await context.read<ActivityCubit>().markActivityComplete(task.activityId);
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(success
                             ? 'Job marked as complete!'
-                            : 'Failed to mark complete: ${provider.error}'),
+                            : 'Failed to mark complete: ${context.read<ActivityCubit>().state.error}'),
                         backgroundColor: success ? AppColors.green : AppColors.red,
                         behavior: SnackBarBehavior.floating,
                         shape: RoundedRectangleBorder(
@@ -407,11 +406,11 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
   }
 
   Widget _buildTaskList() {
-    return Consumer<ActivityProvider>(
-      builder: (ctx, provider, _) {
+    return BlocBuilder<ActivityCubit, ActivityState>(
+      builder: (ctx, activityState) {
         final filteredTasks = _taskTabIndex == 0
-            ? provider.todayTasks.where((t) => !t.isCompleted).toList()
-            : provider.todayTasks.where((t) => t.isCompleted).toList();
+            ? activityState.todayTasks.where((t) => !t.isCompleted).toList()
+            : activityState.todayTasks.where((t) => t.isCompleted).toList();
         return Column(
           children: [
             // Header
@@ -427,7 +426,7 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                   Expanded(
                     child: Text(
                       "Today's Tasks",
-                      style: GoogleFonts.fraunces(
+                      style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w800,
                         color: Colors.white,
@@ -458,8 +457,8 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
             Expanded(
               child: RefreshIndicator(
                 color: AppColors.green,
-                onRefresh: () => provider.loadTodayTasks(),
-                child: provider.isLoading
+                onRefresh: () => context.read<ActivityCubit>().loadTodayTasks(),
+                child: activityState.isLoading
                     ? const Center(
                         child: CircularProgressIndicator(
                           color: AppColors.green,
@@ -480,7 +479,7 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                           Center(
                             child: Text(
                               _taskTabIndex == 0 ? 'No pending tasks' : 'No completed tasks',
-                              style: GoogleFonts.nunito(
+                              style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w700,
                                 color: AppColors.muted,
@@ -501,9 +500,9 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                                 VendorRoute.vendorOccurrenceDetail.name,
                                 pathParameters: {'occurrenceId': task.id.toString()},
                               );
-                              if (mounted) provider.loadTodayTasks();
+                              if (mounted) context.read<ActivityCubit>().loadTodayTasks();
                             },
-                            onLongPress: () => _showMarkCompleteSheet(task, provider),
+                            onLongPress: () => _showMarkCompleteSheet(task),
                           );
                         },
                       ),
@@ -529,7 +528,7 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
           child: Center(
             child: Text(
               label,
-              style: GoogleFonts.nunito(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
                 color: isActive ? Colors.white : AppColors.muted,
@@ -541,8 +540,8 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
     );
   }
 
-  Widget _buildProfile(AuthProvider auth) {
-    final user = auth.user;
+  Widget _buildProfile() {
+    final user = context.watch<AuthCubit>().state.user;
     return Column(
       children: [
         Container(
@@ -557,7 +556,7 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
               Expanded(
                 child: Text(
                   'Profile',
-                  style: GoogleFonts.fraunces(
+                  style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w800,
                     color: Colors.white,
@@ -583,7 +582,7 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
           alignment: Alignment.center,
           child: Text(
             _getInitials(user?.fullName ?? ''),
-            style: GoogleFonts.fraunces(
+            style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.w800,
               color: AppColors.green,
@@ -593,7 +592,7 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
         const SizedBox(height: 12),
         Text(
           user?.fullName ?? '',
-          style: GoogleFonts.nunito(
+          style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w800,
             color: AppColors.text,
@@ -601,7 +600,7 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
         ),
         Text(
           user?.username ?? '',
-          style: GoogleFonts.nunito(
+          style: TextStyle(
             fontSize: 13,
             color: AppColors.muted,
             fontWeight: FontWeight.w600,
@@ -616,7 +615,7 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
           ),
           child: Text(
             'Vendor Owner',
-            style: GoogleFonts.nunito(
+            style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w800,
               color: AppColors.green,
@@ -649,7 +648,7 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
           child: SizedBox(
             width: double.infinity,
             child: OutlinedButton(
-              onPressed: () => auth.logout(),
+              onPressed: () => context.read<AuthCubit>().logout(),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.red,
                 side: const BorderSide(color: AppColors.red, width: 1.5),
@@ -660,7 +659,7 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
               ),
               child: Text(
                 'Logout',
-                style: GoogleFonts.nunito(
+                style: TextStyle(
                   fontWeight: FontWeight.w800,
                   fontSize: 15,
                 ),
@@ -693,7 +692,7 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                 children: [
                   Text(
                     'Change Password',
-                    style: GoogleFonts.fraunces(
+                    style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w800,
                       color: AppColors.text,
@@ -703,10 +702,10 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                   TextField(
                     controller: controller,
                     obscureText: true,
-                    style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w600),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                     decoration: InputDecoration(
                       labelText: 'New Password',
-                      labelStyle: GoogleFonts.nunito(fontSize: 13, color: AppColors.muted),
+                      labelStyle: TextStyle(fontSize: 13, color: AppColors.muted),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -735,7 +734,7 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                                 if (mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                      content: Text('Password updated successfully', style: GoogleFonts.nunito(fontWeight: FontWeight.w600)),
+                                      content: Text('Password updated successfully', style: TextStyle(fontWeight: FontWeight.w600)),
                                       backgroundColor: AppColors.green,
                                       behavior: SnackBarBehavior.floating,
                                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -747,7 +746,7 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                                 if (mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                      content: Text(e.toString().replaceFirst('Exception: ', ''), style: GoogleFonts.nunito(fontWeight: FontWeight.w600)),
+                                      content: Text(e.toString().replaceFirst('Exception: ', ''), style: TextStyle(fontWeight: FontWeight.w600)),
                                       backgroundColor: AppColors.red,
                                       behavior: SnackBarBehavior.floating,
                                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -767,7 +766,7 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                               width: 20, height: 20,
                               child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                             )
-                          : Text('Update Password', style: GoogleFonts.nunito(fontWeight: FontWeight.w800, fontSize: 15)),
+                          : Text('Update Password', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
                     ),
                   ),
                 ],
@@ -787,7 +786,7 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
         children: [
           Text(
             label,
-            style: GoogleFonts.nunito(
+            style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
               color: AppColors.muted,
@@ -795,7 +794,7 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
           ),
           Text(
             value,
-            style: GoogleFonts.nunito(
+            style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w700,
               color: AppColors.text,

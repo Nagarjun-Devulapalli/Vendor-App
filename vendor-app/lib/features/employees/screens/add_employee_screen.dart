@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../core/services/api_service.dart';
 import '../../../core/theme/app_theme.dart';
@@ -62,7 +61,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                   ),
                   child: const Icon(Icons.camera_alt_rounded, color: AppColors.green),
                 ),
-                title: Text('Camera', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+                title: Text('Camera', style: TextStyle(fontWeight: FontWeight.w700)),
                 onTap: () => Navigator.pop(ctx, ImageSource.camera),
               ),
               ListTile(
@@ -74,7 +73,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                   ),
                   child: const Icon(Icons.photo_library_rounded, color: AppColors.blue),
                 ),
-                title: Text('Gallery', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+                title: Text('Gallery', style: TextStyle(fontWeight: FontWeight.w700)),
                 onTap: () => Navigator.pop(ctx, ImageSource.gallery),
               ),
             ],
@@ -141,7 +140,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                     child: const Icon(Icons.check_circle_rounded, color: AppColors.green, size: 32),
                   ),
                   const SizedBox(height: 16),
-                  Text('Employee Created!', style: GoogleFonts.fraunces(
+                  Text('Employee Created!', style: TextStyle(
                     fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.text,
                   )),
                   const SizedBox(height: 16),
@@ -158,7 +157,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                         const SizedBox(width: 8),
                         Expanded(child: Text(
                           'Save these credentials!\nThey won\'t be shown again.',
-                          style: GoogleFonts.nunito(
+                          style: TextStyle(
                             fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.red,
                           ),
                         )),
@@ -181,14 +180,14 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                         const SizedBox(height: 2),
                         Text(
                           credentials['username'] ?? 'N/A',
-                          style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.text),
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.text),
                         ),
                         const SizedBox(height: 10),
                         Text('PASSWORD', style: AppTheme.label),
                         const SizedBox(height: 2),
                         Text(
                           credentials['password'] ?? 'N/A',
-                          style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.text),
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.text),
                         ),
                       ],
                     ),
@@ -199,7 +198,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                     child: ElevatedButton(
                       onPressed: () => Navigator.pop(ctx),
                       style: AppTheme.greenButton,
-                      child: Text('Done', style: GoogleFonts.nunito(fontWeight: FontWeight.w800)),
+                      child: Text('Done', style: TextStyle(fontWeight: FontWeight.w800)),
                     ),
                   ),
                 ],
@@ -266,7 +265,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                             const SizedBox(height: 8),
                             Text(
                               _photo == null ? 'Tap to add photo' : 'Tap to change photo',
-                              style: GoogleFonts.nunito(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.muted),
+                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.muted),
                             ),
                           ],
                         ),
@@ -288,7 +287,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                           TextFormField(
                             controller: _firstNameController,
                             inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z ]'))],
-                            style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w600),
+                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                             decoration: AppTheme.styledInput(label: '', hint: 'e.g. Suresh'),
                             validator: (v) => v == null || v.isEmpty ? 'Required' : null,
                           ),
@@ -298,7 +297,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                           TextFormField(
                             controller: _lastNameController,
                             inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z ]'))],
-                            style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w600),
+                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                             decoration: AppTheme.styledInput(label: '', hint: 'e.g. Babu'),
                             validator: (v) => v == null || v.isEmpty ? 'Required' : null,
                           ),
@@ -312,7 +311,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                               FilteringTextInputFormatter.digitsOnly,
                               LengthLimitingTextInputFormatter(10),
                             ],
-                            style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w600),
+                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                             decoration: AppTheme.styledInput(label: '', hint: '10-digit phone number'),
                             validator: (v) {
                               if (v == null || v.isEmpty) return 'Required';
@@ -330,7 +329,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                               FilteringTextInputFormatter.digitsOnly,
                               LengthLimitingTextInputFormatter(12),
                             ],
-                            style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w600),
+                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                             decoration: AppTheme.styledInput(label: '', hint: '12-digit Aadhar number'),
                             validator: (v) {
                               if (v != null && v.isNotEmpty && v.length != 12) return 'Enter exactly 12 digits';
@@ -355,7 +354,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                           const SizedBox(width: 8),
                           Expanded(child: Text(
                             'Login credentials will be auto-generated and shown once after saving.',
-                            style: GoogleFonts.nunito(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF7a5000)),
+                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF7a5000)),
                           )),
                         ],
                       ),
@@ -369,7 +368,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                         style: AppTheme.greenButton,
                         child: _isSubmitting
                             ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                            : Text('Create Employee', style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w800)),
+                            : Text('Create Employee', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
                       ),
                     ),
                     const SizedBox(height: 24),

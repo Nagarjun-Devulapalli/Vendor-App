@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../occurrences/models/occurrence.dart';
 import '../../../core/theme/app_theme.dart';
 
@@ -119,7 +118,7 @@ class TaskCard extends StatelessWidget {
                       children: [
                         Text(
                           occurrence.activityTitle,
-                          style: GoogleFonts.nunito(
+                          style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w800,
                             color: AppColors.text,
@@ -129,7 +128,7 @@ class TaskCard extends StatelessWidget {
                         const SizedBox(height: 4),
                         Text(
                           'Started ${occurrence.scheduledDate}${occurrence.categoryName != null ? ' · ${occurrence.categoryName}' : ''}',
-                          style: GoogleFonts.nunito(
+                          style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
                             color: AppColors.muted,
@@ -154,7 +153,7 @@ class TaskCard extends StatelessWidget {
                               const SizedBox(width: 3),
                               Text(
                                 _statusLabel,
-                                style: GoogleFonts.nunito(
+                                style: TextStyle(
                                   fontSize: 10,
                                   fontWeight: FontWeight.w800,
                                   color: _statusColor,

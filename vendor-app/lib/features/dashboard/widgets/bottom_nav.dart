@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_theme.dart';
 
 class AppBottomNav extends StatelessWidget {
@@ -42,7 +41,7 @@ class AppBottomNav extends StatelessWidget {
                   const SizedBox(height: 3),
                   Text(
                     item.label.toUpperCase(),
-                    style: GoogleFonts.nunito(
+                    style: TextStyle(
                       fontSize: 9,
                       fontWeight: FontWeight.w800,
                       color: active ? AppColors.green : AppColors.muted,
