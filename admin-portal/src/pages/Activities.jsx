@@ -51,13 +51,13 @@ export default function Activities() {
     if (selectedBranch) url += `branch=${selectedBranch}&`
     if (filterStatus) url += `status=${filterStatus}&`
     if (filterType) url += `activity_type=${filterType}&`
-    api.get(url).then((res) => setActivities(res.data.results || res.data)).catch(console.error).finally(() => setLoading(false))
+    api.get(url).then((res) => setActivities(res.data.results || res.data)).catch(() => toast.error('Failed to load activities')).finally(() => setLoading(false))
   }
 
   useEffect(() => { fetchActivities(); setCurrentPage(1) }, [filterStatus, filterType, selectedBranch])
   useEffect(() => {
-    api.get('/vendors/').then((res) => setVendors(res.data.results || res.data)).catch(console.error)
-    api.get('/categories/').then((res) => setCategories(res.data.results || res.data)).catch(console.error)
+    api.get('/vendors/').then((res) => setVendors(res.data.results || res.data)).catch(() => toast.error('Failed to load vendors'))
+    api.get('/categories/').then((res) => setCategories(res.data.results || res.data)).catch(() => toast.error('Failed to load categories'))
   }, [])
 
   // Close suggestions when clicking outside
@@ -81,6 +81,7 @@ export default function Activities() {
       await api.post('/activities/', payload)
       setShowModal(false)
       setForm({ title: '', description: '', vendor: '', category: '', activity_type: 'one_time', start_date: '', end_date: '', recurrence_interval_days: '', expected_cost: '', payment_type: '' })
+      toast.success('Activity created successfully')
       fetchActivities()
     } catch (err) {
       toast.error(parseApiError(err, 'Error creating activity'))

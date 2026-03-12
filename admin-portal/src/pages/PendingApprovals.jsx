@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import api from '../services/api'
+import { useToast, parseApiError } from '../components/Toast'
 import { ExclamationCircleOutlined } from '@ant-design/icons'
 import Pagination from '../components/Pagination'
 
@@ -83,7 +84,7 @@ export default function PendingApprovals() {
           rejected: sortByRecent(rejected),
         })
       })
-      .catch(console.error)
+      .catch(() => toast.error('Failed to load pending approvals'))
       .finally(() => setLoading(false))
   }, [])
 
@@ -95,6 +96,42 @@ export default function PendingApprovals() {
 
   const currentActivities = allGrouped[activeTab] || []
   const pagedActivities = currentActivities.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+
+  const handleApprove = (id) => {
+    api.patch(`/work-logs/${id}/review/`, { approval_status: 'approved' })
+      .then(() => {
+        toast.success('Work log approved successfully')
+        fetchWorkLogs()
+        setDetailModal(null)
+      })
+      .catch((err) => toast.error(parseApiError(err)))
+  }
+
+  const handleReject = () => {
+    if (!rejectReason.trim()) return
+    api.patch(`/work-logs/${rejectModal.id}/review/`, {
+      approval_status: 'rejected',
+      rejection_reason: rejectReason,
+    })
+      .then(() => {
+        toast.success('Work log rejected')
+        setRejectModal(null)
+        setRejectReason('')
+        setDetailModal(null)
+        fetchWorkLogs()
+      })
+      .catch((err) => toast.error(parseApiError(err)))
+  }
+
+  const openReject = (log) => {
+    setRejectModal(log)
+    setRejectReason('')
+  }
+
+  const resolvePhoto = (url) => {
+    if (!url) return null
+    return url.startsWith('http') ? url : `http://localhost:8000${url}`
+  }
 
   if (loading) return <div className="flex items-center justify-center h-64 text-[#6b7280]">Loading...</div>
 

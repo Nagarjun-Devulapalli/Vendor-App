@@ -39,7 +39,7 @@ export default function Vendors() {
     setLoading(true)
     let url = '/vendors/'
     if (selectedBranch) url += `?branch=${selectedBranch}`
-    api.get(url).then((res) => setVendors(res.data.results || res.data)).catch(console.error).finally(() => setLoading(false))
+    api.get(url).then((res) => setVendors(res.data.results || res.data)).catch(() => toast.error('Failed to load vendors')).finally(() => setLoading(false))
   }
 
   useEffect(() => {
@@ -47,8 +47,8 @@ export default function Vendors() {
   }, [selectedBranch])
 
   useEffect(() => {
-    api.get('/branches/').then((res) => setBranches(res.data.results || res.data)).catch(console.error)
-    api.get('/categories/').then((res) => setCategories(res.data.results || res.data)).catch(console.error)
+    api.get('/branches/').then((res) => setBranches(res.data.results || res.data)).catch(() => toast.error('Failed to load branches'))
+    api.get('/categories/').then((res) => setCategories(res.data.results || res.data)).catch(() => toast.error('Failed to load categories'))
     api.get('/employees/').then((res) => {
       const employees = res.data.results || res.data
       const countMap = {}
@@ -57,7 +57,7 @@ export default function Vendors() {
         countMap[vid] = (countMap[vid] || 0) + 1
       })
       setEmployeeCountMap(countMap)
-    }).catch(console.error)
+    }).catch(() => toast.error('Failed to load employee data'))
   }, [])
 
   // Close suggestions when clicking outside
@@ -108,6 +108,7 @@ export default function Vendors() {
       setForm({ company_name: '', first_name: '', last_name: '', phone: '', aadhar_number: '', branch: '', category_ids: [] })
       setPhoto(null)
       setPhotoPreview(null)
+      toast.success('Vendor created successfully')
       fetchVendors()
     } catch (err) {
       toast.error(parseApiError(err, 'Error creating vendor'))
@@ -127,6 +128,7 @@ export default function Vendors() {
     try {
       await api.delete(`/vendors/${id}/`)
       setDeleteConfirm(null)
+      toast.success('Vendor deleted successfully')
       fetchVendors()
     } catch (err) {
       toast.error('Error deleting vendor')
