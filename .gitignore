@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.sqlite3
+backend/media/
+conversation_log.md
+
+# Node
+node_modules/
+dist/
+
+# Flutter
+vendor-app/.dart_tool/
+vendor-app/.flutter-plugins
+vendor-app/.flutter-plugins-dependencies
+vendor-app/build/
+vendor-app/.packages
+vendor-app/pubspec.lock
+backend/venv
+backend/credentials
+
+# IDE
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# Env
+.env
+*.env
+.venv
+backend/venv
+
+# Credentials
+backend/credentials/
+
+# Internal docs
+prompts.md
+occurrence-changes.md
+payment-revamp-frontend.md
+
