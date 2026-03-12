@@ -4,7 +4,7 @@ import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
 import { useToast, parseApiError } from '../components/Toast'
 import BranchFilter from '../components/BranchFilter'
-import { DeleteOutlined, CameraOutlined, CheckCircleOutlined, FileTextOutlined } from '@ant-design/icons'
+import { DeleteOutlined, CameraOutlined, CheckCircleOutlined, FileTextOutlined, SearchOutlined } from '@ant-design/icons'
 import Pagination from '../components/Pagination'
 
 const PAGE_SIZE = 10
@@ -24,18 +24,23 @@ export default function Vendors() {
   const [photo, setPhoto] = useState(null)
   const [photoPreview, setPhotoPreview] = useState(null)
   const [submitting, setSubmitting] = useState(false)
+  const [togglingId, setTogglingId] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [selectedVendorId, setSelectedVendorId] = useState(null)
   const [currentPage, setCurrentPage] = useState(1)
+  const [branchDropdownOpen, setBranchDropdownOpen] = useState(false)
+  const [branchSearch, setBranchSearch] = useState('')
+  const [deleteConfirm, setDeleteConfirm] = useState(null)
   const navigate = useNavigate()
   const searchRef = useRef(null)
+  const branchDropdownRef = useRef(null)
 
   const fetchVendors = () => {
     setLoading(true)
     let url = '/vendors/'
     if (selectedBranch) url += `?branch=${selectedBranch}`
-    api.get(url).then((res) => setVendors(res.data.results || res.data)).catch(console.error).finally(() => setLoading(false))
+    api.get(url).then((res) => setVendors(res.data.results || res.data)).catch(() => toast.error('Failed to load vendors')).finally(() => setLoading(false))
   }
 
   useEffect(() => {
@@ -43,8 +48,8 @@ export default function Vendors() {
   }, [selectedBranch])
 
   useEffect(() => {
-    api.get('/branches/').then((res) => setBranches(res.data.results || res.data)).catch(console.error)
-    api.get('/categories/').then((res) => setCategories(res.data.results || res.data)).catch(console.error)
+    api.get('/branches/').then((res) => setBranches(res.data.results || res.data)).catch(() => toast.error('Failed to load branches'))
+    api.get('/categories/').then((res) => setCategories(res.data.results || res.data)).catch(() => toast.error('Failed to load categories'))
     api.get('/employees/').then((res) => {
       const employees = res.data.results || res.data
       const countMap = {}
@@ -53,7 +58,7 @@ export default function Vendors() {
         countMap[vid] = (countMap[vid] || 0) + 1
       })
       setEmployeeCountMap(countMap)
-    }).catch(console.error)
+    }).catch(() => toast.error('Failed to load employee data'))
   }, [])
 
   // Close suggestions when clicking outside
@@ -61,6 +66,16 @@ export default function Vendors() {
     const handleClickOutside = (event) => {
       if (searchRef.current && !searchRef.current.contains(event.target)) {
         setShowSuggestions(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (branchDropdownRef.current && !branchDropdownRef.current.contains(event.target)) {
+        setBranchDropdownOpen(false)
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
@@ -94,6 +109,7 @@ export default function Vendors() {
       setForm({ company_name: '', first_name: '', last_name: '', phone: '', aadhar_number: '', branch: '', category_ids: [] })
       setPhoto(null)
       setPhotoPreview(null)
+      toast.success('Vendor created successfully')
       fetchVendors()
     } catch (err) {
       toast.error(parseApiError(err, 'Error creating vendor'))
@@ -109,10 +125,29 @@ export default function Vendors() {
     }))
   }
 
+  const handleToggleActive = async (e, vendor) => {
+    e.stopPropagation()
+    setTogglingId(vendor.id)
+    try {
+      await api.patch(`/vendors/${vendor.id}/toggle-active/`, { is_active: !vendor.is_active })
+      if (vendor.is_active) {
+        toast.error('Vendor deactivated')
+      } else {
+        toast.success('Vendor activated')
+      }
+      fetchVendors()
+    } catch (err) {
+      toast.error(parseApiError(err, 'Failed to update vendor status'))
+    } finally {
+      setTogglingId(null)
+    }
+  }
+
   const handleDelete = async (id) => {
-    if (!confirm('Delete this vendor?')) return
     try {
       await api.delete(`/vendors/${id}/`)
+      setDeleteConfirm(null)
+      toast.success('Vendor deleted successfully')
       fetchVendors()
     } catch (err) {
       toast.error('Error deleting vendor')
@@ -247,6 +282,7 @@ export default function Vendors() {
               <th className="text-left text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider px-4 py-2.5">Work Type</th>
               <th className="text-left text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider px-4 py-2.5">Employees</th>
               <th className="text-left text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider px-4 py-2.5">Phone</th>
+              <th className="text-left text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider px-4 py-2.5">Status</th>
               <th className="text-left text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider px-4 py-2.5">Actions</th>
             </tr>
           </thead>
@@ -258,6 +294,7 @@ export default function Vendors() {
                     <td className="px-4 py-3.5"><div className="h-3 bg-[#e4e8ed] rounded w-20" /></td>
                     <td className="px-4 py-3.5"><div className="h-3 bg-[#e4e8ed] rounded w-6" /></td>
                     <td className="px-4 py-3.5"><div className="h-3 bg-[#e4e8ed] rounded w-24" /></td>
+                    <td className="px-4 py-3.5"><div className="h-6 bg-[#e4e8ed] rounded w-16" /></td>
                     <td className="px-4 py-3.5"><div className="h-7 bg-[#e4e8ed] rounded w-7" /></td>
                   </tr>
                 ))
@@ -295,12 +332,12 @@ export default function Vendors() {
                 <td className="px-4 py-3.5 text-[13px]">{employeeCountMap[v.id] ?? 0}</td>
                 <td className="px-4 py-3.5 text-[13px]">{v.user?.phone}</td>
                 <td className="px-4 py-3.5 space-x-2">
-                  <button onClick={() => handleDelete(v.id)} className="w-[30px] h-[30px] rounded-lg border border-[#e4e8ed] inline-flex items-center justify-center text-sm text-[#6b7280] hover:bg-[#fdecea] hover:text-[#c0392b] transition-colors"><DeleteOutlined /></button>
+                  <button onClick={(e) => { e.stopPropagation(); setDeleteConfirm(v) }} className="w-[30px] h-[30px] rounded-lg border border-[#e4e8ed] inline-flex items-center justify-center text-sm text-[#6b7280] hover:bg-[#fdecea] hover:text-[#c0392b] transition-colors"><DeleteOutlined /></button>
                 </td>
               </tr>
             ))}
             {!loading && filteredVendors.length === 0 && (
-              <tr><td colSpan="5" className="px-4 py-8 text-center text-[13px] text-[#6b7280]">
+              <tr><td colSpan="6" className="px-4 py-8 text-center text-[13px] text-[#6b7280]">
                 {searchQuery || selectedVendorId ? 'No vendors match your search' : 'No vendors found'}
               </td></tr>
             )}
@@ -361,12 +398,33 @@ export default function Vendors() {
                   <input value={form.aadhar_number} onChange={(e) => setForm({ ...form, aadhar_number: e.target.value })} placeholder="XXXX XXXX XXXX" className="w-full border-[1.5px] border-[#e4e8ed] rounded-lg px-3.5 py-2.5 text-sm focus:border-orchid focus:outline-none transition-colors" />
                 </div>
               </div>
-              <div>
+              <div ref={branchDropdownRef} className="relative">
                 <label className="block text-xs font-semibold text-[#1a1f2e] mb-1.5">Branch *</label>
-                <select value={form.branch} onChange={(e) => setForm({ ...form, branch: e.target.value })} className="w-full border-[1.5px] border-[#e4e8ed] rounded-lg px-3.5 py-2.5 text-sm focus:border-orchid focus:outline-none transition-colors" required>
-                  <option value="">Select branch</option>
-                  {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-                </select>
+                <button type="button" onClick={() => { setBranchDropdownOpen(!branchDropdownOpen); setBranchSearch('') }} className="w-full border-[1.5px] border-[#e4e8ed] rounded-lg px-3.5 py-2.5 text-sm text-left focus:border-orchid focus:outline-none transition-colors flex items-center justify-between">
+                  <span className={form.branch ? 'text-[#1a1f2e]' : 'text-[#9ca3af]'}>{form.branch ? branches.find(b => String(b.id) === String(form.branch))?.name || 'Select branch' : 'Select branch'}</span>
+                  <svg className={`w-4 h-4 text-[#6b7280] transition-transform ${branchDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                </button>
+                {branchDropdownOpen && (
+                  <div className="absolute z-50 mt-1 w-full bg-white border border-[#e4e8ed] rounded-lg shadow-lg max-h-56 overflow-hidden">
+                    <div className="p-2 border-b border-[#e4e8ed]">
+                      <div className="relative">
+                        <SearchOutlined className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#9ca3af] text-xs" />
+                        <input autoFocus value={branchSearch} onChange={(e) => setBranchSearch(e.target.value)} placeholder="Search branches..." className="w-full pl-8 pr-3 py-1.5 text-sm border border-[#e4e8ed] rounded-md focus:border-orchid focus:outline-none" />
+                      </div>
+                    </div>
+                    <div className="max-h-44 overflow-y-auto">
+                      {branches.filter(b => b.name.toLowerCase().includes(branchSearch.toLowerCase())).map(b => (
+                        <button key={b.id} type="button" onClick={() => { setForm({ ...form, branch: b.id }); setBranchDropdownOpen(false) }} className={`w-full text-left px-3.5 py-2 text-sm hover:bg-[#f6f7f9] transition-colors ${String(form.branch) === String(b.id) ? 'bg-orchid/5 text-orchid font-medium' : 'text-[#1a1f2e]'}`}>
+                          {b.name}
+                        </button>
+                      ))}
+                      {branches.filter(b => b.name.toLowerCase().includes(branchSearch.toLowerCase())).length === 0 && (
+                        <div className="px-3.5 py-3 text-sm text-[#9ca3af] text-center">No branches found</div>
+                      )}
+                    </div>
+                  </div>
+                )}
+                <input type="hidden" required value={form.branch || ''} />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-[#1a1f2e] mb-1.5">Work Categories *</label>
@@ -395,6 +453,20 @@ export default function Vendors() {
       )}
 
       {/* Credentials Modal */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-black/40 modal-backdrop flex items-center justify-center z-[1000] p-4">
+          <div className="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full text-center">
+            <div className="w-12 h-12 bg-[#fdecea] rounded-full flex items-center justify-center mx-auto mb-3 text-xl text-[#c0392b]"><DeleteOutlined /></div>
+            <h2 className="font-serif text-lg font-bold mb-1">Delete Vendor</h2>
+            <p className="text-sm text-[#6b7280] mb-5">Are you sure you want to delete <span className="font-semibold text-[#1a1f2e]">{deleteConfirm.display_name || deleteConfirm.company_name}</span>? This action cannot be undone.</p>
+            <div className="flex gap-2.5 justify-center">
+              <button onClick={() => setDeleteConfirm(null)} className="px-4 py-2 border-[1.5px] border-[#e4e8ed] rounded-lg text-[13px] font-semibold hover:bg-[#f6f7f9] transition-colors">Cancel</button>
+              <button onClick={() => handleDelete(deleteConfirm.id)} className="px-4 py-2 bg-[#c0392b] text-white rounded-lg text-[13px] font-semibold hover:bg-[#a93226] transition-colors">Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {credentials && (
         <div className="fixed inset-0 bg-black/40 modal-backdrop flex items-center justify-center z-[1000] p-4">
           <div className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full text-center">

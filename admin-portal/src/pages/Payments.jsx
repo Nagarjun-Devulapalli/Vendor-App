@@ -55,7 +55,7 @@ export default function Payments() {
     if (activeTab) url += `payment_status=${activeTab}&`
     api.get(url)
       .then((res) => setPayments(res.data.results || res.data))
-      .catch(console.error)
+      .catch(() => toast.error('Failed to load payments'))
       .finally(() => setLoading(false))
   }
 
