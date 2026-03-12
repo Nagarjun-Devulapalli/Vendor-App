@@ -116,7 +116,11 @@ export default function Vendors() {
     setTogglingId(vendor.id)
     try {
       await api.patch(`/vendors/${vendor.id}/toggle-active/`, { is_active: !vendor.is_active })
-      toast.success(vendor.is_active ? 'Vendor deactivated' : 'Vendor activated')
+      if (vendor.is_active) {
+        toast.error('Vendor deactivated')
+      } else {
+        toast.success('Vendor activated')
+      }
       fetchVendors()
     } catch (err) {
       toast.error(parseApiError(err, 'Failed to update vendor status'))
