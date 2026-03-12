@@ -4,9 +4,9 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import '../models/employee.dart';
-import '../services/api_service.dart';
-import '../theme/app_theme.dart';
-import '../widgets/detail_hero.dart';
+import '../../../core/services/api_service.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../occurrences/widgets/detail_hero.dart';
 import 'add_employee_screen.dart';
 
 class EmployeeListScreen extends StatefulWidget {

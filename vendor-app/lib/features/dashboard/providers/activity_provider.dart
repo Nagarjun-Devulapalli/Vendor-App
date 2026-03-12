@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../models/occurrence.dart';
-import '../services/api_service.dart';
+import '../../occurrences/models/occurrence.dart';
+import '../../../core/services/api_service.dart';
 
 class ActivityProvider extends ChangeNotifier {
   List<Occurrence> _todayTasks = [];

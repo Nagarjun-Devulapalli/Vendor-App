@@ -34,15 +34,15 @@ export default function PendingApprovals() {
   const [currentPage, setCurrentPage] = useState(1)
 
   useEffect(() => {
-    api.get('/activities/')
-      .then(async (actRes) => {
+    Promise.all([
+      api.get('/activities/'),
+      api.get('/occurrences/'),
+    ])
+      .then(([actRes, occRes]) => {
         const allActivities = actRes.data.results || actRes.data
-
-        const occPromises = allActivities.map(a =>
-          api.get(`/activities/${a.id}/occurrences/`).catch(() => ({ data: [] }))
-        )
-        const occResults = await Promise.all(occPromises)
-        const allOccurrences = occResults.flatMap(res => res.data.results || res.data)
+        const allOccurrences = occRes.data.results || occRes.data
+        const actMap = {}
+        for (const a of allActivities) actMap[a.id] = a
 
         const counts = {}
         for (const occ of allOccurrences) {
@@ -142,11 +142,6 @@ export default function PendingApprovals() {
           <h3 className="font-serif text-lg font-bold">Pending Approvals</h3>
           <p className="text-[13px] text-[#6b7280] mt-0.5">Activities with work logs awaiting admin approval</p>
         </div>
-        {allGrouped.pending.length > 0 && (
-          <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[#fef3e0] text-[#b07200] rounded-lg text-[13px] font-semibold">
-            {allGrouped.pending.length} activities pending review
-          </span>
-        )}
       </div>
 
       {/* Summary Cards */}

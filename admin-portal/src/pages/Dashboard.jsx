@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList } from 'recharts'
 import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
 import BranchFilter from '../components/BranchFilter'
@@ -148,13 +148,23 @@ export default function Dashboard() {
             <button onClick={() => navigate('/payments')} className="text-xs text-orchid font-semibold hover:underline">View Report</button>
           </div>
           <div className="p-5">
-            <ResponsiveContainer width="100%" height={160}>
-              <BarChart data={spending}>
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={spending} margin={{ top: 20, right: 10, left: 10, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e4e8ed" />
                 <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#6b7280' }} />
-                <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} />
+                <YAxis
+                  tick={{ fontSize: 11, fill: '#6b7280' }}
+                  tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}K`}
+                />
                 <Tooltip formatter={(v) => `₹${v.toLocaleString()}`} contentStyle={{ borderRadius: 8, border: '1px solid #e4e8ed', fontSize: 13 }} />
-                <Bar dataKey="amount" fill="#e8eefb" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="amount" fill="#2563a8" radius={[4, 4, 0, 0]}>
+                  <LabelList
+                    dataKey="amount"
+                    position="top"
+                    formatter={(value) => `₹${value.toLocaleString()}`}
+                    style={{ fontSize: 11, fontWeight: 600, fill: '#1a1f2e' }}
+                  />
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
             {currentMonth && (

@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
 import { useToast, parseApiError } from '../components/Toast'
 import BranchFilter from '../components/BranchFilter'
-import { DeleteOutlined, CameraOutlined, CheckCircleOutlined, FileTextOutlined, SearchOutlined } from '@ant-design/icons'
+import { DeleteOutlined, CameraOutlined, CheckCircleOutlined, FileTextOutlined, SearchOutlined, EyeOutlined } from '@ant-design/icons'
 import Pagination from '../components/Pagination'
 
 const PAGE_SIZE = 10
@@ -32,9 +33,14 @@ export default function Vendors() {
   const [branchDropdownOpen, setBranchDropdownOpen] = useState(false)
   const [branchSearch, setBranchSearch] = useState('')
   const [deleteConfirm, setDeleteConfirm] = useState(null)
+  const [statusFilter, setStatusFilter] = useState('')
+  const [statusDropdownOpen, setStatusDropdownOpen] = useState(false)
+  const [statusDropdownPos, setStatusDropdownPos] = useState({ top: 0, left: 0 })
   const navigate = useNavigate()
   const searchRef = useRef(null)
   const branchDropdownRef = useRef(null)
+  const statusBtnRef = useRef(null)
+  const statusPortalRef = useRef(null)
 
   const fetchVendors = () => {
     setLoading(true)
@@ -77,6 +83,16 @@ export default function Vendors() {
       if (branchDropdownRef.current && !branchDropdownRef.current.contains(event.target)) {
         setBranchDropdownOpen(false)
       }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      const inBtn = statusBtnRef.current?.contains(event.target)
+      const inPortal = statusPortalRef.current?.contains(event.target)
+      if (!inBtn && !inPortal) setStatusDropdownOpen(false)
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
@@ -199,80 +215,42 @@ export default function Vendors() {
   } else if (searchQuery && searchQuery.trim().length > 0) {
     filteredVendors = vendors.filter(v => matchesSearch(v, searchQuery))
   }
+  if (statusFilter === 'active') filteredVendors = filteredVendors.filter(v => v.is_active)
+  if (statusFilter === 'inactive') filteredVendors = filteredVendors.filter(v => !v.is_active)
 
   const pagedVendors = filteredVendors.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
   const suggestions = getSuggestions()
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center gap-6">
-        <div className="min-w-[160px]">
+      <div className="grid grid-cols-[200px_1fr_auto] items-center gap-6">
+        <div>
           <h3 className="font-serif text-lg font-bold">All Vendors</h3>
           <p className="text-[13px] text-[#6b7280] mt-0.5">{vendors.length} vendors registered</p>
         </div>
-        {user?.role === 'superadmin' && (
-          <BranchFilter value={selectedBranch} onChange={(val) => { setSelectedBranch(val); setCurrentPage(1) }} />
-        )}
 
-        {/* Search Bar with Suggestions */}
-        <div ref={searchRef} className="relative">
-          <div className="relative">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              onFocus={() => searchQuery.trim() && setShowSuggestions(true)}
-              placeholder="Search vendors..."
-              className="w-full border-[1.5px] border-[#e4e8ed] rounded-lg pl-10 pr-10 py-2.5 text-sm focus:border-orchid focus:outline-none transition-colors"
-            />
-            {(searchQuery || selectedVendorId) && (
-              <button
-                onClick={clearFilter}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6b7280] hover:text-[#1a1f2e] text-lg font-bold"
-              >
-                ✕
-              </button>
-            )}
-          </div>
-
-          {/* Suggestions Dropdown */}
-          {showSuggestions && suggestions.length > 0 && (
-            <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-[#e4e8ed] rounded-lg shadow-lg z-50 overflow-hidden">
-              {suggestions.map((vendor) => (
-                <button
-                  key={vendor.id}
-                  onClick={() => handleSuggestionClick(vendor)}
-                  className="w-full px-4 py-3 text-left hover:bg-[#f6f7f9] transition-colors border-b border-[#e4e8ed] last:border-0"
-                >
-                  <div className="font-semibold text-[13px] text-[#1a1f2e]">
-                    {vendor.display_name || vendor.company_name || `${vendor.user?.first_name} ${vendor.user?.last_name}`}
-                  </div>
-                  <div className="text-[11px] text-[#6b7280] mt-0.5">
-                    {vendor.user?.first_name} {vendor.user?.last_name} · {vendor.user?.phone}
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
+        {/* Large Search Bar */}
+        <div className="relative">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            placeholder="Search vendors..."
+            className="w-full border-[1.5px] border-[#e4e8ed] rounded-lg pl-10 pr-4 py-2.5 text-sm focus:border-orchid focus:outline-none transition-colors"
+          />
+          <SearchOutlined className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6b7280]" />
         </div>
 
-        <div className="flex justify-end">
-          <button onClick={() => setShowModal(true)} className="inline-flex items-center gap-1.5 px-4 py-2 bg-orchid text-white rounded-lg text-[13px] font-semibold hover:bg-orchid-mid transition-colors">
+        <div className="flex items-center gap-3">
+          {user?.role === 'superadmin' && (
+            <BranchFilter value={selectedBranch} onChange={(val) => { setSelectedBranch(val); setCurrentPage(1) }} />
+          )}
+
+          <button onClick={() => setShowModal(true)} className="inline-flex items-center gap-1.5 px-4 py-2 bg-orchid text-white rounded-lg text-[13px] font-semibold hover:bg-orchid-mid transition-colors whitespace-nowrap">
             + Add Vendor
           </button>
         </div>
       </div>
-
-      {/* Active filter indicator */}
-      {selectedVendorId && (
-        <div className="flex items-center gap-2 text-sm">
-          <span className="text-[#6b7280]">Showing:</span>
-          <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-orchid-light text-orchid rounded-lg font-medium">
-            {vendors.find(v => v.id === selectedVendorId)?.display_name || vendors.find(v => v.id === selectedVendorId)?.company_name}
-            <button onClick={clearFilter} className="hover:text-orchid-dark">✕</button>
-          </span>
-        </div>
-      )}
 
       <div className="bg-white rounded-xl border border-[#e4e8ed] shadow-sm overflow-hidden">
         <table className="w-full">
@@ -282,7 +260,41 @@ export default function Vendors() {
               <th className="text-left text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider px-4 py-2.5">Work Type</th>
               <th className="text-left text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider px-4 py-2.5">Employees</th>
               <th className="text-left text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider px-4 py-2.5">Phone</th>
-              <th className="text-left text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider px-4 py-2.5">Status</th>
+              <th className="text-left text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider px-4 py-2.5">
+                <button
+                  ref={statusBtnRef}
+                  onClick={() => {
+                    if (statusBtnRef.current) {
+                      const r = statusBtnRef.current.getBoundingClientRect()
+                      setStatusDropdownPos({ top: r.bottom + 4, left: r.left })
+                    }
+                    setStatusDropdownOpen(o => !o)
+                  }}
+                  className={`flex items-center gap-1 transition-colors hover:text-[#1a1f2e] ${statusFilter ? 'text-orchid' : ''}`}
+                >
+                  STATUS
+                  <svg className="w-3 h-3 shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M3 4h18v2.5l-7 7V20l-4-2v-6.5L3 6.5V4z"/></svg>
+                  {statusFilter && <span className="w-1.5 h-1.5 rounded-full bg-orchid shrink-0" />}
+                </button>
+                {statusDropdownOpen && createPortal(
+                  <div
+                    ref={statusPortalRef}
+                    style={{ position: 'fixed', top: statusDropdownPos.top, left: statusDropdownPos.left, zIndex: 9999 }}
+                    className="bg-white border border-[#e4e8ed] rounded-lg shadow-xl w-36 py-1"
+                  >
+                    {[{ label: 'All', value: '' }, { label: 'Active', value: 'active' }, { label: 'Inactive', value: 'inactive' }].map(({ label, value }) => (
+                      <button
+                        key={value}
+                        onClick={() => { setStatusFilter(value); setCurrentPage(1); setStatusDropdownOpen(false) }}
+                        className={`w-full text-left px-4 py-2.5 text-[13px] normal-case tracking-normal font-normal hover:bg-[#f6f7f9] transition-colors ${statusFilter === value || (!statusFilter && value === '') ? 'text-orchid font-semibold bg-orchid/5' : 'text-[#1a1f2e]'}`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>,
+                  document.body
+                )}
+              </th>
               <th className="text-left text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider px-4 py-2.5">Actions</th>
             </tr>
           </thead>
@@ -331,7 +343,20 @@ export default function Vendors() {
                 </td>
                 <td className="px-4 py-3.5 text-[13px]">{employeeCountMap[v.id] ?? 0}</td>
                 <td className="px-4 py-3.5 text-[13px]">{v.user?.phone}</td>
-                <td className="px-4 py-3.5 space-x-2">
+                <td className="px-4 py-3.5" onClick={(e) => e.stopPropagation()}>
+                  <button
+                    onClick={(e) => handleToggleActive(e, v)}
+                    disabled={togglingId === v.id}
+                    className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors disabled:opacity-50 ${
+                      v.is_active
+                        ? 'bg-[#e8f5ee] text-[#1a6b4a] hover:bg-[#d0eddb]'
+                        : 'bg-[#fdecea] text-[#c0392b] hover:bg-[#fad4d0]'
+                    }`}
+                  >
+                    {togglingId === v.id ? '...' : v.is_active ? 'Active' : 'Inactive'}
+                  </button>
+                </td>
+                <td className="px-4 py-3.5" onClick={(e) => e.stopPropagation()}>
                   <button onClick={(e) => { e.stopPropagation(); setDeleteConfirm(v) }} className="w-[30px] h-[30px] rounded-lg border border-[#e4e8ed] inline-flex items-center justify-center text-sm text-[#6b7280] hover:bg-[#fdecea] hover:text-[#c0392b] transition-colors"><DeleteOutlined /></button>
                 </td>
               </tr>
