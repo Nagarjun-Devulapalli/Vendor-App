@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:vendor_app/core/routes.dart';
 import '../models/employee.dart';
@@ -82,10 +81,10 @@ class _EmployeeListScreenState extends State<EmployeeListScreen> {
               ),
               _empAvatar(emp, size: 72, radius: 20, fontSize: 28),
               const SizedBox(height: 12),
-              Text(emp.fullName, style: GoogleFonts.nunito(
+              Text(emp.fullName, style: TextStyle(
                 fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.text,
               )),
-              Text('@${emp.username}', style: GoogleFonts.nunito(
+              Text('@${emp.username}', style: TextStyle(
                 fontSize: 13, color: AppColors.muted, fontWeight: FontWeight.w600,
               )),
               const SizedBox(height: 6),
@@ -97,7 +96,7 @@ class _EmployeeListScreenState extends State<EmployeeListScreen> {
                 ),
                 child: Text(
                   emp.isActive ? 'Active' : 'Inactive',
-                  style: GoogleFonts.nunito(
+                  style: TextStyle(
                     fontSize: 11, fontWeight: FontWeight.w800,
                     color: emp.isActive ? AppColors.green : AppColors.red,
                   ),
@@ -129,7 +128,7 @@ class _EmployeeListScreenState extends State<EmployeeListScreen> {
                         _showEditSheet(emp);
                       },
                       icon: const Icon(Icons.edit_rounded, size: 16),
-                      label: Text('Edit', style: GoogleFonts.nunito(fontWeight: FontWeight.w800)),
+                      label: Text('Edit', style: TextStyle(fontWeight: FontWeight.w800)),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppColors.blue,
                         side: const BorderSide(color: AppColors.blue),
@@ -146,7 +145,7 @@ class _EmployeeListScreenState extends State<EmployeeListScreen> {
                         _confirmDelete(emp);
                       },
                       icon: const Icon(Icons.delete_rounded, size: 16),
-                      label: Text('Delete', style: GoogleFonts.nunito(fontWeight: FontWeight.w800)),
+                      label: Text('Delete', style: TextStyle(fontWeight: FontWeight.w800)),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppColors.red,
                         side: const BorderSide(color: AppColors.red),
@@ -171,11 +170,11 @@ class _EmployeeListScreenState extends State<EmployeeListScreen> {
         children: [
           Icon(icon, size: 16, color: AppColors.muted),
           const SizedBox(width: 10),
-          Text(label, style: GoogleFonts.nunito(
+          Text(label, style: TextStyle(
             fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.muted,
           )),
           const Spacer(),
-          Text(value, style: GoogleFonts.nunito(
+          Text(value, style: TextStyle(
             fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.text,
           )),
         ],
@@ -225,7 +224,7 @@ class _EmployeeListScreenState extends State<EmployeeListScreen> {
                           decoration: BoxDecoration(color: AppColors.greenLight, borderRadius: BorderRadius.circular(10)),
                           child: const Icon(Icons.camera_alt_rounded, color: AppColors.green),
                         ),
-                        title: Text('Camera', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+                        title: Text('Camera', style: TextStyle(fontWeight: FontWeight.w700)),
                         onTap: () => Navigator.pop(c, ImageSource.camera),
                       ),
                       ListTile(
@@ -234,7 +233,7 @@ class _EmployeeListScreenState extends State<EmployeeListScreen> {
                           decoration: BoxDecoration(color: AppColors.blueLight, borderRadius: BorderRadius.circular(10)),
                           child: const Icon(Icons.photo_library_rounded, color: AppColors.blue),
                         ),
-                        title: Text('Gallery', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+                        title: Text('Gallery', style: TextStyle(fontWeight: FontWeight.w700)),
                         onTap: () => Navigator.pop(c, ImageSource.gallery),
                       ),
                     ],
@@ -296,7 +295,7 @@ class _EmployeeListScreenState extends State<EmployeeListScreen> {
                     margin: const EdgeInsets.only(bottom: 16),
                     decoration: BoxDecoration(color: AppColors.border, borderRadius: BorderRadius.circular(2)),
                   ),
-                  Text('Edit Employee', style: GoogleFonts.fraunces(
+                  Text('Edit Employee', style: TextStyle(
                     fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.text,
                   )),
                   const SizedBox(height: 16),
@@ -322,7 +321,7 @@ class _EmployeeListScreenState extends State<EmployeeListScreen> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   const Icon(Icons.camera_alt_rounded, size: 22, color: AppColors.green),
-                                  Text('Photo', style: GoogleFonts.nunito(fontSize: 9, color: AppColors.muted, fontWeight: FontWeight.w700)),
+                                  Text('Photo', style: TextStyle(fontSize: 9, color: AppColors.muted, fontWeight: FontWeight.w700)),
                                 ],
                               )
                             : null,
@@ -335,7 +334,7 @@ class _EmployeeListScreenState extends State<EmployeeListScreen> {
                   TextFormField(
                     controller: firstNameCtrl,
                     inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z ]'))],
-                    style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w600),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                     decoration: AppTheme.styledInput(label: '', hint: 'First name'),
                   ),
                   const SizedBox(height: 12),
@@ -344,7 +343,7 @@ class _EmployeeListScreenState extends State<EmployeeListScreen> {
                   TextFormField(
                     controller: lastNameCtrl,
                     inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z ]'))],
-                    style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w600),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                     decoration: AppTheme.styledInput(label: '', hint: 'Last name'),
                   ),
                   const SizedBox(height: 12),
@@ -357,7 +356,7 @@ class _EmployeeListScreenState extends State<EmployeeListScreen> {
                       FilteringTextInputFormatter.digitsOnly,
                       LengthLimitingTextInputFormatter(10),
                     ],
-                    style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w600),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                     decoration: AppTheme.styledInput(label: '', hint: '10-digit phone number'),
                   ),
                   const SizedBox(height: 12),
@@ -370,7 +369,7 @@ class _EmployeeListScreenState extends State<EmployeeListScreen> {
                       FilteringTextInputFormatter.digitsOnly,
                       LengthLimitingTextInputFormatter(12),
                     ],
-                    style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w600),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                     decoration: AppTheme.styledInput(label: '', hint: '12-digit Aadhar number'),
                   ),
                   const SizedBox(height: 20),
@@ -381,7 +380,7 @@ class _EmployeeListScreenState extends State<EmployeeListScreen> {
                       style: AppTheme.greenButton,
                       child: isSaving
                           ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                          : Text('Save Changes', style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w800)),
+                          : Text('Save Changes', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
                     ),
                   ),
                 ],
@@ -417,7 +416,7 @@ class _EmployeeListScreenState extends State<EmployeeListScreen> {
       child: photoUrl == null
           ? Text(
               _getInitials(emp.fullName),
-              style: GoogleFonts.nunito(
+              style: TextStyle(
                 fontSize: fontSize, fontWeight: FontWeight.w900, color: AppColors.green,
               ),
             )
@@ -441,14 +440,14 @@ class _EmployeeListScreenState extends State<EmployeeListScreen> {
                 child: const Icon(Icons.delete_rounded, color: AppColors.red, size: 28),
               ),
               const SizedBox(height: 16),
-              Text('Delete Employee?', style: GoogleFonts.fraunces(
+              Text('Delete Employee?', style: TextStyle(
                 fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.text,
               )),
               const SizedBox(height: 8),
               Text(
                 'Are you sure you want to delete ${emp.fullName}? This action cannot be undone.',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.nunito(fontSize: 13, color: AppColors.muted, fontWeight: FontWeight.w600),
+                style: TextStyle(fontSize: 13, color: AppColors.muted, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 20),
               Row(
@@ -462,7 +461,7 @@ class _EmployeeListScreenState extends State<EmployeeListScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
-                      child: Text('Cancel', style: GoogleFonts.nunito(fontWeight: FontWeight.w800)),
+                      child: Text('Cancel', style: TextStyle(fontWeight: FontWeight.w800)),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -498,7 +497,7 @@ class _EmployeeListScreenState extends State<EmployeeListScreen> {
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         elevation: 0,
                       ),
-                      child: Text('Delete', style: GoogleFonts.nunito(fontWeight: FontWeight.w800)),
+                      child: Text('Delete', style: TextStyle(fontWeight: FontWeight.w800)),
                     ),
                   ),
                 ],
@@ -528,11 +527,11 @@ class _EmployeeListScreenState extends State<EmployeeListScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('My Team', style: GoogleFonts.fraunces(
+                      Text('My Team', style: TextStyle(
                         fontSize: 22, fontWeight: FontWeight.w800, color: Colors.white,
                       )),
                       const SizedBox(height: 2),
-                      Text('${_employees.length} employees', style: GoogleFonts.nunito(
+                      Text('${_employees.length} employees', style: TextStyle(
                         fontSize: 12, color: Colors.white.withValues(alpha: 0.65),
                       )),
                     ],
@@ -561,7 +560,7 @@ class _EmployeeListScreenState extends State<EmployeeListScreen> {
                         child: ElevatedButton.icon(
                           onPressed: _navigateToAdd,
                           icon: const Text('＋', style: TextStyle(fontSize: 18)),
-                          label: Text('Add New Employee', style: GoogleFonts.nunito(fontWeight: FontWeight.w800)),
+                          label: Text('Add New Employee', style: TextStyle(fontWeight: FontWeight.w800)),
                           style: AppTheme.greenButton,
                         ),
                       ),
@@ -574,11 +573,11 @@ class _EmployeeListScreenState extends State<EmployeeListScreen> {
                             children: [
                               const Icon(Icons.groups_rounded, size: 40, color: AppColors.muted),
                               const SizedBox(height: 12),
-                              Text('No employees yet', style: GoogleFonts.nunito(
+                              Text('No employees yet', style: TextStyle(
                                 fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.muted,
                               )),
                               const SizedBox(height: 4),
-                              Text('Tap the button above to add one', style: GoogleFonts.nunito(
+                              Text('Tap the button above to add one', style: TextStyle(
                                 fontSize: 12, color: AppColors.muted, fontWeight: FontWeight.w600,
                               )),
                             ],
@@ -613,7 +612,7 @@ class _EmployeeListScreenState extends State<EmployeeListScreen> {
                                               child: Column(
                                                 crossAxisAlignment: CrossAxisAlignment.start,
                                                 children: [
-                                                  Text(emp.fullName, style: GoogleFonts.nunito(
+                                                  Text(emp.fullName, style: TextStyle(
                                                     fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.text,
                                                   )),
                                                   const SizedBox(height: 1),
@@ -621,13 +620,13 @@ class _EmployeeListScreenState extends State<EmployeeListScreen> {
                                                     children: [
                                                       const Icon(Icons.phone_rounded, size: 12, color: AppColors.muted),
                                                       const SizedBox(width: 4),
-                                                      Text(emp.phone, style: GoogleFonts.nunito(
+                                                      Text(emp.phone, style: TextStyle(
                                                         fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.muted,
                                                       )),
                                                     ],
                                                   ),
                                                   if (emp.aadhar != null && emp.aadhar!.isNotEmpty)
-                                                    Text('Aadhar: ${emp.aadhar}', style: GoogleFonts.nunito(
+                                                    Text('Aadhar: ${emp.aadhar}', style: TextStyle(
                                                       fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.muted,
                                                     )),
                                                 ],

@@ -1,7 +1,7 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
-import 'package:vendor_app/features/auth/providers/auth_provider.dart';
+import 'package:vendor_app/features/auth/cubit/auth_cubit.dart';
 import 'package:vendor_app/features/auth/screens/login_screen.dart';
 import 'package:vendor_app/features/dashboard/screens/owner_dashboard.dart';
 import 'package:vendor_app/features/dashboard/screens/employee_dashboard.dart';
@@ -9,7 +9,6 @@ import 'package:vendor_app/features/occurrences/screens/occurrence_detail_screen
 import 'package:vendor_app/features/work_logs/screens/work_log_screen.dart';
 import 'package:vendor_app/features/employees/screens/employee_list_screen.dart';
 import 'package:vendor_app/features/employees/screens/add_employee_screen.dart';
-import 'package:vendor_app/core/theme/app_theme.dart';
 
 enum VendorRoute {
   vendorLogin('/vendor-login'),
@@ -24,13 +23,30 @@ enum VendorRoute {
   final String path;
 }
 
-GoRouter createVendorRouter(AuthProvider authProvider) {
+/// Bridges BLoC stream to a Listenable for GoRouter's refreshListenable.
+class GoRouterRefreshStream extends ChangeNotifier {
+  late final StreamSubscription<dynamic> _subscription;
+
+  GoRouterRefreshStream(Stream<dynamic> stream) {
+    notifyListeners();
+    _subscription = stream.asBroadcastStream().listen((_) => notifyListeners());
+  }
+
+  @override
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
+  }
+}
+
+GoRouter createVendorRouter(AuthCubit authCubit) {
   return GoRouter(
     initialLocation: VendorRoute.vendorLogin.path,
-    refreshListenable: authProvider,
+    refreshListenable: GoRouterRefreshStream(authCubit.stream),
     redirect: (context, state) {
-      final isLoggedIn = authProvider.isAuthenticated;
-      final isInitializing = authProvider.isInitializing;
+      final authState = authCubit.state;
+      final isLoggedIn = authState.isAuthenticated;
+      final isInitializing = authState.isInitializing;
       final isOnLogin = state.matchedLocation == VendorRoute.vendorLogin.path;
 
       if (isInitializing) return null;
@@ -40,7 +56,7 @@ GoRouter createVendorRouter(AuthProvider authProvider) {
       }
 
       if (isLoggedIn && isOnLogin) {
-        return authProvider.user!.isOwner
+        return authState.user!.isOwner
             ? VendorRoute.vendorOwnerDashboard.path
             : VendorRoute.vendorEmployeeDashboard.path;
       }

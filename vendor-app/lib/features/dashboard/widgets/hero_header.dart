@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_theme.dart';
 
 class HeroHeader extends StatelessWidget {
@@ -59,7 +58,7 @@ class HeroHeader extends StatelessWidget {
                     children: [
                       Text(
                         '$greeting,\n$name',
-                        style: GoogleFonts.fraunces(
+                        style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.w800,
                           color: Colors.white,
@@ -69,7 +68,7 @@ class HeroHeader extends StatelessWidget {
                       const SizedBox(height: 2),
                       Text(
                         subtitle,
-                        style: GoogleFonts.nunito(
+                        style: TextStyle(
                           fontSize: 12,
                           color: Colors.white.withOpacity(0.65),
                         ),
@@ -93,7 +92,7 @@ class HeroHeader extends StatelessWidget {
                       alignment: Alignment.center,
                       child: Text(
                         initials,
-                        style: GoogleFonts.fraunces(
+                        style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w800,
                           color: Colors.white,
@@ -113,7 +112,7 @@ class HeroHeader extends StatelessWidget {
                           alignment: Alignment.center,
                           child: Text(
                             '$notificationCount',
-                            style: GoogleFonts.nunito(
+                            style: TextStyle(
                               fontSize: 8,
                               fontWeight: FontWeight.w900,
                               color: Colors.white,
@@ -181,7 +180,7 @@ class TodaySummary extends StatelessWidget {
         children: [
           Text(
             value,
-            style: GoogleFonts.fraunces(
+            style: TextStyle(
               fontSize: 26,
               fontWeight: FontWeight.w800,
               color: color,
@@ -191,7 +190,7 @@ class TodaySummary extends StatelessWidget {
           const SizedBox(height: 3),
           Text(
             label.toUpperCase(),
-            style: GoogleFonts.nunito(
+            style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w700,
               color: AppColors.muted,

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_theme.dart';
 
 class DetailHero extends StatelessWidget {
@@ -49,7 +48,7 @@ class DetailHero extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: GoogleFonts.fraunces(
+                  style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w800,
                     color: Colors.white,
@@ -59,7 +58,7 @@ class DetailHero extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   subtitle,
-                  style: GoogleFonts.nunito(
+                  style: TextStyle(
                     fontSize: 12,
                     color: Colors.white.withOpacity(0.65),
                   ),

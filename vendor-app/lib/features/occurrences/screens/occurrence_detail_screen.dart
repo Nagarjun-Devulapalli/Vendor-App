@@ -2,7 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+
 import 'package:vendor_app/core/routes.dart';
 
 import '../models/occurrence.dart';
@@ -342,7 +342,7 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
                       'DESCRIPTION',
                       Text(
                         occ.activityDescription!,
-                        style: GoogleFonts.nunito(
+                        style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
                           color: AppColors.text,
@@ -368,7 +368,7 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
                             child: Center(
                               child: Text(
                                 'No work log yet. Start work to create one.',
-                                style: GoogleFonts.nunito(
+                                style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
                                   color: AppColors.muted,
@@ -421,7 +421,7 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
                     children: [
                       const Icon(Icons.person_add_rounded, size: 12, color: AppColors.green),
                       const SizedBox(width: 4),
-                      Text('Assign', style: GoogleFonts.nunito(
+                      Text('Assign', style: TextStyle(
                         fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.green,
                       )),
                     ],
@@ -436,7 +436,7 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
               padding: const EdgeInsets.all(8),
               child: Center(child: Text(
                 'No employees assigned yet',
-                style: GoogleFonts.nunito(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.muted),
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.muted),
               )),
             )
           else
@@ -459,7 +459,7 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
                       child: Center(
                         child: Text(
                           a.employeeName.isNotEmpty ? a.employeeName[0].toUpperCase() : '?',
-                          style: GoogleFonts.nunito(
+                          style: TextStyle(
                             fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.green,
                           ),
                         ),
@@ -467,7 +467,7 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
                     ),
                     const SizedBox(width: 10),
                     Expanded(
-                      child: Text(a.employeeName, style: GoogleFonts.nunito(
+                      child: Text(a.employeeName, style: TextStyle(
                         fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.text,
                       )),
                     ),
@@ -498,7 +498,7 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
         child: ElevatedButton.icon(
           onPressed: null,
           icon: const Icon(Icons.check_circle, size: 20),
-          label: Text('Completed', style: GoogleFonts.nunito(fontWeight: FontWeight.w800)),
+          label: Text('Completed', style: TextStyle(fontWeight: FontWeight.w800)),
           style: AppTheme.greenButton.copyWith(
             backgroundColor: WidgetStatePropertyAll(AppColors.border),
             foregroundColor: WidgetStatePropertyAll(AppColors.muted),
@@ -528,7 +528,7 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
             if (result == true) _loadData();
           },
           icon: const Icon(Icons.play_arrow_rounded, size: 20),
-          label: Text('Start Work', style: GoogleFonts.nunito(fontWeight: FontWeight.w800)),
+          label: Text('Start Work', style: TextStyle(fontWeight: FontWeight.w800)),
           style: AppTheme.greenButton,
         ),
       );
@@ -550,7 +550,7 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
             if (result == true) _loadData();
           },
           icon: const Icon(Icons.refresh_rounded, size: 20),
-          label: Text('Resubmit After Photo', style: GoogleFonts.nunito(fontWeight: FontWeight.w800)),
+          label: Text('Resubmit After Photo', style: TextStyle(fontWeight: FontWeight.w800)),
           style: AppTheme.greenButton.copyWith(
             backgroundColor: const WidgetStatePropertyAll(AppColors.amber),
           ),
@@ -574,7 +574,7 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
             if (result == true) _loadData();
           },
           icon: const Icon(Icons.check_circle_outline_rounded, size: 20),
-          label: Text('Complete Work', style: GoogleFonts.nunito(fontWeight: FontWeight.w800)),
+          label: Text('Complete Work', style: TextStyle(fontWeight: FontWeight.w800)),
           style: AppTheme.greenButton,
         ),
       );
@@ -585,7 +585,7 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
         child: ElevatedButton.icon(
           onPressed: null,
           icon: const Icon(Icons.hourglass_top_rounded, size: 20),
-          label: Text('Submitted · Awaiting Review', style: GoogleFonts.nunito(fontWeight: FontWeight.w800)),
+          label: Text('Submitted · Awaiting Review', style: TextStyle(fontWeight: FontWeight.w800)),
           style: AppTheme.greenButton.copyWith(
             backgroundColor: WidgetStatePropertyAll(AppColors.amberLight),
             foregroundColor: WidgetStatePropertyAll(AppColors.amber),
@@ -607,7 +607,7 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
         icon: const Icon(Icons.done_all_rounded, size: 18),
         label: Text(
           'Mark Job as Complete',
-          style: GoogleFonts.nunito(fontWeight: FontWeight.w800),
+          style: TextStyle(fontWeight: FontWeight.w800),
         ),
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.green,
@@ -627,17 +627,17 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
       builder: (ctx) => AlertDialog(
         title: Text(
           'Mark Job as Complete?',
-          style: GoogleFonts.nunito(fontWeight: FontWeight.w800, fontSize: 16),
+          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
         ),
         content: Text(
           'This will mark the entire activity "${occ.activityTitle}" as completed. No new daily tasks will be created for this job.',
-          style: GoogleFonts.nunito(fontSize: 13, height: 1.5),
+          style: TextStyle(fontSize: 13, height: 1.5),
         ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text('Cancel', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+            child: Text('Cancel', style: TextStyle(fontWeight: FontWeight.w700)),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -646,7 +646,7 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
-            child: Text('Complete', style: GoogleFonts.nunito(fontWeight: FontWeight.w800)),
+            child: Text('Complete', style: TextStyle(fontWeight: FontWeight.w800)),
           ),
         ],
       ),
@@ -712,7 +712,7 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
           const SizedBox(width: 5),
           Text(
             label,
-            style: GoogleFonts.nunito(
+            style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w800,
               color: Colors.white,
@@ -737,7 +737,7 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
           const SizedBox(width: 4),
           Text(
             text,
-            style: GoogleFonts.nunito(
+            style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w800,
               color: fg,
@@ -767,7 +767,7 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
         children: [
           Text(
             label,
-            style: GoogleFonts.nunito(
+            style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
               color: AppColors.muted,
@@ -775,7 +775,7 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
           ),
           Text(
             value,
-            style: GoogleFonts.nunito(
+            style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w700,
               color: valueColor ?? AppColors.text,
@@ -817,7 +817,7 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
             children: [
               Text(
                 'By: ${log.userName ?? 'Unknown'}',
-                style: GoogleFonts.nunito(
+                style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w800,
                   color: AppColors.text,
@@ -831,7 +831,7 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
                   ],
                   Text(
                     log.createdAt.split('T').first,
-                    style: GoogleFonts.nunito(
+                    style: TextStyle(
                       fontSize: 11,
                       color: AppColors.muted,
                       fontWeight: FontWeight.w600,
@@ -847,7 +847,7 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
             const SizedBox(height: 4),
             Text(
               'Rejected: ${log.rejectionReason}',
-              style: GoogleFonts.nunito(
+              style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
                 color: AppColors.red,
@@ -859,7 +859,7 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
             const SizedBox(height: 4),
             Text(
               'Approved by ${log.reviewedByName}',
-              style: GoogleFonts.nunito(
+              style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
                 color: AppColors.green,
@@ -870,7 +870,7 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
             const SizedBox(height: 6),
             Text(
               log.description,
-              style: GoogleFonts.nunito(
+              style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
                 color: AppColors.text,
@@ -945,7 +945,7 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
           const SizedBox(width: 3),
           Text(
             label,
-            style: GoogleFonts.nunito(
+            style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w800,
               color: fg,
@@ -996,7 +996,7 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
                 child: Center(
                   child: Text(
                     label,
-                    style: GoogleFonts.nunito(
+                    style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
                       color: Colors.white,
@@ -1017,7 +1017,7 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
       children: [
         Text(
           label,
-          style: GoogleFonts.nunito(
+          style: TextStyle(
             fontSize: 10,
             fontWeight: FontWeight.w700,
             color: AppColors.muted,
@@ -1048,7 +1048,7 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
           const SizedBox(height: 3),
           Text(
             timestamp,
-            style: GoogleFonts.nunito(
+            style: TextStyle(
               fontSize: 9,
               color: AppColors.muted,
               fontWeight: FontWeight.w600,
@@ -1114,10 +1114,10 @@ class _AssignEmployeesSheetState extends State<_AssignEmployeesSheet> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Select Employees', style: GoogleFonts.fraunces(
+                Text('Select Employees', style: TextStyle(
                   fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.text,
                 )),
-                Text('${_selected.length} selected', style: GoogleFonts.nunito(
+                Text('${_selected.length} selected', style: TextStyle(
                   fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.muted,
                 )),
               ],
@@ -1127,7 +1127,7 @@ class _AssignEmployeesSheetState extends State<_AssignEmployeesSheet> {
           if (widget.employees.isEmpty)
             Padding(
               padding: const EdgeInsets.all(24),
-              child: Text('No employees found', style: GoogleFonts.nunito(
+              child: Text('No employees found', style: TextStyle(
                 fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.muted,
               )),
             )
@@ -1173,7 +1173,7 @@ class _AssignEmployeesSheetState extends State<_AssignEmployeesSheet> {
                             child: Center(
                               child: Text(
                                 name.isNotEmpty ? name[0].toUpperCase() : '?',
-                                style: GoogleFonts.nunito(
+                                style: TextStyle(
                                   fontSize: 14, fontWeight: FontWeight.w800,
                                   color: isSelected ? Colors.white : AppColors.muted,
                                 ),
@@ -1182,7 +1182,7 @@ class _AssignEmployeesSheetState extends State<_AssignEmployeesSheet> {
                           ),
                           const SizedBox(width: 10),
                           Expanded(
-                            child: Text(name, style: GoogleFonts.nunito(
+                            child: Text(name, style: TextStyle(
                               fontSize: 13, fontWeight: FontWeight.w700,
                               color: isSelected ? AppColors.green : AppColors.text,
                             )),
@@ -1216,7 +1216,7 @@ class _AssignEmployeesSheetState extends State<_AssignEmployeesSheet> {
                         height: 18, width: 18,
                         child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                       )
-                    : Text('Confirm', style: GoogleFonts.nunito(fontWeight: FontWeight.w800)),
+                    : Text('Confirm', style: TextStyle(fontWeight: FontWeight.w800)),
               ),
             ),
           ),

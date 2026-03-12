@@ -1,18 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart';
-import 'features/auth/providers/auth_provider.dart';
-import 'features/dashboard/providers/activity_provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'features/auth/cubit/auth_cubit.dart';
+import 'features/dashboard/cubit/activity_cubit.dart';
 import 'core/theme/app_theme.dart';
 import 'core/routes.dart';
 
 void main() {
-  GoogleFonts.config.allowRuntimeFetching = true;
   runApp(
-    MultiProvider(
+    MultiBlocProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
-        ChangeNotifierProvider(create: (_) => ActivityProvider()),
+        BlocProvider(create: (_) => AuthCubit()),
+        BlocProvider(create: (_) => ActivityCubit()),
       ],
       child: const VendorApp(),
     ),
@@ -24,9 +22,9 @@ class VendorApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = context.read<AuthProvider>();
-    authProvider.tryAutoLogin();
-    final router = createVendorRouter(authProvider);
+    final authCubit = context.read<AuthCubit>();
+    authCubit.tryAutoLogin();
+    final router = createVendorRouter(authCubit);
 
     return MaterialApp.router(
       title: 'Orchids Vendor Portal',
