@@ -107,8 +107,8 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
     return Consumer<ActivityProvider>(
       builder: (ctx, provider, _) {
         final tasks = provider.todayTasks;
-        final doneTasks = tasks.where((t) => t.status == 'completed').length;
-        final overdueTasks = tasks.where((t) => t.status == 'missed').length;
+        final doneTasks = tasks.where((t) => t.isCompleted).length;
+        final overdueTasks = tasks.where((t) => t.isMissed).length;
 
         return NotificationListener<OverscrollIndicatorNotification>(
           onNotification: (n) { n.disallowIndicator(); return true; },

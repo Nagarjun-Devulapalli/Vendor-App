@@ -12,9 +12,9 @@ class TaskCard extends StatelessWidget {
 
   Color get _statusColor {
     switch (occurrence.status) {
-      case 'completed':
+      case OccurrenceStatus.completed:
         return AppColors.green;
-      case 'missed':
+      case OccurrenceStatus.missed:
         return AppColors.red;
       default:
         return AppColors.amber;
@@ -23,9 +23,9 @@ class TaskCard extends StatelessWidget {
 
   Color get _iconBg {
     switch (occurrence.status) {
-      case 'completed':
+      case OccurrenceStatus.completed:
         return AppColors.greenLight;
-      case 'missed':
+      case OccurrenceStatus.missed:
         return AppColors.redLight;
       default:
         return AppColors.amberLight;
@@ -34,9 +34,9 @@ class TaskCard extends StatelessWidget {
 
   IconData get _statusIcon {
     switch (occurrence.status) {
-      case 'completed':
+      case OccurrenceStatus.completed:
         return Icons.check_circle_rounded;
-      case 'missed':
+      case OccurrenceStatus.missed:
         return Icons.warning_rounded;
       default:
         return Icons.schedule_rounded;
@@ -45,11 +45,11 @@ class TaskCard extends StatelessWidget {
 
   String get _statusLabel {
     switch (occurrence.status) {
-      case 'completed':
+      case OccurrenceStatus.completed:
         return 'Completed';
-      case 'in_progress':
+      case OccurrenceStatus.inProgress:
         return 'In Progress';
-      case 'missed':
+      case OccurrenceStatus.missed:
         return 'Overdue';
       default:
         return 'Pending';
@@ -140,9 +140,9 @@ class TaskCard extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
                           decoration: BoxDecoration(
-                            color: occurrence.status == 'completed'
+                            color: occurrence.isCompleted
                                 ? AppColors.greenLight
-                                : occurrence.status == 'missed'
+                                : occurrence.isMissed
                                     ? AppColors.redLight
                                     : AppColors.amberLight,
                             borderRadius: BorderRadius.circular(20),

@@ -82,8 +82,8 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
     return Consumer<ActivityProvider>(
       builder: (ctx, provider, _) {
         final tasks = provider.todayTasks;
-        final doneTasks = tasks.where((t) => t.status == 'completed').length;
-        final pendingTasks = tasks.where((t) => t.status == 'pending').length;
+        final doneTasks = tasks.where((t) => t.isCompleted).length;
+        final pendingTasks = tasks.where((t) => t.isPending).length;
 
         return NotificationListener<OverscrollIndicatorNotification>(
           onNotification: (n) {

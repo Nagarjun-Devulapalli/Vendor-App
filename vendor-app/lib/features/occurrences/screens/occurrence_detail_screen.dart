@@ -270,32 +270,32 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
                     runSpacing: 6,
                     children: [
                       _iconChip(
-                        occ.status == 'completed'
+                        occ.isCompleted
                             ? Icons.check_circle_rounded
-                            : occ.status == 'in_progress'
+                            : occ.isInProgress
                             ? Icons.schedule_rounded
-                            : occ.status == 'missed'
+                            : occ.isMissed
                             ? Icons.warning_rounded
                             : Icons.schedule_rounded,
-                        occ.status == 'completed'
+                        occ.isCompleted
                             ? 'Completed'
-                            : occ.status == 'in_progress'
+                            : occ.isInProgress
                             ? 'In Progress'
-                            : occ.status == 'missed'
+                            : occ.isMissed
                             ? 'Overdue'
                             : 'Pending',
-                        occ.status == 'completed'
+                        occ.isCompleted
                             ? AppColors.greenLight
-                            : occ.status == 'in_progress'
+                            : occ.isInProgress
                             ? AppColors.blueLight
-                            : occ.status == 'missed'
+                            : occ.isMissed
                             ? AppColors.redLight
                             : AppColors.amberLight,
-                        occ.status == 'completed'
+                        occ.isCompleted
                             ? AppColors.green
-                            : occ.status == 'in_progress'
+                            : occ.isInProgress
                             ? AppColors.blue
-                            : occ.status == 'missed'
+                            : occ.isMissed
                             ? AppColors.red
                             : AppColors.amber,
                       ),
@@ -315,15 +315,18 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
                     _infoRow('Scheduled Date', occ.scheduledDate),
                     _infoRow(
                       'Status',
-                      occ.status == 'in_progress'
+                      occ.isInProgress
                           ? 'In Progress'
-                          : occ.status[0].toUpperCase() +
-                                occ.status.substring(1),
-                      valueColor: occ.status == 'completed'
+                          : occ.isCompleted
+                          ? 'Completed'
+                          : occ.isMissed
+                          ? 'Missed'
+                          : 'Pending',
+                      valueColor: occ.isCompleted
                           ? AppColors.green
-                          : occ.status == 'in_progress'
+                          : occ.isInProgress
                           ? AppColors.blue
-                          : occ.status == 'missed'
+                          : occ.isMissed
                           ? AppColors.red
                           : AppColors.amber,
                     ),
@@ -489,7 +492,7 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
   }
 
   Widget _buildActionButton(Occurrence occ) {
-    if (occ.status == 'completed') {
+    if (occ.isCompleted) {
       return SizedBox(
         width: double.infinity,
         child: ElevatedButton.icon(
@@ -506,7 +509,7 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
       );
     }
 
-    if (occ.status == 'missed') return const SizedBox.shrink();
+    if (occ.isMissed) return const SizedBox.shrink();
 
     // Find any existing work log for this occurrence (not per-user)
     final existingLog = _workLogs.isEmpty ? null : _workLogs.first;
@@ -529,7 +532,7 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
           style: AppTheme.greenButton,
         ),
       );
-    } else if (existingLog.approvalStatus == 'rejected') {
+    } else if (existingLog.approvalStatus == ApprovalStatus.rejected) {
       // Work log rejected — allow resubmission of after photo
       return SizedBox(
         width: double.infinity,
@@ -575,7 +578,7 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
           style: AppTheme.greenButton,
         ),
       );
-    } else if (existingLog.isCompleted && existingLog.approvalStatus != 'approved') {
+    } else if (existingLog.isCompleted && existingLog.approvalStatus != ApprovalStatus.approved) {
       // Submitted and awaiting admin review
       return SizedBox(
         width: double.infinity,
@@ -676,19 +679,19 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
     }
   }
 
-  Widget _statusBadge(String status) {
+  Widget _statusBadge(OccurrenceStatus status) {
     final String label;
     final IconData icon;
     switch (status) {
-      case 'completed':
+      case OccurrenceStatus.completed:
         label = 'Completed';
         icon = Icons.check_circle_rounded;
         break;
-      case 'in_progress':
+      case OccurrenceStatus.inProgress:
         label = 'In Progress';
         icon = Icons.schedule_rounded;
         break;
-      case 'missed':
+      case OccurrenceStatus.missed:
         label = 'Overdue';
         icon = Icons.warning_rounded;
         break;
@@ -838,7 +841,7 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
               ),
             ],
           ),
-          if (log.approvalStatus == 'rejected' &&
+          if (log.approvalStatus == ApprovalStatus.rejected &&
               log.rejectionReason != null &&
               log.rejectionReason!.isNotEmpty) ...[
             const SizedBox(height: 4),
@@ -851,7 +854,7 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
               ),
             ),
           ],
-          if (log.approvalStatus == 'approved' &&
+          if (log.approvalStatus == ApprovalStatus.approved &&
               log.reviewedByName != null) ...[
             const SizedBox(height: 4),
             Text(
@@ -905,19 +908,19 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
     );
   }
 
-  Widget _approvalBadge(String status) {
+  Widget _approvalBadge(ApprovalStatus status) {
     final Color bg;
     final Color fg;
     final String label;
     final IconData icon;
     switch (status) {
-      case 'approved':
+      case ApprovalStatus.approved:
         bg = AppColors.greenLight;
         fg = AppColors.green;
         label = 'Approved';
         icon = Icons.check_circle_rounded;
         break;
-      case 'rejected':
+      case ApprovalStatus.rejected:
         bg = AppColors.redLight;
         fg = AppColors.red;
         label = 'Rejected';
