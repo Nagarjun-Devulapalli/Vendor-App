@@ -331,7 +331,20 @@ export default function Vendors() {
                 </td>
                 <td className="px-4 py-3.5 text-[13px]">{employeeCountMap[v.id] ?? 0}</td>
                 <td className="px-4 py-3.5 text-[13px]">{v.user?.phone}</td>
-                <td className="px-4 py-3.5 space-x-2">
+                <td className="px-4 py-3.5" onClick={(e) => e.stopPropagation()}>
+                  <button
+                    onClick={(e) => handleToggleActive(e, v)}
+                    disabled={togglingId === v.id}
+                    className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors disabled:opacity-50 ${
+                      v.is_active
+                        ? 'bg-[#e8f5ee] text-[#1a6b4a] hover:bg-[#d0eddb]'
+                        : 'bg-[#fdecea] text-[#c0392b] hover:bg-[#fad4d0]'
+                    }`}
+                  >
+                    {togglingId === v.id ? '...' : v.is_active ? 'Active' : 'Inactive'}
+                  </button>
+                </td>
+                <td className="px-4 py-3.5" onClick={(e) => e.stopPropagation()}>
                   <button onClick={(e) => { e.stopPropagation(); setDeleteConfirm(v) }} className="w-[30px] h-[30px] rounded-lg border border-[#e4e8ed] inline-flex items-center justify-center text-sm text-[#6b7280] hover:bg-[#fdecea] hover:text-[#c0392b] transition-colors"><DeleteOutlined /></button>
                 </td>
               </tr>
