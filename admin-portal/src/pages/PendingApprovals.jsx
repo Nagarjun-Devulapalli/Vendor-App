@@ -47,7 +47,7 @@ export default function PendingApprovals() {
         }
         setWorkLogs(logs)
       })
-      .catch(console.error)
+      .catch(() => toast.error('Failed to load pending approvals'))
       .finally(() => setLoading(false))
   }
 
@@ -80,6 +80,7 @@ export default function PendingApprovals() {
   const handleApprove = (id) => {
     api.patch(`/work-logs/${id}/review/`, { approval_status: 'approved' })
       .then(() => {
+        toast.success('Work log approved successfully')
         fetchWorkLogs()
         setDetailModal(null)
       })
@@ -93,6 +94,7 @@ export default function PendingApprovals() {
       rejection_reason: rejectReason,
     })
       .then(() => {
+        toast.success('Work log rejected')
         setRejectModal(null)
         setRejectReason('')
         setDetailModal(null)
@@ -125,11 +127,6 @@ export default function PendingApprovals() {
             <BranchFilter value={selectedBranch} onChange={(val) => { setSelectedBranch(val); setCurrentPage(1) }} />
           )}
         </div>
-        {counts.pending > 0 && (
-          <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[#fef3e0] text-[#b07200] rounded-lg text-[13px] font-semibold">
-            {counts.pending} awaiting review
-          </span>
-        )}
       </div>
 
       {/* Summary Cards */}

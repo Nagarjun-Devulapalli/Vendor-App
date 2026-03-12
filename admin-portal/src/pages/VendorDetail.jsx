@@ -37,7 +37,7 @@ export default function VendorDetail() {
       setEmployees(empRes.data.results || empRes.data)
       setActivities(actRes.data.results || actRes.data)
     } catch (err) {
-      console.error(err)
+      toast.error('Failed to load vendor details')
     } finally {
       setLoading(false)
     }
@@ -70,6 +70,7 @@ export default function VendorDetail() {
       setEmpForm({ first_name: '', last_name: '', phone: '', aadhar_number: '' })
       setEmpPhoto(null)
       setEmpPhotoPreview(null)
+      toast.success('Employee added successfully')
       fetchData()
     } catch (err) {
       toast.error(parseApiError(err, 'Error adding employee'))

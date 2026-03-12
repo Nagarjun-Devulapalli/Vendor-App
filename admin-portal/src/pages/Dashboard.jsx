@@ -5,16 +5,19 @@ import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
 import BranchFilter from '../components/BranchFilter'
 import { ShopOutlined, FileTextOutlined, ExclamationCircleOutlined, CreditCardOutlined, EyeOutlined } from '@ant-design/icons'
+import { useToast } from '../components/Toast'
 
 const PIE_COLORS = { pending: '#e8a020', in_progress: '#2563a8', completed: '#1a6b4a', cancelled: '#c0392b' }
 
 export default function Dashboard() {
   const { user } = useAuth()
+  const toast = useToast()
   const [stats, setStats] = useState(null)
   const [spending, setSpending] = useState([])
   const [completion, setCompletion] = useState([])
   const [vendors, setVendors] = useState([])
   const [activities, setActivities] = useState([])
+  const [payments, setPayments] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedBranch, setSelectedBranch] = useState(null)
   const navigate = useNavigate()
@@ -29,15 +32,17 @@ export default function Dashboard() {
       api.get(`/dashboard/completion-rates/${branchParam}`),
       api.get(`/vendors/${branchParam}`),
       api.get(`/activities/${branchParam}`),
+      api.get(`/payments/${branchParam}`),
     ])
-      .then(([statsRes, spendingRes, completionRes, vendorsRes, actRes]) => {
+      .then(([statsRes, spendingRes, completionRes, vendorsRes, actRes, paymentsRes]) => {
         setStats(statsRes.data)
         setSpending(spendingRes.data)
         setCompletion(completionRes.data)
         setVendors((vendorsRes.data.results || vendorsRes.data).slice(0, 5))
         setActivities((actRes.data.results || actRes.data))
+        setPayments((paymentsRes.data.results || paymentsRes.data))
       })
-      .catch(console.error)
+      .catch(() => toast.error('Failed to load dashboard data'))
       .finally(() => setLoading(false))
   }, [selectedBranch])
 
@@ -67,10 +72,13 @@ export default function Dashboard() {
     </div>
   )
 
+  const partialPayments = payments.filter(p => p.payment_status === 'partial')
+  const partialBalance = partialPayments.reduce((sum, p) => sum + parseFloat(p.balance_remaining || 0), 0)
+
   const statCards = [
     { label: 'Total Vendors', value: stats?.total_vendors || 0, sub: `${vendors.length} registered`, color: 'green', icon: <ShopOutlined />, onClick: () => navigate('/vendors') },
     { label: 'Open Activities', value: stats?.total_activities || 0, sub: `${activities.filter(a => a.status === 'in_progress').length} in progress`, color: 'amber', icon: <FileTextOutlined />, onClick: () => navigate('/activities') },
-    { label: 'Partial Payments', value: `₹${((stats?.partial_payments_amount || 0) / 1000).toFixed(0)}K`, sub: `${stats?.partial_payments_count || 0} invoices`, color: 'amber', icon: <ExclamationCircleOutlined />, onClick: () => navigate('/payments?tab=partial') },
+    { label: 'Partial Payments', value: `₹${(partialBalance / 1000).toFixed(0)}K`, sub: `${partialPayments.length} invoices`, color: 'amber', icon: <ExclamationCircleOutlined />, onClick: () => navigate('/payments?tab=partial') },
     { label: 'Balance Remaining', value: `₹${((stats?.balance_remaining_amount || 0) / 1000).toFixed(0)}K`, sub: `${stats?.balance_remaining_count || 0} outstanding`, color: 'blue', icon: <CreditCardOutlined />, onClick: () => navigate('/payments') },
   ]
 

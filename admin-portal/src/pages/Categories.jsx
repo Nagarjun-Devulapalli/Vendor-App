@@ -51,7 +51,7 @@ export default function Categories() {
   const navigate = useNavigate()
 
   const fetchCategories = () => {
-    api.get('/categories/').then((res) => setCategories(res.data.results || res.data)).catch(console.error).finally(() => setLoading(false))
+    api.get('/categories/').then((res) => setCategories(res.data.results || res.data)).catch(() => toast.error('Failed to load categories')).finally(() => setLoading(false))
   }
 
   useEffect(() => { fetchCategories() }, [])
@@ -74,8 +74,10 @@ export default function Categories() {
     try {
       if (editing) {
         await api.put(`/categories/${editing.id}/`, form)
+        toast.success('Category updated successfully')
       } else {
         await api.post('/categories/', form)
+        toast.success('Category created successfully')
       }
       setShowModal(false)
       fetchCategories()
@@ -90,6 +92,7 @@ export default function Categories() {
     if (!deleteTarget) return
     try {
       await api.delete(`/categories/${deleteTarget.id}/`)
+      toast.success('Category deleted successfully')
       setDeleteTarget(null)
       fetchCategories()
     } catch (err) {
