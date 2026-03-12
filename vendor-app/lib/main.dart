@@ -9,7 +9,7 @@ import 'screens/employee_dashboard.dart';
 import 'theme/app_theme.dart';
 
 void main() {
-  GoogleFonts.config.allowRuntimeFetching = false;
+  GoogleFonts.config.allowRuntimeFetching = true;
   runApp(
     MultiProvider(
       providers: [
@@ -42,7 +42,7 @@ class _VendorAppState extends State<VendorApp> {
       theme: AppTheme.theme,
       home: Consumer<AuthProvider>(
         builder: (ctx, auth, _) {
-          if (auth.isLoading) {
+          if (auth.isInitializing) {
             return Scaffold(
               backgroundColor: AppColors.green,
               body: Center(
