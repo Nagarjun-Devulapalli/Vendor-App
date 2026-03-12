@@ -156,7 +156,7 @@ class OccurrenceViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         qs = ActivityOccurrence.objects.select_related(
             'activity', 'activity__category', 'activity__vendor', 'completed_by'
-        ).prefetch_related('work_logs__user', 'assignments__employee').annotate(
+        ).prefetch_related('work_logs__user', 'work_logs__reviewed_by', 'assignments__employee').annotate(
             work_log_count=Count('work_logs')
         )
         user = self.request.user
