@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
@@ -32,9 +33,14 @@ export default function Vendors() {
   const [branchDropdownOpen, setBranchDropdownOpen] = useState(false)
   const [branchSearch, setBranchSearch] = useState('')
   const [deleteConfirm, setDeleteConfirm] = useState(null)
+  const [statusFilter, setStatusFilter] = useState('')
+  const [statusDropdownOpen, setStatusDropdownOpen] = useState(false)
+  const [statusDropdownPos, setStatusDropdownPos] = useState({ top: 0, left: 0 })
   const navigate = useNavigate()
   const searchRef = useRef(null)
   const branchDropdownRef = useRef(null)
+  const statusBtnRef = useRef(null)
+  const statusPortalRef = useRef(null)
 
   const fetchVendors = () => {
     setLoading(true)
@@ -77,6 +83,16 @@ export default function Vendors() {
       if (branchDropdownRef.current && !branchDropdownRef.current.contains(event.target)) {
         setBranchDropdownOpen(false)
       }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      const inBtn = statusBtnRef.current?.contains(event.target)
+      const inPortal = statusPortalRef.current?.contains(event.target)
+      if (!inBtn && !inPortal) setStatusDropdownOpen(false)
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
@@ -199,6 +215,8 @@ export default function Vendors() {
   } else if (searchQuery && searchQuery.trim().length > 0) {
     filteredVendors = vendors.filter(v => matchesSearch(v, searchQuery))
   }
+  if (statusFilter === 'active') filteredVendors = filteredVendors.filter(v => v.is_active)
+  if (statusFilter === 'inactive') filteredVendors = filteredVendors.filter(v => !v.is_active)
 
   const pagedVendors = filteredVendors.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
   const suggestions = getSuggestions()
@@ -242,7 +260,41 @@ export default function Vendors() {
               <th className="text-left text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider px-4 py-2.5">Work Type</th>
               <th className="text-left text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider px-4 py-2.5">Employees</th>
               <th className="text-left text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider px-4 py-2.5">Phone</th>
-              <th className="text-left text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider px-4 py-2.5">Status</th>
+              <th className="text-left text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider px-4 py-2.5">
+                <button
+                  ref={statusBtnRef}
+                  onClick={() => {
+                    if (statusBtnRef.current) {
+                      const r = statusBtnRef.current.getBoundingClientRect()
+                      setStatusDropdownPos({ top: r.bottom + 4, left: r.left })
+                    }
+                    setStatusDropdownOpen(o => !o)
+                  }}
+                  className={`flex items-center gap-1 transition-colors hover:text-[#1a1f2e] ${statusFilter ? 'text-orchid' : ''}`}
+                >
+                  STATUS
+                  <svg className="w-3 h-3 shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M3 4h18v2.5l-7 7V20l-4-2v-6.5L3 6.5V4z"/></svg>
+                  {statusFilter && <span className="w-1.5 h-1.5 rounded-full bg-orchid shrink-0" />}
+                </button>
+                {statusDropdownOpen && createPortal(
+                  <div
+                    ref={statusPortalRef}
+                    style={{ position: 'fixed', top: statusDropdownPos.top, left: statusDropdownPos.left, zIndex: 9999 }}
+                    className="bg-white border border-[#e4e8ed] rounded-lg shadow-xl w-36 py-1"
+                  >
+                    {[{ label: 'All', value: '' }, { label: 'Active', value: 'active' }, { label: 'Inactive', value: 'inactive' }].map(({ label, value }) => (
+                      <button
+                        key={value}
+                        onClick={() => { setStatusFilter(value); setCurrentPage(1); setStatusDropdownOpen(false) }}
+                        className={`w-full text-left px-4 py-2.5 text-[13px] normal-case tracking-normal font-normal hover:bg-[#f6f7f9] transition-colors ${statusFilter === value || (!statusFilter && value === '') ? 'text-orchid font-semibold bg-orchid/5' : 'text-[#1a1f2e]'}`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>,
+                  document.body
+                )}
+              </th>
               <th className="text-left text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider px-4 py-2.5">Actions</th>
             </tr>
           </thead>
