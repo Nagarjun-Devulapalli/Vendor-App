@@ -86,16 +86,23 @@ class DashboardStatsView(APIView):
         payments_qs = Payment.objects.filter(activity__branch=branch) if branch else Payment.objects.all()
         employees_qs = Employee.objects.filter(vendor_owner__branch=branch) if branch else Employee.objects.all()
 
-        pending_qs = payments_qs.filter(payment_status='pending')
-        partial_qs = payments_qs.filter(payment_status='partial')
-        completed_qs = payments_qs.filter(payment_status='completed')
+        # Prefetch related data to avoid N+1 queries
+        payments_with_related = payments_qs.select_related(
+            'activity'
+        ).prefetch_related('entries', 'activity__occurrences')
 
-        balance_remaining = sum(p.balance_remaining for p in payments_qs.exclude(payment_status='completed'))
-        pending_payments_amount = sum(p.total_due for p in pending_qs)
-        partial_payments_amount = sum(p.total_paid for p in partial_qs)
-        completed_payments_amount = sum(p.total_paid for p in completed_qs)
+        pending_list = [p for p in payments_with_related if p.payment_status == 'pending']
+        partial_list = [p for p in payments_with_related if p.payment_status == 'partial']
+        completed_list = [p for p in payments_with_related if p.payment_status == 'completed']
+        unpaid_list = pending_list + partial_list
 
-        overdue_count = sum(1 for a in activities_qs if a.is_overdue)
+        balance_remaining = sum(p.balance_remaining for p in unpaid_list)
+        partial_payments_amount = sum(p.total_paid for p in partial_list)
+        completed_payments_amount = sum(p.total_paid for p in completed_list)
+
+        overdue_count = activities_qs.filter(
+            end_date__lt=timezone.now().date()
+        ).exclude(status__in=['completed', 'cancelled']).count()
 
         status_counts = {}
         for status, count in activities_qs.values_list('status').annotate(count=Count('id')):
@@ -106,9 +113,9 @@ class DashboardStatsView(APIView):
             'total_activities': activities_qs.count(),
             'total_employees': employees_qs.count(),
             'balance_remaining_amount': float(balance_remaining),
-            'balance_remaining_count': payments_qs.exclude(payment_status='completed').count(),
+            'balance_remaining_count': len(unpaid_list),
             'partial_payments_amount': float(partial_payments_amount),
-            'partial_payments_count': partial_qs.count(),
+            'partial_payments_count': len(partial_list),
             'completed_payments_amount': float(completed_payments_amount),
             'overdue_activities_count': overdue_count,
             'activities_by_status': status_counts,
@@ -134,19 +141,33 @@ class SpendingTrendsView(APIView):
             entries_qs = entries_qs.filter(payment__activity__branch=branch)
 
         today = timezone.now().date()
-        result = []
+        # Build month ranges
+        months = []
         for i in range(5, -1, -1):
             month_start = (today.replace(day=1) - timedelta(days=i * 30)).replace(day=1)
             if month_start.month == 12:
                 month_end = month_start.replace(year=month_start.year + 1, month=1, day=1)
             else:
                 month_end = month_start.replace(month=month_start.month + 1, day=1)
-            total = entries_qs.filter(
-                payment_date__gte=month_start, payment_date__lt=month_end
-            ).aggregate(total=Sum('amount'))['total'] or 0
+            months.append((month_start, month_end))
+
+        # Single query with conditional aggregation
+        from django.db.models import Case, When, DecimalField
+        aggregates = {}
+        for idx, (ms, me) in enumerate(months):
+            aggregates[f'month_{idx}'] = Sum(
+                Case(
+                    When(payment_date__gte=ms, payment_date__lt=me, then='amount'),
+                    default=0, output_field=DecimalField()
+                )
+            )
+        totals = entries_qs.aggregate(**aggregates)
+
+        result = []
+        for idx, (ms, me) in enumerate(months):
             result.append({
-                'month': month_start.strftime('%b %Y'),
-                'amount': float(total),
+                'month': ms.strftime('%b %Y'),
+                'amount': float(totals[f'month_{idx}'] or 0),
             })
         return Response(result)
 
@@ -168,18 +189,35 @@ class CompletionRatesView(APIView):
         occ_qs = ActivityOccurrence.objects.filter(activity__branch=branch) if branch else ActivityOccurrence.objects.all()
 
         today = timezone.now().date()
-        result = []
+        # Build month ranges
+        months = []
         for i in range(5, -1, -1):
             month_start = (today.replace(day=1) - timedelta(days=i * 30)).replace(day=1)
             if month_start.month == 12:
                 month_end = month_start.replace(year=month_start.year + 1, month=1, day=1)
             else:
                 month_end = month_start.replace(month=month_start.month + 1, day=1)
-            total = occ_qs.filter(scheduled_date__gte=month_start, scheduled_date__lt=month_end).count()
-            completed = occ_qs.filter(scheduled_date__gte=month_start, scheduled_date__lt=month_end, status='completed').count()
+            months.append((month_start, month_end))
+
+        # Single query with conditional aggregation
+        from django.db.models import Case, When, IntegerField, Value
+        aggregates = {}
+        for idx, (ms, me) in enumerate(months):
+            aggregates[f'total_{idx}'] = Count(
+                Case(When(scheduled_date__gte=ms, scheduled_date__lt=me, then=Value(1)))
+            )
+            aggregates[f'completed_{idx}'] = Count(
+                Case(When(scheduled_date__gte=ms, scheduled_date__lt=me, status='completed', then=Value(1)))
+            )
+        totals = occ_qs.aggregate(**aggregates)
+
+        result = []
+        for idx, (ms, me) in enumerate(months):
+            total = totals[f'total_{idx}'] or 0
+            completed = totals[f'completed_{idx}'] or 0
             rate = round((completed / total * 100), 1) if total > 0 else 0
             result.append({
-                'month': month_start.strftime('%b %Y'),
+                'month': ms.strftime('%b %Y'),
                 'rate': rate,
             })
         return Response(result)

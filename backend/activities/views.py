@@ -64,7 +64,7 @@ class ActivityViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        qs = Activity.objects.select_related('vendor', 'category', 'branch').annotate(
+        qs = Activity.objects.select_related('vendor', 'vendor__user', 'category', 'branch').annotate(
             occurrence_count=Count('occurrences')
         ).order_by('-created_at')
         user = self.request.user
