@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { BankOutlined } from '@ant-design/icons'
+import { BankOutlined, EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons'
 
 export default function Login() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const { login, loading, error } = useAuth()
   const navigate = useNavigate()
 
@@ -44,14 +45,19 @@ export default function Login() {
           </div>
           <div>
             <label className="block text-xs font-semibold text-[#1a1f2e] mb-1.5">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full border-[1.5px] border-[#e4e8ed] rounded-lg px-3.5 py-2.5 text-sm focus:border-orchid focus:outline-none transition-colors"
-              placeholder="Enter password"
-              required
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full border-[1.5px] border-[#e4e8ed] rounded-lg px-3.5 py-2.5 pr-10 text-sm focus:border-orchid focus:outline-none transition-colors"
+                placeholder="Enter password"
+                required
+              />
+              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6b7280] hover:text-[#1a1f2e] transition-colors">
+                {showPassword ? <EyeInvisibleOutlined /> : <EyeOutlined />}
+              </button>
+            </div>
           </div>
           <button
             type="submit"
