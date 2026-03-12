@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
-import { SearchOutlined, CopyOutlined, CheckOutlined, EditOutlined, SwapOutlined } from '@ant-design/icons'
+import { useToast, parseApiError } from '../components/Toast'
+import { SearchOutlined, CopyOutlined, CheckOutlined, EditOutlined, SwapOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
 import Pagination from '../components/Pagination'
 import BranchFilter from '../components/BranchFilter'
 
@@ -32,6 +33,8 @@ export default function Credentials() {
   const [newPassword, setNewPassword] = useState('')
   const [resetting, setResetting] = useState(false)
   const [switching, setSwitching] = useState(null)
+  const [switchConfirm, setSwitchConfirm] = useState(null)
+  const toast = useToast()
   const navigate = useNavigate()
 
   const fetchCredentials = () => {
@@ -72,9 +75,10 @@ export default function Credentials() {
       await api.patch(`/credentials/${resetModal.id}/reset-password/`, { new_password: newPassword })
       setResetModal(null)
       setNewPassword('')
+      toast.success('Password reset successfully')
       fetchCredentials()
     } catch (err) {
-      alert(err.response?.data?.error || 'Error resetting password')
+      toast.error(parseApiError(err, 'Error resetting password'))
     } finally {
       setResetting(false)
     }
@@ -82,10 +86,10 @@ export default function Credentials() {
 
   const handleSwitchUser = async (cred) => {
     if (isUntracked(cred.password_plain)) {
-      alert('Password not tracked. Please reset the password first, then switch.')
+      toast.error('Password not tracked. Please reset the password first, then switch.')
       return
     }
-    if (!confirm(`Switch to ${cred.first_name} ${cred.last_name} (${cred.username})?\n\nYou will be logged out of superadmin.`)) return
+    setSwitchConfirm(null)
     setSwitching(cred.id)
     try {
       // Save superadmin session so we can switch back
@@ -104,7 +108,7 @@ export default function Credentials() {
       localStorage.setItem('user', JSON.stringify(userData))
       window.location.href = '/dashboard'
     } catch (err) {
-      alert(err.response?.data?.detail || err.response?.data?.non_field_errors?.[0] || 'Login failed. Try resetting the password first.')
+      toast.error(err.response?.data?.detail || err.response?.data?.non_field_errors?.[0] || 'Login failed. Try resetting the password first.')
       localStorage.removeItem('superadmin_session')
     } finally {
       setSwitching(null)
@@ -253,7 +257,7 @@ export default function Credentials() {
                     <td className="px-4 py-3">
                       {c.role === 'admin' ? (
                         <button
-                          onClick={() => handleSwitchUser(c)}
+                          onClick={() => isUntracked(c.password_plain) ? toast.error('Password not tracked. Please reset the password first, then switch.') : setSwitchConfirm(c)}
                           disabled={switching === c.id || !c.is_active}
                           className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-colors ${
                             !c.is_active
@@ -324,6 +328,20 @@ export default function Credentials() {
               >
                 {resetting ? 'Resetting...' : 'Reset Password'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {switchConfirm && (
+        <div className="fixed inset-0 bg-black/40 modal-backdrop flex items-center justify-center z-[1000] p-4">
+          <div className="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full text-center">
+            <div className="w-12 h-12 bg-[#fef3e0] rounded-full flex items-center justify-center mx-auto mb-3 text-xl text-[#b07200]"><ExclamationCircleOutlined /></div>
+            <h2 className="font-serif text-lg font-bold mb-1">Switch User</h2>
+            <p className="text-sm text-[#6b7280] mb-5">Switch to <span className="font-semibold text-[#1a1f2e]">{switchConfirm.first_name} {switchConfirm.last_name} ({switchConfirm.username})</span>? You will be logged out of superadmin.</p>
+            <div className="flex gap-2.5 justify-center">
+              <button onClick={() => setSwitchConfirm(null)} className="px-4 py-2 border-[1.5px] border-[#e4e8ed] rounded-lg text-[13px] font-semibold hover:bg-[#f6f7f9] transition-colors">Cancel</button>
+              <button onClick={() => handleSwitchUser(switchConfirm)} className="px-4 py-2 bg-orchid text-white rounded-lg text-[13px] font-semibold hover:bg-orchid-mid transition-colors">Switch</button>
             </div>
           </div>
         </div>
