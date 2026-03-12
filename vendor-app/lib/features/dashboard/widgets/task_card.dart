@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../models/occurrence.dart';
-import '../theme/app_theme.dart';
+import '../../occurrences/models/occurrence.dart';
+import '../../../core/theme/app_theme.dart';
 
 class TaskCard extends StatelessWidget {
   final Occurrence occurrence;

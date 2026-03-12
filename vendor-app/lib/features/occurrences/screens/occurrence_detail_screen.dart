@@ -4,12 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../models/occurrence.dart';
-import '../models/work_log.dart';
-import '../services/api_service.dart';
-import '../services/auth_service.dart';
-import '../theme/app_theme.dart';
+import '../../work_logs/models/work_log.dart';
+import '../../../core/services/api_service.dart';
+import '../../../core/services/auth_service.dart';
+import '../../../core/theme/app_theme.dart';
 import '../widgets/detail_hero.dart';
-import 'work_log_screen.dart';
+import '../../work_logs/screens/work_log_screen.dart';
 
 class OccurrenceDetailScreen extends StatefulWidget {
   final int occurrenceId;
