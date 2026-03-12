@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../models/user.dart';
-import '../services/api_service.dart';
-import '../services/auth_service.dart';
+import '../../../models/user.dart';
+import '../../../core/services/api_service.dart';
+import '../../../core/services/auth_service.dart';
 
 class AuthProvider extends ChangeNotifier {
   User? _user;

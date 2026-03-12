@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'providers/auth_provider.dart';
-import 'providers/activity_provider.dart';
-import 'screens/login_screen.dart';
-import 'screens/owner_dashboard.dart';
-import 'screens/employee_dashboard.dart';
-import 'theme/app_theme.dart';
+import 'features/auth/providers/auth_provider.dart';
+import 'features/dashboard/providers/activity_provider.dart';
+import 'features/auth/screens/login_screen.dart';
+import 'features/dashboard/screens/owner_dashboard.dart';
+import 'features/dashboard/screens/employee_dashboard.dart';
+import 'core/theme/app_theme.dart';
 
 void main() {
   GoogleFonts.config.allowRuntimeFetching = true;

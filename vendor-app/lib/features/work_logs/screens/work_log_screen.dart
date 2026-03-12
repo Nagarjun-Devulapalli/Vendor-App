@@ -2,9 +2,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
-import '../services/api_service.dart';
-import '../theme/app_theme.dart';
-import '../widgets/detail_hero.dart';
+import '../../../core/services/api_service.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../occurrences/widgets/detail_hero.dart';
 
 enum WorkLogMode { start, complete }
 
