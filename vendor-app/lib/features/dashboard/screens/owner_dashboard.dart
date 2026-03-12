@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:vendor_app/core/routes.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../providers/activity_provider.dart';
 import '../../occurrences/models/occurrence.dart';
@@ -12,7 +14,6 @@ import '../widgets/hero_header.dart';
 import '../widgets/bottom_nav.dart';
 import '../widgets/task_card.dart';
 import '../../employees/screens/employee_list_screen.dart';
-import '../../occurrences/screens/occurrence_detail_screen.dart';
 
 class OwnerDashboard extends StatefulWidget {
   const OwnerDashboard({super.key});
@@ -200,13 +201,9 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                       (ctx, i) => TaskCard(
                         occurrence: tasks[i],
                         onTap: () async {
-                          await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => OccurrenceDetailScreen(
-                                occurrenceId: tasks[i].id,
-                              ),
-                            ),
+                          await context.pushNamed(
+                            VendorRoute.vendorOccurrenceDetail.name,
+                            pathParameters: {'occurrenceId': tasks[i].id.toString()},
                           );
                           if (mounted) provider.loadTodayTasks();
                         },
@@ -500,13 +497,9 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                           return TaskCard(
                             occurrence: task,
                             onTap: () async {
-                              await Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => OccurrenceDetailScreen(
-                                    occurrenceId: task.id,
-                                  ),
-                                ),
+                              await context.pushNamed(
+                                VendorRoute.vendorOccurrenceDetail.name,
+                                pathParameters: {'occurrenceId': task.id.toString()},
                               );
                               if (mounted) provider.loadTodayTasks();
                             },

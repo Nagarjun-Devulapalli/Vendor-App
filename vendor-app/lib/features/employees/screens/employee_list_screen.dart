@@ -1,13 +1,14 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:vendor_app/core/routes.dart';
 import '../models/employee.dart';
 import '../../../core/services/api_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../occurrences/widgets/detail_hero.dart';
-import 'add_employee_screen.dart';
 
 class EmployeeListScreen extends StatefulWidget {
   final bool embedded;
@@ -53,10 +54,7 @@ class _EmployeeListScreenState extends State<EmployeeListScreen> {
   }
 
   Future<void> _navigateToAdd() async {
-    await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const AddEmployeeScreen()),
-    );
+    await context.pushNamed(VendorRoute.vendorAddEmployee.name);
     _loadEmployees();
   }
 

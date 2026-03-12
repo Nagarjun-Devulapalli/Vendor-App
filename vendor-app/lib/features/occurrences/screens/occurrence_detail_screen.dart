@@ -1,15 +1,17 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:vendor_app/core/routes.dart';
 
 import '../models/occurrence.dart';
 import '../../work_logs/models/work_log.dart';
+import '../../work_logs/screens/work_log_screen.dart';
 import '../../../core/services/api_service.dart';
 import '../../../core/services/auth_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../widgets/detail_hero.dart';
-import '../../work_logs/screens/work_log_screen.dart';
 
 class OccurrenceDetailScreen extends StatefulWidget {
   final int occurrenceId;
@@ -515,14 +517,10 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
         width: double.infinity,
         child: ElevatedButton.icon(
           onPressed: () async {
-            final result = await Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => WorkLogScreen(
-                  occurrenceId: widget.occurrenceId,
-                  mode: WorkLogMode.start,
-                ),
-              ),
+            final result = await context.pushNamed(
+              VendorRoute.vendorWorkLog.name,
+              pathParameters: {'occurrenceId': widget.occurrenceId.toString()},
+              extra: {'mode': WorkLogMode.start},
             );
             if (result == true) _loadData();
           },
@@ -537,16 +535,14 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
         width: double.infinity,
         child: ElevatedButton.icon(
           onPressed: () async {
-            final result = await Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => WorkLogScreen(
-                  occurrenceId: widget.occurrenceId,
-                  mode: WorkLogMode.complete,
-                  workLogId: existingLog.id,
-                  existingBeforePhotoUrl: existingLog.beforePhoto,
-                ),
-              ),
+            final result = await context.pushNamed(
+              VendorRoute.vendorWorkLog.name,
+              pathParameters: {'occurrenceId': widget.occurrenceId.toString()},
+              extra: {
+                'mode': WorkLogMode.complete,
+                'workLogId': existingLog.id,
+                'existingBeforePhotoUrl': existingLog.beforePhoto,
+              },
             );
             if (result == true) _loadData();
           },
@@ -563,16 +559,14 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
         width: double.infinity,
         child: ElevatedButton.icon(
           onPressed: () async {
-            final result = await Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => WorkLogScreen(
-                  occurrenceId: widget.occurrenceId,
-                  mode: WorkLogMode.complete,
-                  workLogId: existingLog.id,
-                  existingBeforePhotoUrl: existingLog.beforePhoto,
-                ),
-              ),
+            final result = await context.pushNamed(
+              VendorRoute.vendorWorkLog.name,
+              pathParameters: {'occurrenceId': widget.occurrenceId.toString()},
+              extra: {
+                'mode': WorkLogMode.complete,
+                'workLogId': existingLog.id,
+                'existingBeforePhotoUrl': existingLog.beforePhoto,
+              },
             );
             if (result == true) _loadData();
           },
