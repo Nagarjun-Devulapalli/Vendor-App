@@ -165,14 +165,6 @@ class ApiService {
     return data as Map<String, dynamic>;
   }
 
-  static Future<void> resetPassword(
-      String username, String newPassword) async {
-    await _put('/auth/reset-password/', {
-      'username': username,
-      'new_password': newPassword,
-    });
-  }
-
   // Occurrences
   static Future<List<dynamic>> getTodayOccurrences() async {
     final data = await _get('/occurrences/today/');
