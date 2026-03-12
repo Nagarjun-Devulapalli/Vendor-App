@@ -52,9 +52,15 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
         child: SafeArea(
-          child: Column(
-            children: [
-              const Spacer(flex: 2),
+          child: SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top - MediaQuery.of(context).padding.bottom,
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const SizedBox(height: 40),
               // Logo & branding
               const Icon(Icons.school_rounded, size: 56, color: Colors.white),
               const SizedBox(height: 16),
@@ -71,7 +77,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   color: Colors.white.withValues(alpha: 0.55),
                 ),
               ),
-              const Spacer(),
+              const SizedBox(height: 32),
               // Login card
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -209,6 +215,8 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 32),
             ],
+          ),
+        ),
           ),
         ),
       ),
