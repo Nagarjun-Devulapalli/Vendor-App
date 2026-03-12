@@ -27,18 +27,18 @@ export default function Layout() {
         className={`${collapsed ? 'ml-16' : 'ml-[240px]'} flex-1 flex flex-col min-h-screen transition-all duration-200 ease-in-out`}
       >
         {/* Top bar */}
-        <header className="bg-white border-b border-[#e4e8ed] px-5 h-[60px] flex items-center justify-between sticky top-0 z-40">
+        <header className="bg-[#e6fcf2] border-b border-[#8ac4ab] px-5 h-[60px] flex items-center justify-between sticky top-0 z-40">
           <div className="flex items-center gap-4">
             <button
               onClick={() => setCollapsed((c) => !c)}
-              className="text-[#6b7280] hover:text-[#1a1f2e] transition-colors"
+              className="text-[#1a5c3f] hover:text-[#0d3625] transition-colors"
               title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             >
               {collapsed ? <MenuUnfoldOutlined style={{ fontSize: 18 }} /> : <MenuFoldOutlined style={{ fontSize: 18 }} />}
             </button>
             <div>
-              <h2 className="font-serif text-xl font-bold text-[#1a1f2e]">{meta.title}</h2>
-              <p className="text-xs text-[#6b7280] mt-0.5">{meta.sub}</p>
+              <h2 className="font-serif text-xl font-bold text-[#0d3625]">{meta.title}</h2>
+              <p className="text-xs text-[#1a5c3f] mt-0.5">{meta.sub}</p>
             </div>
           </div>
         </header>
