@@ -24,6 +24,7 @@ export default function Vendors() {
   const [photo, setPhoto] = useState(null)
   const [photoPreview, setPhotoPreview] = useState(null)
   const [submitting, setSubmitting] = useState(false)
+  const [togglingId, setTogglingId] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [selectedVendorId, setSelectedVendorId] = useState(null)
@@ -122,6 +123,24 @@ export default function Vendors() {
       ...f,
       category_ids: f.category_ids.includes(id) ? f.category_ids.filter((c) => c !== id) : [...f.category_ids, id],
     }))
+  }
+
+  const handleToggleActive = async (e, vendor) => {
+    e.stopPropagation()
+    setTogglingId(vendor.id)
+    try {
+      await api.patch(`/vendors/${vendor.id}/toggle-active/`, { is_active: !vendor.is_active })
+      if (vendor.is_active) {
+        toast.error('Vendor deactivated')
+      } else {
+        toast.success('Vendor activated')
+      }
+      fetchVendors()
+    } catch (err) {
+      toast.error(parseApiError(err, 'Failed to update vendor status'))
+    } finally {
+      setTogglingId(null)
+    }
   }
 
   const handleDelete = async (id) => {
@@ -263,6 +282,7 @@ export default function Vendors() {
               <th className="text-left text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider px-4 py-2.5">Work Type</th>
               <th className="text-left text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider px-4 py-2.5">Employees</th>
               <th className="text-left text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider px-4 py-2.5">Phone</th>
+              <th className="text-left text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider px-4 py-2.5">Status</th>
               <th className="text-left text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider px-4 py-2.5">Actions</th>
             </tr>
           </thead>
@@ -274,6 +294,7 @@ export default function Vendors() {
                     <td className="px-4 py-3.5"><div className="h-3 bg-[#e4e8ed] rounded w-20" /></td>
                     <td className="px-4 py-3.5"><div className="h-3 bg-[#e4e8ed] rounded w-6" /></td>
                     <td className="px-4 py-3.5"><div className="h-3 bg-[#e4e8ed] rounded w-24" /></td>
+                    <td className="px-4 py-3.5"><div className="h-6 bg-[#e4e8ed] rounded w-16" /></td>
                     <td className="px-4 py-3.5"><div className="h-7 bg-[#e4e8ed] rounded w-7" /></td>
                   </tr>
                 ))
@@ -316,7 +337,7 @@ export default function Vendors() {
               </tr>
             ))}
             {!loading && filteredVendors.length === 0 && (
-              <tr><td colSpan="5" className="px-4 py-8 text-center text-[13px] text-[#6b7280]">
+              <tr><td colSpan="6" className="px-4 py-8 text-center text-[13px] text-[#6b7280]">
                 {searchQuery || selectedVendorId ? 'No vendors match your search' : 'No vendors found'}
               </td></tr>
             )}
