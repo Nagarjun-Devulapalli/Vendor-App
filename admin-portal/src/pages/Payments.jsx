@@ -418,13 +418,29 @@ export default function Payments() {
                         <td className="px-4 py-3 text-[13px]">{entry.paid_by_name || '—'}</td>
                         <td className="px-4 py-3 text-[12px] text-[#6b7280] max-w-[140px] truncate">{entry.notes || '—'}</td>
                         <td className="px-4 py-3">
-                          {entry.receipt ? (
-                            <a href={entry.receipt} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#e8f5ee] text-[#1a6b4a] rounded text-[11px] font-semibold hover:bg-[#d0ebdb] transition-colors">
-                              📄 View
-                            </a>
-                          ) : (
-                            <span className="text-[11px] text-[#6b7280]">—</span>
-                          )}
+                          <div className="flex items-center gap-1.5">
+                            {entry.receipt && (
+                              <a href={entry.receipt} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#e8f5ee] text-[#1a6b4a] rounded text-[11px] font-semibold hover:bg-[#d0ebdb] transition-colors">
+                                View
+                              </a>
+                            )}
+                            <label className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold cursor-pointer transition-colors ${entry.receipt ? 'bg-[#f0f1f3] text-[#6b7280] hover:bg-[#e4e8ed]' : 'bg-[#e8f0fc] text-[#2563a8] hover:bg-[#d0e0f8]'}`}>
+                              {entry.receipt ? 'Replace' : 'Upload'}
+                              <input type="file" accept="image/*,.pdf" className="hidden" onChange={async (e) => {
+                                const file = e.target.files[0]
+                                if (!file) return
+                                const fd = new FormData()
+                                fd.append('receipt', file)
+                                try {
+                                  await api.patch(`/payment-entries/${entry.id}/upload-receipt/`, fd, { headers: { 'Content-Type': 'multipart/form-data' } })
+                                  toast.success('Receipt uploaded')
+                                  const res = await api.get(`/payment-entries/?payment=${entriesModal.id}`)
+                                  setEntriesModal({ ...entriesModal, entries: res.data.results || res.data })
+                                } catch (err) { toast.error(parseApiError(err, 'Failed to upload receipt')) }
+                                e.target.value = ''
+                              }} />
+                            </label>
+                          </div>
                         </td>
                         <td className="px-4 py-3">
                           <button
