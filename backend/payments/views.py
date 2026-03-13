@@ -35,6 +35,25 @@ class PaymentViewSet(viewsets.ModelViewSet):
             qs = qs.filter(payment_status=status_filter)
         return qs
 
+    def list(self, request, *args, **kwargs):
+        # Auto-fix stale payment statuses from old data
+        from decimal import Decimal
+        for payment in self.get_queryset():
+            paid = payment.total_paid
+            due = payment.total_due
+            if paid <= Decimal('0.00'):
+                expected = 'pending'
+            elif due > 0 and paid >= due:
+                expected = 'completed'
+            elif paid > Decimal('0.00'):
+                expected = 'partial'
+            else:
+                expected = 'pending'
+            if payment.payment_status != expected:
+                payment.payment_status = expected
+                payment.save(update_fields=['payment_status'])
+        return super().list(request, *args, **kwargs)
+
     @action(detail=True, methods=['post'], url_path='pay')
     def pay(self, request, pk=None):
         """Record a payment entry for this payment."""
@@ -88,7 +107,7 @@ class PaymentEntryViewSet(viewsets.ModelViewSet):
     """View/manage individual payment entries."""
     serializer_class = PaymentEntrySerializer
     permission_classes = [IsAuthenticated]
-    http_method_names = ['get', 'delete', 'head', 'options']
+    http_method_names = ['get', 'patch', 'delete', 'head', 'options']
 
     def get_queryset(self):
         qs = PaymentEntry.objects.select_related('payment__activity', 'paid_by').all()
@@ -98,9 +117,20 @@ class PaymentEntryViewSet(viewsets.ModelViewSet):
         return qs
 
     def get_permissions(self):
-        if self.action == 'destroy':
+        if self.action in ('destroy', 'upload_receipt'):
             return [IsAdmin()]
         return [IsAuthenticated()]
+
+    @action(detail=True, methods=['patch'], url_path='upload-receipt')
+    def upload_receipt(self, request, pk=None):
+        """Upload or replace a receipt for a payment entry."""
+        entry = self.get_object()
+        receipt = request.FILES.get('receipt')
+        if not receipt:
+            return Response({'detail': 'receipt file is required.'}, status=status.HTTP_400_BAD_REQUEST)
+        entry.receipt = receipt
+        entry.save(update_fields=['receipt'])
+        return Response(PaymentEntrySerializer(entry).data)
 
     def perform_destroy(self, instance):
         payment = instance.payment
