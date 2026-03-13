@@ -1,57 +1,55 @@
-import 'dart:convert';
 import 'dart:io';
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
 import 'auth_service.dart';
 
 class ApiService {
   static const String baseUrl = 'http://10.0.2.2:8000/api';
   static const String mediaBaseUrl = 'http://10.0.2.2:8000';
 
+  static final Dio _dio = Dio(BaseOptions(
+    baseUrl: baseUrl,
+    connectTimeout: const Duration(seconds: 30),
+    receiveTimeout: const Duration(seconds: 30),
+  ));
+
   /// Resolves a photo URL from the API to a full URL.
-  /// Handles both relative paths (/media/...) and full URLs.
   static String resolvePhotoUrl(String url) {
     if (url.startsWith('http://') || url.startsWith('https://')) {
-      return url.replaceFirst('http://localhost:8000', mediaBaseUrl)
-                .replaceFirst('http://127.0.0.1:8000', mediaBaseUrl);
+      return url
+          .replaceFirst('http://localhost:8000', mediaBaseUrl)
+          .replaceFirst('http://127.0.0.1:8000', mediaBaseUrl);
     }
     return '$mediaBaseUrl$url';
   }
 
-  static Future<Map<String, String>> _getHeaders({bool isJson = true}) async {
+  static Future<Options> _getOptions({bool isJson = true}) async {
     final token = await AuthService.getAccessToken();
-    return {
-      if (isJson) 'Content-Type': 'application/json',
-      if (token != null) 'Authorization': 'Bearer $token',
-    };
+    return Options(
+      headers: {
+        if (isJson) 'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token',
+      },
+    );
   }
 
-  static Future<dynamic> _handleResponse(http.Response response) async {
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      if (response.body.isEmpty) return {};
-      return jsonDecode(response.body);
+  static Future<dynamic> _handleResponse(Response response) async {
+    if (response.statusCode! >= 200 && response.statusCode! < 300) {
+      return response.data ?? {};
     }
-    if (response.statusCode == 401) {
-      final refreshed = await _refreshToken();
-      if (!refreshed) throw Exception('Session expired. Please login again.');
-      throw Exception('TOKEN_REFRESHED');
-    }
-    throw Exception(response.body.isNotEmpty
-        ? jsonDecode(response.body).toString()
-        : 'Request failed: ${response.statusCode}');
+    throw Exception('Request failed: ${response.statusCode}');
   }
 
   static Future<bool> _refreshToken() async {
     final refresh = await AuthService.getRefreshToken();
     if (refresh == null) return false;
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/auth/token/refresh/'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'refresh': refresh}),
+      final response = await _dio.post(
+        '/auth/token/refresh/',
+        data: {'refresh': refresh},
+        options: Options(headers: {'Content-Type': 'application/json'}),
       );
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        await AuthService.saveTokens(data['access'], refresh);
+        await AuthService.saveTokens(response.data['access'], refresh);
         return true;
       }
       return false;
@@ -60,114 +58,111 @@ class ApiService {
     }
   }
 
-  static Future<dynamic> _get(String path) async {
+  static Future<dynamic> _get(String path,
+      {Map<String, dynamic>? queryParameters}) async {
     try {
-      final headers = await _getHeaders();
-      final response = await http.get(Uri.parse('$baseUrl$path'), headers: headers);
+      final options = await _getOptions();
+      final response = await _dio.get(path,
+          options: options, queryParameters: queryParameters);
       return await _handleResponse(response);
-    } catch (e) {
-      if (e.toString().contains('TOKEN_REFRESHED')) {
-        final headers = await _getHeaders();
-        final response = await http.get(Uri.parse('$baseUrl$path'), headers: headers);
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) {
+        final refreshed = await _refreshToken();
+        if (!refreshed) throw Exception('Session expired. Please login again.');
+        final options = await _getOptions();
+        final response = await _dio.get(path,
+            options: options, queryParameters: queryParameters);
         return await _handleResponse(response);
       }
-      rethrow;
+      _handleDioError(e);
     }
   }
 
   static Future<dynamic> _post(String path, Map<String, dynamic> body) async {
     try {
-      final headers = await _getHeaders();
-      final response = await http.post(
-        Uri.parse('$baseUrl$path'),
-        headers: headers,
-        body: jsonEncode(body),
-      );
+      final options = await _getOptions();
+      final response = await _dio.post(path, data: body, options: options);
       return await _handleResponse(response);
-    } catch (e) {
-      if (e.toString().contains('TOKEN_REFRESHED')) {
-        final headers = await _getHeaders();
-        final response = await http.post(
-          Uri.parse('$baseUrl$path'),
-          headers: headers,
-          body: jsonEncode(body),
-        );
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) {
+        final refreshed = await _refreshToken();
+        if (!refreshed) throw Exception('Session expired. Please login again.');
+        final options = await _getOptions();
+        final response = await _dio.post(path, data: body, options: options);
         return await _handleResponse(response);
       }
-      rethrow;
+      _handleDioError(e);
     }
   }
 
   static Future<dynamic> _patch(String path, Map<String, dynamic> body) async {
     try {
-      final headers = await _getHeaders();
-      final response = await http.patch(
-        Uri.parse('$baseUrl$path'),
-        headers: headers,
-        body: jsonEncode(body),
-      );
+      final options = await _getOptions();
+      final response = await _dio.patch(path, data: body, options: options);
       return await _handleResponse(response);
-    } catch (e) {
-      if (e.toString().contains('TOKEN_REFRESHED')) {
-        final headers = await _getHeaders();
-        final response = await http.patch(
-          Uri.parse('$baseUrl$path'),
-          headers: headers,
-          body: jsonEncode(body),
-        );
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) {
+        final refreshed = await _refreshToken();
+        if (!refreshed) throw Exception('Session expired. Please login again.');
+        final options = await _getOptions();
+        final response = await _dio.patch(path, data: body, options: options);
         return await _handleResponse(response);
       }
-      rethrow;
+      _handleDioError(e);
     }
   }
 
   static Future<dynamic> _put(String path, Map<String, dynamic> body) async {
     try {
-      final headers = await _getHeaders();
-      final response = await http.put(
-        Uri.parse('$baseUrl$path'),
-        headers: headers,
-        body: jsonEncode(body),
-      );
+      final options = await _getOptions();
+      final response = await _dio.put(path, data: body, options: options);
       return await _handleResponse(response);
-    } catch (e) {
-      if (e.toString().contains('TOKEN_REFRESHED')) {
-        final headers = await _getHeaders();
-        final response = await http.put(
-          Uri.parse('$baseUrl$path'),
-          headers: headers,
-          body: jsonEncode(body),
-        );
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) {
+        final refreshed = await _refreshToken();
+        if (!refreshed) throw Exception('Session expired. Please login again.');
+        final options = await _getOptions();
+        final response = await _dio.put(path, data: body, options: options);
         return await _handleResponse(response);
       }
-      rethrow;
+      _handleDioError(e);
     }
   }
 
-  // Auth
-  static Future<Map<String, dynamic>> login(String username, String password) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/auth/login/'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'username': username, 'password': password}),
-    );
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body) as Map<String, dynamic>;
+  static Never _handleDioError(DioException e) {
+    final data = e.response?.data;
+    if (data is Map) {
+      throw Exception(
+          data['detail'] ?? data['error'] ?? data.toString());
     }
-    final error = response.body.isNotEmpty ? jsonDecode(response.body) : {};
-    throw Exception(error['detail'] ?? error['error'] ?? 'Login failed');
+    throw Exception(data?.toString() ?? 'Request failed: ${e.message}');
+  }
+
+  // Auth
+  static Future<Map<String, dynamic>> login(
+      String username, String password) async {
+    try {
+      final response = await _dio.post(
+        '/auth/login/',
+        data: {'username': username, 'password': password},
+        options: Options(headers: {'Content-Type': 'application/json'}),
+      );
+      if (response.statusCode == 200) {
+        return response.data as Map<String, dynamic>;
+      }
+      throw Exception('Login failed');
+    } on DioException catch (e) {
+      final data = e.response?.data;
+      if (data is Map) {
+        throw Exception(data['detail'] ?? data['error'] ?? 'Login failed');
+      }
+      throw Exception('Login failed');
+    }
   }
 
   static Future<Map<String, dynamic>> getProfile() async {
     final data = await _get('/auth/profile/');
     return data as Map<String, dynamic>;
-  }
-
-  static Future<void> resetPassword(String username, String newPassword) async {
-    await _put('/auth/reset-password/', {
-      'username': username,
-      'new_password': newPassword,
-    });
   }
 
   // Occurrences
@@ -186,7 +181,8 @@ class ApiService {
   }
 
   // Mark activity as completed (stops new occurrences)
-  static Future<Map<String, dynamic>> markActivityComplete(int activityId) async {
+  static Future<Map<String, dynamic>> markActivityComplete(
+      int activityId) async {
     final data = await _patch('/activities/$activityId/mark-complete/', {});
     return data as Map<String, dynamic>;
   }
@@ -199,22 +195,22 @@ class ApiService {
     File? afterPhoto,
   }) async {
     final token = await AuthService.getAccessToken();
-    final request = http.MultipartRequest('POST', Uri.parse('$baseUrl/work-logs/'));
-    request.headers['Authorization'] = 'Bearer $token';
-    request.fields['occurrence'] = occurrenceId.toString();
-    request.fields['description'] = description;
+    final formData = FormData.fromMap({
+      'occurrence': occurrenceId.toString(),
+      'description': description,
+      if (beforePhoto != null)
+        'before_photo': await MultipartFile.fromFile(beforePhoto.path),
+      if (afterPhoto != null)
+        'after_photo': await MultipartFile.fromFile(afterPhoto.path),
+    });
 
-    if (beforePhoto != null) {
-      request.files.add(await http.MultipartFile.fromPath('before_photo', beforePhoto.path));
-    }
-    if (afterPhoto != null) {
-      request.files.add(await http.MultipartFile.fromPath('after_photo', afterPhoto.path));
-    }
-
-    final streamedResponse = await request.send();
-    final response = await http.Response.fromStream(streamedResponse);
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw Exception('Failed to submit work log: ${response.body}');
+    final response = await _dio.post(
+      '/work-logs/',
+      data: formData,
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+    if (response.statusCode! < 200 || response.statusCode! >= 300) {
+      throw Exception('Failed to submit work log: ${response.data}');
     }
   }
 
@@ -223,25 +219,24 @@ class ApiService {
     required File afterPhoto,
   }) async {
     final token = await AuthService.getAccessToken();
-    final request = http.MultipartRequest(
-      'PATCH',
-      Uri.parse('$baseUrl/work-logs/$workLogId/complete/'),
-    );
-    request.headers['Authorization'] = 'Bearer $token';
-    request.files.add(
-      await http.MultipartFile.fromPath('after_photo', afterPhoto.path),
-    );
+    final formData = FormData.fromMap({
+      'after_photo': await MultipartFile.fromFile(afterPhoto.path),
+    });
 
-    final streamedResponse = await request.send();
-    final response = await http.Response.fromStream(streamedResponse);
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw Exception('Failed to complete work log: ${response.body}');
+    final response = await _dio.patch(
+      '/work-logs/$workLogId/complete/',
+      data: formData,
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+    if (response.statusCode! < 200 || response.statusCode! >= 300) {
+      throw Exception('Failed to complete work log: ${response.data}');
     }
   }
 
   // Employees
   static Future<List<dynamic>> getEmployees({int? vendorId}) async {
-    final path = vendorId != null ? '/employees/?vendor_owner=$vendorId' : '/employees/';
+    final path =
+        vendorId != null ? '/employees/?vendor_owner=$vendorId' : '/employees/';
     final data = await _get(path);
     return data is List ? data : (data['results'] ?? []);
   }
@@ -255,22 +250,24 @@ class ApiService {
     File? photo,
   }) async {
     final token = await AuthService.getAccessToken();
-    final request = http.MultipartRequest('POST', Uri.parse('$baseUrl/employees/'));
-    request.headers['Authorization'] = 'Bearer $token';
-    request.fields['vendor_owner'] = vendorOwnerId.toString();
-    request.fields['first_name'] = firstName;
-    request.fields['last_name'] = lastName;
-    request.fields['phone'] = phone;
-    if (aadhar != null && aadhar.isNotEmpty) request.fields['aadhar_number'] = aadhar;
-    if (photo != null) {
-      request.files.add(await http.MultipartFile.fromPath('photo', photo.path));
+    final formData = FormData.fromMap({
+      'vendor_owner': vendorOwnerId.toString(),
+      'first_name': firstName,
+      'last_name': lastName,
+      'phone': phone,
+      if (aadhar != null && aadhar.isNotEmpty) 'aadhar_number': aadhar,
+      if (photo != null) 'photo': await MultipartFile.fromFile(photo.path),
+    });
+
+    final response = await _dio.post(
+      '/employees/',
+      data: formData,
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+    if (response.statusCode! >= 200 && response.statusCode! < 300) {
+      return response.data as Map<String, dynamic>;
     }
-    final streamedResponse = await request.send();
-    final response = await http.Response.fromStream(streamedResponse);
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      return jsonDecode(response.body) as Map<String, dynamic>;
-    }
-    throw Exception(response.body.isNotEmpty ? jsonDecode(response.body).toString() : 'Failed to add employee');
+    throw Exception(response.data?.toString() ?? 'Failed to add employee');
   }
 
   static Future<void> updateEmployee({
@@ -282,29 +279,34 @@ class ApiService {
     File? photo,
   }) async {
     final token = await AuthService.getAccessToken();
-    final request = http.MultipartRequest('PATCH', Uri.parse('$baseUrl/employees/$employeeId/'));
-    request.headers['Authorization'] = 'Bearer $token';
-    if (firstName != null) request.fields['first_name'] = firstName;
-    if (lastName != null) request.fields['last_name'] = lastName;
-    if (phone != null) request.fields['phone'] = phone;
-    if (aadhar != null) request.fields['aadhar_number'] = aadhar;
+    final map = <String, dynamic>{};
+    if (firstName != null) map['first_name'] = firstName;
+    if (lastName != null) map['last_name'] = lastName;
+    if (phone != null) map['phone'] = phone;
+    if (aadhar != null) map['aadhar_number'] = aadhar;
     if (photo != null) {
-      request.files.add(await http.MultipartFile.fromPath('photo', photo.path));
+      map['photo'] = await MultipartFile.fromFile(photo.path);
     }
-    final streamedResponse = await request.send();
-    final response = await http.Response.fromStream(streamedResponse);
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw Exception(response.body.isNotEmpty ? jsonDecode(response.body).toString() : 'Failed to update employee');
+    final formData = FormData.fromMap(map);
+
+    final response = await _dio.patch(
+      '/employees/$employeeId/',
+      data: formData,
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+    if (response.statusCode! < 200 || response.statusCode! >= 300) {
+      throw Exception(
+          response.data?.toString() ?? 'Failed to update employee');
     }
   }
 
   static Future<void> deleteEmployee(int employeeId) async {
     final token = await AuthService.getAccessToken();
-    final response = await http.delete(
-      Uri.parse('$baseUrl/employees/$employeeId/'),
-      headers: {'Authorization': 'Bearer $token'},
+    final response = await _dio.delete(
+      '/employees/$employeeId/',
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
     );
-    if (response.statusCode < 200 || response.statusCode >= 300) {
+    if (response.statusCode! < 200 || response.statusCode! >= 300) {
       throw Exception('Failed to delete employee');
     }
   }
@@ -322,11 +324,15 @@ class ApiService {
   }
 
   // Assignments
-  static Future<void> assignEmployee(int occurrenceId, int employeeId) async {
-    await _post('/occurrences/$occurrenceId/assign/', {'employee_id': employeeId});
+  static Future<void> assignEmployee(
+      int occurrenceId, int employeeId) async {
+    await _post(
+        '/occurrences/$occurrenceId/assign/', {'employee_id': employeeId});
   }
 
-  static Future<void> unassignEmployee(int occurrenceId, int employeeId) async {
-    await _post('/occurrences/$occurrenceId/unassign/', {'employee_id': employeeId});
+  static Future<void> unassignEmployee(
+      int occurrenceId, int employeeId) async {
+    await _post(
+        '/occurrences/$occurrenceId/unassign/', {'employee_id': employeeId});
   }
 }

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import api from '../services/api'
-import { DeleteOutlined, EditOutlined, SearchOutlined } from '@ant-design/icons'
+import { useToast, parseApiError } from '../components/Toast'
+import { DeleteOutlined, EditOutlined, SearchOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
 import Pagination from '../components/Pagination'
 
 const PAGE_SIZE = 10
@@ -14,6 +15,8 @@ export default function BranchAdmins() {
   const [form, setForm] = useState({ username: '', password: '', first_name: '', last_name: '', email: '', phone: '', branch: '' })
   const [submitting, setSubmitting] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [deleteConfirm, setDeleteConfirm] = useState(null)
+  const toast = useToast()
   const [currentPage, setCurrentPage] = useState(1)
 
   const fetchAdmins = () => {
@@ -39,9 +42,10 @@ export default function BranchAdmins() {
       setShowModal(false)
       setEditingAdmin(null)
       setForm({ username: '', password: '', first_name: '', last_name: '', email: '', phone: '', branch: '' })
+      toast.success(editingAdmin ? 'Admin updated successfully' : 'Admin created successfully')
       fetchAdmins()
     } catch (err) {
-      alert(err.response?.data?.detail || JSON.stringify(err.response?.data) || 'Error saving admin')
+      toast.error(parseApiError(err, 'Error saving admin'))
     } finally {
       setSubmitting(false)
     }
@@ -62,21 +66,23 @@ export default function BranchAdmins() {
   }
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this admin?')) return
     try {
       await api.delete(`/branch-admins/${id}/`)
+      setDeleteConfirm(null)
+      toast.success('Admin deleted successfully')
       fetchAdmins()
     } catch (err) {
-      alert('Error deleting admin')
+      toast.error('Error deleting admin')
     }
   }
 
   const toggleActive = async (admin) => {
     try {
       await api.patch(`/branch-admins/${admin.id}/`, { is_active: !admin.is_active })
+      toast.success(`Admin ${admin.is_active ? 'deactivated' : 'activated'} successfully`)
       fetchAdmins()
     } catch (err) {
-      alert('Error updating admin')
+      toast.error('Error updating admin')
     }
   }
 
@@ -159,7 +165,7 @@ export default function BranchAdmins() {
                 </td>
                 <td className="px-4 py-3.5 space-x-2">
                   <button onClick={() => handleEdit(a)} className="w-[30px] h-[30px] rounded-lg border border-[#e4e8ed] inline-flex items-center justify-center text-sm text-[#6b7280] hover:bg-[#f6f7f9] transition-colors"><EditOutlined /></button>
-                  <button onClick={() => handleDelete(a.id)} className="w-[30px] h-[30px] rounded-lg border border-[#e4e8ed] inline-flex items-center justify-center text-sm text-[#6b7280] hover:bg-[#fdecea] hover:text-[#c0392b] transition-colors"><DeleteOutlined /></button>
+                  <button onClick={() => setDeleteConfirm(a)} className="w-[30px] h-[30px] rounded-lg border border-[#e4e8ed] inline-flex items-center justify-center text-sm text-[#6b7280] hover:bg-[#fdecea] hover:text-[#c0392b] transition-colors"><DeleteOutlined /></button>
                 </td>
               </tr>
             ))}
@@ -220,6 +226,20 @@ export default function BranchAdmins() {
               <button type="submit" form="admin-form" disabled={submitting} className="px-4 py-2 bg-orchid text-white rounded-lg text-[13px] font-semibold hover:bg-orchid-mid disabled:opacity-50 transition-colors">
                 {submitting ? 'Saving...' : editingAdmin ? 'Update Admin' : 'Create Admin →'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-black/40 modal-backdrop flex items-center justify-center z-[1000] p-4">
+          <div className="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full text-center">
+            <div className="w-12 h-12 bg-[#fdecea] rounded-full flex items-center justify-center mx-auto mb-3 text-xl text-[#c0392b]"><DeleteOutlined /></div>
+            <h2 className="font-serif text-lg font-bold mb-1">Delete Admin</h2>
+            <p className="text-sm text-[#6b7280] mb-5">Are you sure you want to delete <span className="font-semibold text-[#1a1f2e]">{deleteConfirm.first_name} {deleteConfirm.last_name}</span>? This action cannot be undone.</p>
+            <div className="flex gap-2.5 justify-center">
+              <button onClick={() => setDeleteConfirm(null)} className="px-4 py-2 border-[1.5px] border-[#e4e8ed] rounded-lg text-[13px] font-semibold hover:bg-[#f6f7f9] transition-colors">Cancel</button>
+              <button onClick={() => handleDelete(deleteConfirm.id)} className="px-4 py-2 bg-[#c0392b] text-white rounded-lg text-[13px] font-semibold hover:bg-[#a93226] transition-colors">Delete</button>
             </div>
           </div>
         </div>

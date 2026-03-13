@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import api from '../services/api'
-import { useToast, parseApiError } from '../components/Toast'
 import { ExclamationCircleOutlined } from '@ant-design/icons'
 import Pagination from '../components/Pagination'
 
@@ -97,52 +96,17 @@ export default function PendingApprovals() {
   const currentActivities = allGrouped[activeTab] || []
   const pagedActivities = currentActivities.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
 
-  const handleApprove = (id) => {
-    api.patch(`/work-logs/${id}/review/`, { approval_status: 'approved' })
-      .then(() => {
-        toast.success('Work log approved successfully')
-        fetchWorkLogs()
-        setDetailModal(null)
-      })
-      .catch((err) => toast.error(parseApiError(err)))
-  }
-
-  const handleReject = () => {
-    if (!rejectReason.trim()) return
-    api.patch(`/work-logs/${rejectModal.id}/review/`, {
-      approval_status: 'rejected',
-      rejection_reason: rejectReason,
-    })
-      .then(() => {
-        toast.success('Work log rejected')
-        setRejectModal(null)
-        setRejectReason('')
-        setDetailModal(null)
-        fetchWorkLogs()
-      })
-      .catch((err) => toast.error(parseApiError(err)))
-  }
-
-  const openReject = (log) => {
-    setRejectModal(log)
-    setRejectReason('')
-  }
-
-  const resolvePhoto = (url) => {
-    if (!url) return null
-    return url.startsWith('http') ? url : `http://localhost:8000${url}`
-  }
-
   if (loading) return <div className="flex items-center justify-center h-64 text-[#6b7280]">Loading...</div>
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="font-serif text-lg font-bold">Pending Approvals</h3>
-          <p className="text-[13px] text-[#6b7280] mt-0.5">Activities with work logs awaiting admin approval</p>
+      {allGrouped.pending.length > 0 && (
+        <div className="flex justify-end">
+          <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[#fef3e0] text-[#b07200] rounded-lg text-[13px] font-semibold">
+            {allGrouped.pending.length} activities pending review
+          </span>
         </div>
-      </div>
+      )}
 
       {/* Summary Cards */}
       <div className="bg-white rounded-xl border border-[#e4e8ed] shadow-sm overflow-hidden">

@@ -1,4 +1,6 @@
-class User {
+import 'package:equatable/equatable.dart';
+
+class User extends Equatable {
   final int id;
   final String username;
   final String firstName;
@@ -9,7 +11,7 @@ class User {
   final String? branchName;
   final String? companyName;
 
-  User({
+  const User({
     required this.id,
     required this.username,
     required this.firstName,
@@ -41,8 +43,45 @@ class User {
         'role': role,
         'phone': phone,
         'branch': branchId,
+        'branch_name': branchName,
         'company_name': companyName,
       };
+
+  User copyWith({
+    int? id,
+    String? username,
+    String? firstName,
+    String? lastName,
+    String? role,
+    String? phone,
+    int? branchId,
+    String? branchName,
+    String? companyName,
+  }) =>
+      User(
+        id: id ?? this.id,
+        username: username ?? this.username,
+        firstName: firstName ?? this.firstName,
+        lastName: lastName ?? this.lastName,
+        role: role ?? this.role,
+        phone: phone ?? this.phone,
+        branchId: branchId ?? this.branchId,
+        branchName: branchName ?? this.branchName,
+        companyName: companyName ?? this.companyName,
+      );
+
+  @override
+  List<Object?> get props => [
+        id,
+        username,
+        firstName,
+        lastName,
+        role,
+        phone,
+        branchId,
+        branchName,
+        companyName,
+      ];
 
   String get fullName => '$firstName $lastName'.trim();
   bool get isOwner => role == 'vendor_owner';

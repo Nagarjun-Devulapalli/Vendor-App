@@ -1,15 +1,42 @@
-class OccurrenceAssignment {
+import 'package:equatable/equatable.dart';
+
+enum OccurrenceStatus {
+  pending,
+  inProgress,
+  completed,
+  missed;
+
+  static OccurrenceStatus fromString(String value) => switch (value) {
+        'pending' => pending,
+        'in_progress' => inProgress,
+        'completed' => completed,
+        'missed' => missed,
+        _ => pending,
+      };
+
+  String toJson() => switch (this) {
+        pending => 'pending',
+        inProgress => 'in_progress',
+        completed => 'completed',
+        missed => 'missed',
+      };
+}
+
+class OccurrenceAssignment extends Equatable {
   final int id;
   final int employeeId;
   final String employeeName;
   final String assignedAt;
 
-  OccurrenceAssignment({
+  const OccurrenceAssignment({
     required this.id,
     required this.employeeId,
     required this.employeeName,
     required this.assignedAt,
   });
+
+  @override
+  List<Object?> get props => [id, employeeId, employeeName, assignedAt];
 
   factory OccurrenceAssignment.fromJson(Map<String, dynamic> json) {
     return OccurrenceAssignment(
@@ -19,21 +46,41 @@ class OccurrenceAssignment {
       assignedAt: json['assigned_at'] ?? '',
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'employee_id': employeeId,
+        'employee_name': employeeName,
+        'assigned_at': assignedAt,
+      };
+
+  OccurrenceAssignment copyWith({
+    int? id,
+    int? employeeId,
+    String? employeeName,
+    String? assignedAt,
+  }) =>
+      OccurrenceAssignment(
+        id: id ?? this.id,
+        employeeId: employeeId ?? this.employeeId,
+        employeeName: employeeName ?? this.employeeName,
+        assignedAt: assignedAt ?? this.assignedAt,
+      );
 }
 
-class Occurrence {
+class Occurrence extends Equatable {
   final int id;
   final int activityId;
   final String activityTitle;
   final String? categoryName;
   final String? activityDescription;
   final String scheduledDate;
-  final String status;
+  final OccurrenceStatus status;
   final String? completedByName;
   final int workLogCount;
   final List<OccurrenceAssignment> assignments;
 
-  Occurrence({
+  const Occurrence({
     required this.id,
     required this.activityId,
     required this.activityTitle,
@@ -45,6 +92,20 @@ class Occurrence {
     this.workLogCount = 0,
     this.assignments = const [],
   });
+
+  @override
+  List<Object?> get props => [
+        id,
+        activityId,
+        activityTitle,
+        categoryName,
+        activityDescription,
+        scheduledDate,
+        status,
+        completedByName,
+        workLogCount,
+        assignments,
+      ];
 
   factory Occurrence.fromJson(Map<String, dynamic> json) {
     final activity = json['activity'];
@@ -62,7 +123,7 @@ class Occurrence {
           ? activity['description']
           : json['description'],
       scheduledDate: json['scheduled_date'] ?? '',
-      status: json['status'] ?? 'pending',
+      status: OccurrenceStatus.fromString(json['status'] ?? 'pending'),
       completedByName: json['completed_by_name'],
       workLogCount: json['work_logs'] is List
           ? (json['work_logs'] as List).length
@@ -73,8 +134,46 @@ class Occurrence {
     );
   }
 
-  bool get isPending => status == 'pending';
-  bool get isInProgress => status == 'in_progress';
-  bool get isCompleted => status == 'completed';
-  bool get isMissed => status == 'missed';
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'activity': activityId,
+        'activity_title': activityTitle,
+        'category_name': categoryName,
+        'description': activityDescription,
+        'scheduled_date': scheduledDate,
+        'status': status.toJson(),
+        'completed_by_name': completedByName,
+        'work_log_count': workLogCount,
+        'assignments': assignments.map((a) => a.toJson()).toList(),
+      };
+
+  Occurrence copyWith({
+    int? id,
+    int? activityId,
+    String? activityTitle,
+    String? categoryName,
+    String? activityDescription,
+    String? scheduledDate,
+    OccurrenceStatus? status,
+    String? completedByName,
+    int? workLogCount,
+    List<OccurrenceAssignment>? assignments,
+  }) =>
+      Occurrence(
+        id: id ?? this.id,
+        activityId: activityId ?? this.activityId,
+        activityTitle: activityTitle ?? this.activityTitle,
+        categoryName: categoryName ?? this.categoryName,
+        activityDescription: activityDescription ?? this.activityDescription,
+        scheduledDate: scheduledDate ?? this.scheduledDate,
+        status: status ?? this.status,
+        completedByName: completedByName ?? this.completedByName,
+        workLogCount: workLogCount ?? this.workLogCount,
+        assignments: assignments ?? this.assignments,
+      );
+
+  bool get isPending => status == OccurrenceStatus.pending;
+  bool get isInProgress => status == OccurrenceStatus.inProgress;
+  bool get isCompleted => status == OccurrenceStatus.completed;
+  bool get isMissed => status == OccurrenceStatus.missed;
 }

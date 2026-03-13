@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart';
-import '../providers/auth_provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../cubit/auth_cubit.dart';
 import '../../../core/theme/app_theme.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -28,7 +27,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _errorMessage = null);
-    final auth = context.read<AuthProvider>();
+    final auth = context.read<AuthCubit>();
     final success = await auth.login(
       _usernameController.text.trim(),
       _passwordController.text,
@@ -37,7 +36,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!success && mounted) {
       _usernameController.text = '';
       _passwordController.text = '';
-      setState(() => _errorMessage = auth.error ?? 'Login failed');
+      setState(() => _errorMessage = auth.state.error ?? 'Login failed');
     }
   }
 
@@ -53,9 +52,15 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
         child: SafeArea(
-          child: Column(
-            children: [
-              const Spacer(flex: 2),
+          child: SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top - MediaQuery.of(context).padding.bottom,
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const SizedBox(height: 40),
               // Logo & branding
               const Icon(Icons.school_rounded, size: 56, color: Colors.white),
               const SizedBox(height: 16),
@@ -67,12 +72,12 @@ class _LoginScreenState extends State<LoginScreen> {
               Text(
                 'Sign in to continue',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.nunito(
+                style: TextStyle(
                   fontSize: 13,
                   color: Colors.white.withValues(alpha: 0.55),
                 ),
               ),
-              const Spacer(),
+              const SizedBox(height: 32),
               // Login card
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -115,7 +120,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         const SizedBox(height: 6),
                         TextFormField(
                           controller: _usernameController,
-                          style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.text),
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.text),
                           decoration: AppTheme.styledInput(label: '', hint: 'Enter username'),
                           validator: (v) => v == null || v.isEmpty ? 'Required' : null,
                         ),
@@ -125,7 +130,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         TextFormField(
                           controller: _passwordController,
                           obscureText: _obscurePassword,
-                          style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.text),
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.text),
                           decoration: AppTheme.styledInput(label: '', hint: 'Enter password').copyWith(
                             suffixIcon: IconButton(
                               icon: Icon(
@@ -155,7 +160,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 Expanded(
                                   child: Text(
                                     _errorMessage!,
-                                    style: GoogleFonts.nunito(
+                                    style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w700,
                                       color: AppColors.red,
@@ -167,13 +172,13 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ],
                         const SizedBox(height: 20),
-                        Consumer<AuthProvider>(
-                          builder: (ctx, auth, _) => SizedBox(
+                        BlocBuilder<AuthCubit, AuthState>(
+                          builder: (ctx, state) => SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(
-                              onPressed: auth.isLoading ? null : _login,
+                              onPressed: state.isLoading ? null : _login,
                               style: AppTheme.greenButton,
-                              child: auth.isLoading
+                              child: state.isLoading
                                   ? const SizedBox(
                                       width: 24, height: 24,
                                       child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
@@ -181,9 +186,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                   : Row(
                                       mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
-                                        Text('Sign In', style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w800)),
+                                        Text('Sign In', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
                                         const SizedBox(width: 6),
-                                        const Text('→', style: TextStyle(fontSize: 16)),
+                                        const Text('\u2192', style: TextStyle(fontSize: 16)),
                                       ],
                                     ),
                             ),
@@ -198,7 +203,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               const SizedBox(width: 4),
                               Text(
                                 'Credentials are provided by your school admin',
-                                style: GoogleFonts.nunito(fontSize: 11, color: AppColors.muted, fontWeight: FontWeight.w600),
+                                style: TextStyle(fontSize: 11, color: AppColors.muted, fontWeight: FontWeight.w600),
                               ),
                             ],
                           ),
@@ -210,6 +215,8 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 32),
             ],
+          ),
+        ),
           ),
         ),
       ),
@@ -239,7 +246,7 @@ class _LoginScreenState extends State<LoginScreen> {
           alignment: Alignment.center,
           child: Text(
             label,
-            style: GoogleFonts.nunito(
+            style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w800,
               color: isSelected ? Colors.white : AppColors.muted,

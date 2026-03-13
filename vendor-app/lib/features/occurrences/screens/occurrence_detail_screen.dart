@@ -2,7 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+
 import 'package:vendor_app/core/routes.dart';
 
 import '../models/occurrence.dart';
@@ -270,32 +270,32 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
                     runSpacing: 6,
                     children: [
                       _iconChip(
-                        occ.status == 'completed'
+                        occ.isCompleted
                             ? Icons.check_circle_rounded
-                            : occ.status == 'in_progress'
+                            : occ.isInProgress
                             ? Icons.schedule_rounded
-                            : occ.status == 'missed'
+                            : occ.isMissed
                             ? Icons.warning_rounded
                             : Icons.schedule_rounded,
-                        occ.status == 'completed'
+                        occ.isCompleted
                             ? 'Completed'
-                            : occ.status == 'in_progress'
+                            : occ.isInProgress
                             ? 'In Progress'
-                            : occ.status == 'missed'
+                            : occ.isMissed
                             ? 'Overdue'
                             : 'Pending',
-                        occ.status == 'completed'
+                        occ.isCompleted
                             ? AppColors.greenLight
-                            : occ.status == 'in_progress'
+                            : occ.isInProgress
                             ? AppColors.blueLight
-                            : occ.status == 'missed'
+                            : occ.isMissed
                             ? AppColors.redLight
                             : AppColors.amberLight,
-                        occ.status == 'completed'
+                        occ.isCompleted
                             ? AppColors.green
-                            : occ.status == 'in_progress'
+                            : occ.isInProgress
                             ? AppColors.blue
-                            : occ.status == 'missed'
+                            : occ.isMissed
                             ? AppColors.red
                             : AppColors.amber,
                       ),
@@ -315,15 +315,18 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
                     _infoRow('Scheduled Date', occ.scheduledDate),
                     _infoRow(
                       'Status',
-                      occ.status == 'in_progress'
+                      occ.isInProgress
                           ? 'In Progress'
-                          : occ.status[0].toUpperCase() +
-                                occ.status.substring(1),
-                      valueColor: occ.status == 'completed'
+                          : occ.isCompleted
+                          ? 'Completed'
+                          : occ.isMissed
+                          ? 'Missed'
+                          : 'Pending',
+                      valueColor: occ.isCompleted
                           ? AppColors.green
-                          : occ.status == 'in_progress'
+                          : occ.isInProgress
                           ? AppColors.blue
-                          : occ.status == 'missed'
+                          : occ.isMissed
                           ? AppColors.red
                           : AppColors.amber,
                     ),
@@ -339,7 +342,7 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
                       'DESCRIPTION',
                       Text(
                         occ.activityDescription!,
-                        style: GoogleFonts.nunito(
+                        style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
                           color: AppColors.text,
@@ -365,7 +368,7 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
                             child: Center(
                               child: Text(
                                 'No work log yet. Start work to create one.',
-                                style: GoogleFonts.nunito(
+                                style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
                                   color: AppColors.muted,
@@ -418,7 +421,7 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
                     children: [
                       const Icon(Icons.person_add_rounded, size: 12, color: AppColors.green),
                       const SizedBox(width: 4),
-                      Text('Assign', style: GoogleFonts.nunito(
+                      Text('Assign', style: TextStyle(
                         fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.green,
                       )),
                     ],
@@ -433,7 +436,7 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
               padding: const EdgeInsets.all(8),
               child: Center(child: Text(
                 'No employees assigned yet',
-                style: GoogleFonts.nunito(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.muted),
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.muted),
               )),
             )
           else
@@ -456,7 +459,7 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
                       child: Center(
                         child: Text(
                           a.employeeName.isNotEmpty ? a.employeeName[0].toUpperCase() : '?',
-                          style: GoogleFonts.nunito(
+                          style: TextStyle(
                             fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.green,
                           ),
                         ),
@@ -464,7 +467,7 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
                     ),
                     const SizedBox(width: 10),
                     Expanded(
-                      child: Text(a.employeeName, style: GoogleFonts.nunito(
+                      child: Text(a.employeeName, style: TextStyle(
                         fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.text,
                       )),
                     ),
@@ -489,13 +492,13 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
   }
 
   Widget _buildActionButton(Occurrence occ) {
-    if (occ.status == 'completed') {
+    if (occ.isCompleted) {
       return SizedBox(
         width: double.infinity,
         child: ElevatedButton.icon(
           onPressed: null,
           icon: const Icon(Icons.check_circle, size: 20),
-          label: Text('Completed', style: GoogleFonts.nunito(fontWeight: FontWeight.w800)),
+          label: Text('Completed', style: TextStyle(fontWeight: FontWeight.w800)),
           style: AppTheme.greenButton.copyWith(
             backgroundColor: WidgetStatePropertyAll(AppColors.border),
             foregroundColor: WidgetStatePropertyAll(AppColors.muted),
@@ -506,7 +509,7 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
       );
     }
 
-    if (occ.status == 'missed') return const SizedBox.shrink();
+    if (occ.isMissed) return const SizedBox.shrink();
 
     // Find any existing work log for this occurrence (not per-user)
     final existingLog = _workLogs.isEmpty ? null : _workLogs.first;
@@ -525,11 +528,11 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
             if (result == true) _loadData();
           },
           icon: const Icon(Icons.play_arrow_rounded, size: 20),
-          label: Text('Start Work', style: GoogleFonts.nunito(fontWeight: FontWeight.w800)),
+          label: Text('Start Work', style: TextStyle(fontWeight: FontWeight.w800)),
           style: AppTheme.greenButton,
         ),
       );
-    } else if (existingLog.approvalStatus == 'rejected') {
+    } else if (existingLog.approvalStatus == ApprovalStatus.rejected) {
       // Work log rejected — allow resubmission of after photo
       return SizedBox(
         width: double.infinity,
@@ -547,7 +550,7 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
             if (result == true) _loadData();
           },
           icon: const Icon(Icons.refresh_rounded, size: 20),
-          label: Text('Resubmit After Photo', style: GoogleFonts.nunito(fontWeight: FontWeight.w800)),
+          label: Text('Resubmit After Photo', style: TextStyle(fontWeight: FontWeight.w800)),
           style: AppTheme.greenButton.copyWith(
             backgroundColor: const WidgetStatePropertyAll(AppColors.amber),
           ),
@@ -571,18 +574,18 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
             if (result == true) _loadData();
           },
           icon: const Icon(Icons.check_circle_outline_rounded, size: 20),
-          label: Text('Complete Work', style: GoogleFonts.nunito(fontWeight: FontWeight.w800)),
+          label: Text('Complete Work', style: TextStyle(fontWeight: FontWeight.w800)),
           style: AppTheme.greenButton,
         ),
       );
-    } else if (existingLog.isCompleted && existingLog.approvalStatus != 'approved') {
+    } else if (existingLog.isCompleted && existingLog.approvalStatus != ApprovalStatus.approved) {
       // Submitted and awaiting admin review
       return SizedBox(
         width: double.infinity,
         child: ElevatedButton.icon(
           onPressed: null,
           icon: const Icon(Icons.hourglass_top_rounded, size: 20),
-          label: Text('Submitted · Awaiting Review', style: GoogleFonts.nunito(fontWeight: FontWeight.w800)),
+          label: Text('Submitted · Awaiting Review', style: TextStyle(fontWeight: FontWeight.w800)),
           style: AppTheme.greenButton.copyWith(
             backgroundColor: WidgetStatePropertyAll(AppColors.amberLight),
             foregroundColor: WidgetStatePropertyAll(AppColors.amber),
@@ -604,7 +607,7 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
         icon: const Icon(Icons.done_all_rounded, size: 18),
         label: Text(
           'Mark Job as Complete',
-          style: GoogleFonts.nunito(fontWeight: FontWeight.w800),
+          style: TextStyle(fontWeight: FontWeight.w800),
         ),
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.green,
@@ -624,17 +627,17 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
       builder: (ctx) => AlertDialog(
         title: Text(
           'Mark Job as Complete?',
-          style: GoogleFonts.nunito(fontWeight: FontWeight.w800, fontSize: 16),
+          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
         ),
         content: Text(
           'This will mark the entire activity "${occ.activityTitle}" as completed. No new daily tasks will be created for this job.',
-          style: GoogleFonts.nunito(fontSize: 13, height: 1.5),
+          style: TextStyle(fontSize: 13, height: 1.5),
         ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text('Cancel', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+            child: Text('Cancel', style: TextStyle(fontWeight: FontWeight.w700)),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -643,7 +646,7 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
-            child: Text('Complete', style: GoogleFonts.nunito(fontWeight: FontWeight.w800)),
+            child: Text('Complete', style: TextStyle(fontWeight: FontWeight.w800)),
           ),
         ],
       ),
@@ -676,19 +679,19 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
     }
   }
 
-  Widget _statusBadge(String status) {
+  Widget _statusBadge(OccurrenceStatus status) {
     final String label;
     final IconData icon;
     switch (status) {
-      case 'completed':
+      case OccurrenceStatus.completed:
         label = 'Completed';
         icon = Icons.check_circle_rounded;
         break;
-      case 'in_progress':
+      case OccurrenceStatus.inProgress:
         label = 'In Progress';
         icon = Icons.schedule_rounded;
         break;
-      case 'missed':
+      case OccurrenceStatus.missed:
         label = 'Overdue';
         icon = Icons.warning_rounded;
         break;
@@ -709,7 +712,7 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
           const SizedBox(width: 5),
           Text(
             label,
-            style: GoogleFonts.nunito(
+            style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w800,
               color: Colors.white,
@@ -734,7 +737,7 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
           const SizedBox(width: 4),
           Text(
             text,
-            style: GoogleFonts.nunito(
+            style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w800,
               color: fg,
@@ -764,7 +767,7 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
         children: [
           Text(
             label,
-            style: GoogleFonts.nunito(
+            style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
               color: AppColors.muted,
@@ -772,7 +775,7 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
           ),
           Text(
             value,
-            style: GoogleFonts.nunito(
+            style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w700,
               color: valueColor ?? AppColors.text,
@@ -814,7 +817,7 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
             children: [
               Text(
                 'By: ${log.userName ?? 'Unknown'}',
-                style: GoogleFonts.nunito(
+                style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w800,
                   color: AppColors.text,
@@ -828,7 +831,7 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
                   ],
                   Text(
                     log.createdAt.split('T').first,
-                    style: GoogleFonts.nunito(
+                    style: TextStyle(
                       fontSize: 11,
                       color: AppColors.muted,
                       fontWeight: FontWeight.w600,
@@ -838,25 +841,25 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
               ),
             ],
           ),
-          if (log.approvalStatus == 'rejected' &&
+          if (log.approvalStatus == ApprovalStatus.rejected &&
               log.rejectionReason != null &&
               log.rejectionReason!.isNotEmpty) ...[
             const SizedBox(height: 4),
             Text(
               'Rejected: ${log.rejectionReason}',
-              style: GoogleFonts.nunito(
+              style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
                 color: AppColors.red,
               ),
             ),
           ],
-          if (log.approvalStatus == 'approved' &&
+          if (log.approvalStatus == ApprovalStatus.approved &&
               log.reviewedByName != null) ...[
             const SizedBox(height: 4),
             Text(
               'Approved by ${log.reviewedByName}',
-              style: GoogleFonts.nunito(
+              style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
                 color: AppColors.green,
@@ -867,7 +870,7 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
             const SizedBox(height: 6),
             Text(
               log.description,
-              style: GoogleFonts.nunito(
+              style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
                 color: AppColors.text,
@@ -905,19 +908,19 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
     );
   }
 
-  Widget _approvalBadge(String status) {
+  Widget _approvalBadge(ApprovalStatus status) {
     final Color bg;
     final Color fg;
     final String label;
     final IconData icon;
     switch (status) {
-      case 'approved':
+      case ApprovalStatus.approved:
         bg = AppColors.greenLight;
         fg = AppColors.green;
         label = 'Approved';
         icon = Icons.check_circle_rounded;
         break;
-      case 'rejected':
+      case ApprovalStatus.rejected:
         bg = AppColors.redLight;
         fg = AppColors.red;
         label = 'Rejected';
@@ -942,7 +945,7 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
           const SizedBox(width: 3),
           Text(
             label,
-            style: GoogleFonts.nunito(
+            style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w800,
               color: fg,
@@ -993,7 +996,7 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
                 child: Center(
                   child: Text(
                     label,
-                    style: GoogleFonts.nunito(
+                    style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
                       color: Colors.white,
@@ -1014,7 +1017,7 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
       children: [
         Text(
           label,
-          style: GoogleFonts.nunito(
+          style: TextStyle(
             fontSize: 10,
             fontWeight: FontWeight.w700,
             color: AppColors.muted,
@@ -1045,7 +1048,7 @@ class _OccurrenceDetailScreenState extends State<OccurrenceDetailScreen> {
           const SizedBox(height: 3),
           Text(
             timestamp,
-            style: GoogleFonts.nunito(
+            style: TextStyle(
               fontSize: 9,
               color: AppColors.muted,
               fontWeight: FontWeight.w600,
@@ -1111,10 +1114,10 @@ class _AssignEmployeesSheetState extends State<_AssignEmployeesSheet> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Select Employees', style: GoogleFonts.fraunces(
+                Text('Select Employees', style: TextStyle(
                   fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.text,
                 )),
-                Text('${_selected.length} selected', style: GoogleFonts.nunito(
+                Text('${_selected.length} selected', style: TextStyle(
                   fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.muted,
                 )),
               ],
@@ -1124,7 +1127,7 @@ class _AssignEmployeesSheetState extends State<_AssignEmployeesSheet> {
           if (widget.employees.isEmpty)
             Padding(
               padding: const EdgeInsets.all(24),
-              child: Text('No employees found', style: GoogleFonts.nunito(
+              child: Text('No employees found', style: TextStyle(
                 fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.muted,
               )),
             )
@@ -1170,7 +1173,7 @@ class _AssignEmployeesSheetState extends State<_AssignEmployeesSheet> {
                             child: Center(
                               child: Text(
                                 name.isNotEmpty ? name[0].toUpperCase() : '?',
-                                style: GoogleFonts.nunito(
+                                style: TextStyle(
                                   fontSize: 14, fontWeight: FontWeight.w800,
                                   color: isSelected ? Colors.white : AppColors.muted,
                                 ),
@@ -1179,7 +1182,7 @@ class _AssignEmployeesSheetState extends State<_AssignEmployeesSheet> {
                           ),
                           const SizedBox(width: 10),
                           Expanded(
-                            child: Text(name, style: GoogleFonts.nunito(
+                            child: Text(name, style: TextStyle(
                               fontSize: 13, fontWeight: FontWeight.w700,
                               color: isSelected ? AppColors.green : AppColors.text,
                             )),
@@ -1213,7 +1216,7 @@ class _AssignEmployeesSheetState extends State<_AssignEmployeesSheet> {
                         height: 18, width: 18,
                         child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                       )
-                    : Text('Confirm', style: GoogleFonts.nunito(fontWeight: FontWeight.w800)),
+                    : Text('Confirm', style: TextStyle(fontWeight: FontWeight.w800)),
               ),
             ),
           ),

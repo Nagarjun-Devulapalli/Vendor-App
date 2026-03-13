@@ -223,14 +223,9 @@ export default function Vendors() {
 
   return (
     <div className="space-y-5">
-      <div className="grid grid-cols-[200px_1fr_auto] items-center gap-6">
-        <div>
-          <h3 className="font-serif text-lg font-bold">All Vendors</h3>
-          <p className="text-[13px] text-[#6b7280] mt-0.5">{vendors.length} vendors registered</p>
-        </div>
-
+      <div className="flex items-center gap-4">
         {/* Large Search Bar */}
-        <div className="relative">
+        <div className="flex-1 relative">
           <input
             type="text"
             value={searchQuery}
@@ -241,15 +236,13 @@ export default function Vendors() {
           <SearchOutlined className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6b7280]" />
         </div>
 
-        <div className="flex items-center gap-3">
-          {user?.role === 'superadmin' && (
-            <BranchFilter value={selectedBranch} onChange={(val) => { setSelectedBranch(val); setCurrentPage(1) }} />
-          )}
+        {user?.role === 'superadmin' && (
+          <BranchFilter value={selectedBranch} onChange={(val) => { setSelectedBranch(val); setCurrentPage(1) }} />
+        )}
 
-          <button onClick={() => setShowModal(true)} className="inline-flex items-center gap-1.5 px-4 py-2 bg-orchid text-white rounded-lg text-[13px] font-semibold hover:bg-orchid-mid transition-colors whitespace-nowrap">
-            + Add Vendor
-          </button>
-        </div>
+        <button onClick={() => setShowModal(true)} className="inline-flex items-center gap-1.5 px-4 py-2 bg-orchid text-white rounded-lg text-[13px] font-semibold hover:bg-orchid-mid transition-colors whitespace-nowrap">
+          + Add Vendor
+        </button>
       </div>
 
       <div className="bg-white rounded-xl border border-[#e4e8ed] shadow-sm overflow-hidden">

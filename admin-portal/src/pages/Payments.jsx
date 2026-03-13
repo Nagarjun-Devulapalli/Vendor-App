@@ -4,6 +4,7 @@ import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
 import { useToast, parseApiError } from '../components/Toast'
 import BranchFilter from '../components/BranchFilter'
+import { ExclamationCircleOutlined } from '@ant-design/icons'
 import Pagination from '../components/Pagination'
 
 const PAGE_SIZE = 10
@@ -47,6 +48,7 @@ export default function Payments() {
 
   // Entries history modal
   const [entriesModal, setEntriesModal] = useState(null)
+  const [deleteEntryConfirm, setDeleteEntryConfirm] = useState(null)
 
   const fetchPayments = () => {
     setLoading(true)
@@ -93,9 +95,9 @@ export default function Payments() {
   }
 
   const handleDeleteEntry = async (entryId) => {
-    if (!window.confirm('Delete this payment entry?')) return
     try {
       await api.delete(`/payment-entries/${entryId}/`)
+      setDeleteEntryConfirm(null)
       toast.success('Entry deleted')
       const res = await api.get('/payments/')
       const updated = res.data.results || res.data
@@ -123,15 +125,12 @@ export default function Payments() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center gap-6">
-        <div>
-          <h3 className="font-serif text-lg font-bold">Payments</h3>
-          <p className="text-[13px] text-[#6b7280] mt-0.5">Track and manage vendor payments for your branch</p>
-        </div>
-        {user?.role === 'superadmin' && (
+      {user?.role === 'superadmin' && (
+        <div className="flex items-center gap-4">
+          <span className="text-[13px] font-medium text-[#6b7280]">Filter by Branch:</span>
           <BranchFilter value={selectedBranch} onChange={(val) => { setSelectedBranch(val); setCurrentPage(1) }} />
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Summary Cards */}
       <div className="bg-white rounded-xl border border-[#e4e8ed] shadow-sm overflow-hidden">
@@ -429,7 +428,7 @@ export default function Payments() {
                         </td>
                         <td className="px-4 py-3">
                           <button
-                            onClick={() => handleDeleteEntry(entry.id)}
+                            onClick={() => setDeleteEntryConfirm(entry)}
                             className="w-6 h-6 flex items-center justify-center rounded text-[#6b7280] hover:bg-[#fdecea] hover:text-[#c0392b] transition-colors text-xs"
                             title="Delete entry"
                           >
@@ -441,6 +440,20 @@ export default function Payments() {
                   </tbody>
                 </table>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {deleteEntryConfirm && (
+        <div className="fixed inset-0 bg-black/40 modal-backdrop flex items-center justify-center z-[1000] p-4">
+          <div className="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full text-center">
+            <div className="w-12 h-12 bg-[#fdecea] rounded-full flex items-center justify-center mx-auto mb-3 text-xl text-[#c0392b]"><ExclamationCircleOutlined /></div>
+            <h2 className="font-serif text-lg font-bold mb-1">Delete Payment Entry</h2>
+            <p className="text-sm text-[#6b7280] mb-5">Are you sure you want to delete this payment entry of <span className="font-semibold text-[#1a1f2e]">₹{Number(deleteEntryConfirm.amount).toLocaleString()}</span>? This action cannot be undone.</p>
+            <div className="flex gap-2.5 justify-center">
+              <button onClick={() => setDeleteEntryConfirm(null)} className="px-4 py-2 border-[1.5px] border-[#e4e8ed] rounded-lg text-[13px] font-semibold hover:bg-[#f6f7f9] transition-colors">Cancel</button>
+              <button onClick={() => handleDeleteEntry(deleteEntryConfirm.id)} className="px-4 py-2 bg-[#c0392b] text-white rounded-lg text-[13px] font-semibold hover:bg-[#a93226] transition-colors">Delete</button>
             </div>
           </div>
         </div>

@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
 import 'package:vendor_app/core/routes.dart';
-import '../../auth/providers/auth_provider.dart';
-import '../providers/activity_provider.dart';
+import '../../auth/cubit/auth_cubit.dart';
+import '../cubit/activity_cubit.dart';
 import '../../../core/services/api_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../widgets/hero_header.dart';
@@ -25,7 +24,7 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => context.read<ActivityProvider>().loadTodayTasks());
+    Future.microtask(() => context.read<ActivityCubit>().loadTodayTasks());
   }
 
   String _getGreeting() {
@@ -45,8 +44,8 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
 
   @override
   Widget build(BuildContext context) {
-    final auth = context.watch<AuthProvider>();
-    final user = auth.user;
+    final authState = context.watch<AuthCubit>().state;
+    final user = authState.user;
     final dateStr = DateFormat('EEEE, d MMM').format(DateTime.now());
 
     return Scaffold(
@@ -62,7 +61,7 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
                 ? _buildHome(user, dateStr)
                 : _navIndex == 1
                 ? _buildTaskList()
-                : _buildProfile(auth),
+                : _buildProfile(),
           ),
           AppBottomNav(
             currentIndex: _navIndex,
@@ -79,11 +78,11 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
   }
 
   Widget _buildHome(user, String dateStr) {
-    return Consumer<ActivityProvider>(
-      builder: (ctx, provider, _) {
-        final tasks = provider.todayTasks;
-        final doneTasks = tasks.where((t) => t.status == 'completed').length;
-        final pendingTasks = tasks.where((t) => t.status == 'pending').length;
+    return BlocBuilder<ActivityCubit, ActivityState>(
+      builder: (ctx, activityState) {
+        final tasks = activityState.todayTasks;
+        final doneTasks = tasks.where((t) => t.isCompleted).length;
+        final pendingTasks = tasks.where((t) => t.isPending).length;
 
         return NotificationListener<OverscrollIndicatorNotification>(
           onNotification: (n) {
@@ -92,7 +91,7 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
           },
           child: RefreshIndicator(
             color: AppColors.green,
-            onRefresh: () => provider.loadTodayTasks(),
+            onRefresh: () => context.read<ActivityCubit>().loadTodayTasks(),
             child: CustomScrollView(
               physics: const ClampingScrollPhysics(),
               slivers: [
@@ -100,7 +99,7 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
                   child: HeroHeader(
                     greeting: 'Hi',
                     name: user?.firstName ?? 'Employee',
-                    subtitle: '$dateStr · ${user?.branchName ?? ''}',
+                    subtitle: '$dateStr \u00b7 ${user?.branchName ?? ''}',
                     initials: _getInitials(user?.fullName ?? ''),
                     onAvatarTap: () => setState(() => _navIndex = 2),
                   ),
@@ -121,7 +120,7 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
                   ),
                 ),
                 const SliverToBoxAdapter(child: SizedBox(height: 12)),
-                if (provider.isLoading)
+                if (activityState.isLoading)
                   const SliverToBoxAdapter(
                     child: Center(
                       child: Padding(
@@ -146,7 +145,7 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
                           const SizedBox(height: 12),
                           Text(
                             'No tasks for today',
-                            style: GoogleFonts.nunito(
+                            style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
                               color: AppColors.muted,
@@ -168,7 +167,7 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
                               VendorRoute.vendorOccurrenceDetail.name,
                               pathParameters: {'occurrenceId': tasks[i].id.toString()},
                             );
-                            if (mounted) provider.loadTodayTasks();
+                            if (mounted) context.read<ActivityCubit>().loadTodayTasks();
                           },
                         ),
                         childCount: tasks.length,
@@ -184,11 +183,11 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
   }
 
   Widget _buildTaskList() {
-    return Consumer<ActivityProvider>(
-      builder: (ctx, provider, _) {
+    return BlocBuilder<ActivityCubit, ActivityState>(
+      builder: (ctx, activityState) {
         final filteredTasks = _taskTabIndex == 0
-            ? provider.todayTasks.where((t) => !t.isCompleted).toList()
-            : provider.todayTasks.where((t) => t.isCompleted).toList();
+            ? activityState.todayTasks.where((t) => !t.isCompleted).toList()
+            : activityState.todayTasks.where((t) => t.isCompleted).toList();
         return Column(
           children: [
             Container(
@@ -207,7 +206,7 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
                   Expanded(
                     child: Text(
                       'My Tasks',
-                      style: GoogleFonts.fraunces(
+                      style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w800,
                         color: Colors.white,
@@ -238,8 +237,8 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
             Expanded(
               child: RefreshIndicator(
                 color: AppColors.green,
-                onRefresh: () => provider.loadTodayTasks(),
-                child: provider.isLoading
+                onRefresh: () => context.read<ActivityCubit>().loadTodayTasks(),
+                child: activityState.isLoading
                     ? const Center(
                         child: CircularProgressIndicator(
                           color: AppColors.green,
@@ -264,7 +263,7 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
                               _taskTabIndex == 0
                                   ? 'No pending tasks'
                                   : 'No completed tasks',
-                              style: GoogleFonts.nunito(
+                              style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w700,
                                 color: AppColors.muted,
@@ -285,7 +284,7 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
                                 VendorRoute.vendorOccurrenceDetail.name,
                                 pathParameters: {'occurrenceId': task.id.toString()},
                               );
-                              if (mounted) provider.loadTodayTasks();
+                              if (mounted) context.read<ActivityCubit>().loadTodayTasks();
                             },
                           );
                         },
@@ -312,7 +311,7 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
           child: Center(
             child: Text(
               label,
-              style: GoogleFonts.nunito(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
                 color: isActive ? Colors.white : AppColors.muted,
@@ -324,8 +323,8 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
     );
   }
 
-  Widget _buildProfile(AuthProvider auth) {
-    final user = auth.user;
+  Widget _buildProfile() {
+    final user = context.watch<AuthCubit>().state.user;
     return Column(
       children: [
         Container(
@@ -344,7 +343,7 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
               Expanded(
                 child: Text(
                   'Profile',
-                  style: GoogleFonts.fraunces(
+                  style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w800,
                     color: Colors.white,
@@ -365,7 +364,7 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
           alignment: Alignment.center,
           child: Text(
             _getInitials(user?.fullName ?? ''),
-            style: GoogleFonts.fraunces(
+            style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.w800,
               color: AppColors.green,
@@ -375,7 +374,7 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
         const SizedBox(height: 12),
         Text(
           user?.fullName ?? '',
-          style: GoogleFonts.nunito(
+          style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w800,
             color: AppColors.text,
@@ -383,7 +382,7 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
         ),
         Text(
           user?.username ?? '',
-          style: GoogleFonts.nunito(
+          style: TextStyle(
             fontSize: 13,
             color: AppColors.muted,
             fontWeight: FontWeight.w600,
@@ -398,7 +397,7 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
           ),
           child: Text(
             'Employee',
-            style: GoogleFonts.nunito(
+            style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w800,
               color: AppColors.blue,
@@ -433,32 +432,7 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
           child: SizedBox(
             width: double.infinity,
             child: OutlinedButton(
-              onPressed: () => _showChangePasswordDialog(user?.username ?? ''),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.green,
-                side: const BorderSide(color: AppColors.green, width: 1.5),
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-              ),
-              child: Text(
-                'Change Password',
-                style: GoogleFonts.nunito(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 15,
-                ),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: SizedBox(
-            width: double.infinity,
-            child: OutlinedButton(
-              onPressed: () => auth.logout(),
+              onPressed: () => context.read<AuthCubit>().logout(),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.red,
                 side: const BorderSide(color: AppColors.red, width: 1.5),
@@ -469,7 +443,7 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
               ),
               child: Text(
                 'Logout',
-                style: GoogleFonts.nunito(
+                style: TextStyle(
                   fontWeight: FontWeight.w800,
                   fontSize: 15,
                 ),
@@ -481,157 +455,6 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
     );
   }
 
-  void _showChangePasswordDialog(String username) {
-    final controller = TextEditingController();
-    bool isLoading = false;
-
-    showDialog(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Change Password',
-                    style: GoogleFonts.fraunces(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.text,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  TextField(
-                    controller: controller,
-                    obscureText: true,
-                    style: GoogleFonts.nunito(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    decoration: InputDecoration(
-                      labelText: 'New Password',
-                      labelStyle: GoogleFonts.nunito(
-                        fontSize: 13,
-                        color: AppColors.muted,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: AppColors.border),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(
-                          color: AppColors.green,
-                          width: 1.5,
-                        ),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 14,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: isLoading
-                          ? null
-                          : () async {
-                              final password = controller.text.trim();
-                              if (password.isEmpty) return;
-                              setDialogState(() => isLoading = true);
-                              try {
-                                await ApiService.resetPassword(
-                                  username,
-                                  password,
-                                );
-                                if (ctx.mounted) Navigator.pop(ctx);
-                                if (mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        'Password updated successfully',
-                                        style: GoogleFonts.nunito(
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                      backgroundColor: AppColors.green,
-                                      behavior: SnackBarBehavior.floating,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                    ),
-                                  );
-                                }
-                              } catch (e) {
-                                setDialogState(() => isLoading = false);
-                                if (mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        e.toString().replaceFirst(
-                                          'Exception: ',
-                                          '',
-                                        ),
-                                        style: GoogleFonts.nunito(
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                      backgroundColor: AppColors.red,
-                                      behavior: SnackBarBehavior.floating,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                    ),
-                                  );
-                                }
-                              }
-                            },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.green,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
-                      child: isLoading
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2,
-                              ),
-                            )
-                          : Text(
-                              'Update Password',
-                              style: GoogleFonts.nunito(
-                                fontWeight: FontWeight.w800,
-                                fontSize: 15,
-                              ),
-                            ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _infoRow(String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -640,7 +463,7 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
         children: [
           Text(
             label,
-            style: GoogleFonts.nunito(
+            style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
               color: AppColors.muted,
@@ -648,7 +471,7 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
           ),
           Text(
             value,
-            style: GoogleFonts.nunito(
+            style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w700,
               color: AppColors.text,

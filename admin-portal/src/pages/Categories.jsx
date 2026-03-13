@@ -104,11 +104,7 @@ export default function Categories() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="font-serif text-lg font-bold">Work Categories</h3>
-          <p className="text-[13px] text-[#6b7280] mt-0.5">Define the types of work vendors can do</p>
-        </div>
+      <div className="flex justify-end">
         <button onClick={openAdd} className="inline-flex items-center gap-1.5 px-4 py-2 bg-orchid text-white rounded-lg text-[13px] font-semibold hover:bg-orchid-mid transition-colors">
           + Add Category
         </button>

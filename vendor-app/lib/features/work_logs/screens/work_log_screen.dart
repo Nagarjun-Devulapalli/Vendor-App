@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../core/services/api_service.dart';
 import '../../../core/theme/app_theme.dart';
@@ -72,7 +71,7 @@ class _WorkLogScreenState extends State<WorkLogScreen> {
                   ),
                   child: const Icon(Icons.camera_alt_rounded, color: AppColors.green),
                 ),
-                title: Text('Camera', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+                title: Text('Camera', style: TextStyle(fontWeight: FontWeight.w700)),
                 onTap: () => Navigator.pop(ctx, ImageSource.camera),
               ),
               ListTile(
@@ -84,7 +83,7 @@ class _WorkLogScreenState extends State<WorkLogScreen> {
                   ),
                   child: const Icon(Icons.photo_library_rounded, color: AppColors.blue),
                 ),
-                title: Text('Gallery', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+                title: Text('Gallery', style: TextStyle(fontWeight: FontWeight.w700)),
                 onTap: () => Navigator.pop(ctx, ImageSource.gallery),
               ),
             ],
@@ -207,7 +206,7 @@ class _WorkLogScreenState extends State<WorkLogScreen> {
                             if (widget.existingBeforePhotoUrl != null) ...[
                               Text(
                                 'Before Photo (submitted)',
-                                style: GoogleFonts.nunito(
+                                style: TextStyle(
                                   fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.muted,
                                 ),
                               ),
@@ -234,7 +233,7 @@ class _WorkLogScreenState extends State<WorkLogScreen> {
                               const SizedBox(height: 16),
                               Text(
                                 'Take After Photo',
-                                style: GoogleFonts.nunito(
+                                style: TextStyle(
                                   fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.text,
                                 ),
                               ),
@@ -252,7 +251,7 @@ class _WorkLogScreenState extends State<WorkLogScreen> {
                               _isCompleteMode
                                   ? 'Tap the box to take the after photo'
                                   : 'Tap the box to take the before photo',
-                              style: GoogleFonts.nunito(
+                              style: TextStyle(
                                 fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.muted,
                               ),
                             ),
@@ -275,12 +274,12 @@ class _WorkLogScreenState extends State<WorkLogScreen> {
                             TextFormField(
                               controller: _descriptionController,
                               maxLines: 3,
-                              style: GoogleFonts.nunito(
+                              style: TextStyle(
                                 fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.text,
                               ),
                               decoration: InputDecoration(
                                 hintText: 'Describe the work to be done...',
-                                hintStyle: GoogleFonts.nunito(
+                                hintStyle: TextStyle(
                                   fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.muted,
                                 ),
                                 filled: true,
@@ -318,7 +317,7 @@ class _WorkLogScreenState extends State<WorkLogScreen> {
                               )
                             : Text(
                                 _isCompleteMode ? 'Complete Work \u2192' : 'Start Work \u2192',
-                                style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w800),
+                                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
                               ),
                       ),
                     ),
@@ -344,7 +343,7 @@ class _WorkLogScreenState extends State<WorkLogScreen> {
                         color: Colors.white,
                       ),
                       const SizedBox(height: 16),
-                      Text(successTitle, style: GoogleFonts.fraunces(
+                      Text(successTitle, style: TextStyle(
                         fontSize: 24, fontWeight: FontWeight.w800, color: Colors.white,
                       )),
                       const SizedBox(height: 8),
@@ -353,7 +352,7 @@ class _WorkLogScreenState extends State<WorkLogScreen> {
                         child: Text(
                           successMessage,
                           textAlign: TextAlign.center,
-                          style: GoogleFonts.nunito(
+                          style: TextStyle(
                             fontSize: 13, color: Colors.white.withOpacity(0.65),
                           ),
                         ),
@@ -367,7 +366,7 @@ class _WorkLogScreenState extends State<WorkLogScreen> {
                           padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                         ),
-                        child: Text('Back to Task', style: GoogleFonts.nunito(fontWeight: FontWeight.w800, fontSize: 15)),
+                        child: Text('Back to Task', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
                       ),
                     ],
                   ),
@@ -391,7 +390,7 @@ class _WorkLogScreenState extends State<WorkLogScreen> {
                     children: [
                       const CircularProgressIndicator(color: AppColors.green),
                       const SizedBox(height: 16),
-                      Text('Uploading...', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+                      Text('Uploading...', style: TextStyle(fontWeight: FontWeight.w700)),
                     ],
                   ),
                 ),
@@ -446,7 +445,7 @@ class _WorkLogScreenState extends State<WorkLogScreen> {
                       child: Text(
                         label,
                         textAlign: TextAlign.center,
-                        style: GoogleFonts.nunito(fontSize: 10, fontWeight: FontWeight.w700, color: Colors.white),
+                        style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Colors.white),
                       ),
                     ),
                   ),
@@ -457,9 +456,9 @@ class _WorkLogScreenState extends State<WorkLogScreen> {
                 children: [
                   const Icon(Icons.camera_alt_rounded, size: 28, color: AppColors.muted),
                   const SizedBox(height: 6),
-                  Text(label, style: GoogleFonts.nunito(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.muted)),
+                  Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.muted)),
                   const SizedBox(height: 2),
-                  Text('Tap to capture', style: GoogleFonts.nunito(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.muted)),
+                  Text('Tap to capture', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.muted)),
                 ],
               ),
       ),

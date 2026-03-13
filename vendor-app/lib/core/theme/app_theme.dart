@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class AppColors {
   static const green = Color(0xFF1a6b4a);
@@ -19,39 +18,35 @@ class AppColors {
 
 class AppTheme {
   static ThemeData get theme {
-    final base = ThemeData(
+    return ThemeData(
       useMaterial3: true,
       colorSchemeSeed: AppColors.green,
       scaffoldBackgroundColor: AppColors.bg,
     );
-
-    return base.copyWith(
-      textTheme: GoogleFonts.nunitoTextTheme(base.textTheme),
-    );
   }
 
-  static TextStyle get heading => GoogleFonts.fraunces(
+  static TextStyle get heading => const TextStyle(
         fontWeight: FontWeight.w800,
         color: Colors.white,
       );
 
-  static TextStyle get headingDark => GoogleFonts.fraunces(
+  static TextStyle get headingDark => const TextStyle(
         fontWeight: FontWeight.w800,
         color: AppColors.text,
       );
 
-  static TextStyle get body => GoogleFonts.nunito(
+  static TextStyle get body => const TextStyle(
         color: AppColors.text,
       );
 
-  static TextStyle get label => GoogleFonts.nunito(
+  static TextStyle get label => const TextStyle(
         fontSize: 11,
         fontWeight: FontWeight.w800,
         color: AppColors.muted,
         letterSpacing: 0.7,
       );
 
-  static TextStyle get sectionTitle => GoogleFonts.nunito(
+  static TextStyle get sectionTitle => const TextStyle(
         fontSize: 13,
         fontWeight: FontWeight.w800,
         color: AppColors.muted,
@@ -79,13 +74,13 @@ class AppTheme {
       labelText: label,
       hintText: hint,
       prefixIcon: prefix,
-      labelStyle: GoogleFonts.nunito(
+      labelStyle: const TextStyle(
         fontSize: 11,
         fontWeight: FontWeight.w800,
         color: AppColors.muted,
         letterSpacing: 0.7,
       ),
-      hintStyle: GoogleFonts.nunito(
+      hintStyle: const TextStyle(
         fontSize: 14,
         fontWeight: FontWeight.w600,
         color: AppColors.muted,
@@ -115,7 +110,7 @@ class AppTheme {
         shadowColor: AppColors.green.withOpacity(0.35),
         padding: const EdgeInsets.symmetric(vertical: 16),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        textStyle: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w800),
+        textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
       );
 
   static ButtonStyle get outlineButton => OutlinedButton.styleFrom(
@@ -123,6 +118,6 @@ class AppTheme {
         padding: const EdgeInsets.symmetric(vertical: 16),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         side: const BorderSide(color: AppColors.border, width: 2),
-        textStyle: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w800),
+        textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
       );
 }
