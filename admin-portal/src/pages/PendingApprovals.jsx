@@ -96,8 +96,6 @@ export default function PendingApprovals() {
   const currentActivities = allGrouped[activeTab] || []
   const pagedActivities = currentActivities.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
 
-  if (loading) return <div className="flex items-center justify-center h-64 text-[#6b7280]">Loading...</div>
-
   return (
     <div className="space-y-5">
       {allGrouped.pending.length > 0 && (
@@ -113,17 +111,17 @@ export default function PendingApprovals() {
         <div className="grid grid-cols-3 divide-x divide-[#e4e8ed]">
           <div className="px-5 py-4">
             <label className="text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider">Pending Review</label>
-            <div className="font-serif text-[22px] font-bold text-[#b07200] mt-1">{allGrouped.pending.length}</div>
+            {loading ? <div className="h-7 bg-[#e4e8ed] rounded w-10 mt-1 animate-pulse" /> : <div className="font-serif text-[22px] font-bold text-[#b07200] mt-1">{allGrouped.pending.length}</div>}
             <div className="text-[11px] text-[#6b7280] mt-0.5">Activities with pending logs</div>
           </div>
           <div className="px-5 py-4">
             <label className="text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider">Approved</label>
-            <div className="font-serif text-[22px] font-bold text-[#1a6b4a] mt-1">{allGrouped.approved.length}</div>
+            {loading ? <div className="h-7 bg-[#e4e8ed] rounded w-10 mt-1 animate-pulse" /> : <div className="font-serif text-[22px] font-bold text-[#1a6b4a] mt-1">{allGrouped.approved.length}</div>}
             <div className="text-[11px] text-[#6b7280] mt-0.5">Activities with approved logs</div>
           </div>
           <div className="px-5 py-4">
             <label className="text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider">Rejected</label>
-            <div className="font-serif text-[22px] font-bold text-[#c0392b] mt-1">{allGrouped.rejected.length}</div>
+            {loading ? <div className="h-7 bg-[#e4e8ed] rounded w-10 mt-1 animate-pulse" /> : <div className="font-serif text-[22px] font-bold text-[#c0392b] mt-1">{allGrouped.rejected.length}</div>}
             <div className="text-[11px] text-[#6b7280] mt-0.5">Activities with rejected logs</div>
           </div>
         </div>
@@ -169,8 +167,20 @@ export default function PendingApprovals() {
             </tr>
           </thead>
           <tbody>
-            {pagedActivities.map((a) => (
-              <tr key={a.id} className="border-b border-[#e4e8ed] last:border-0 hover:bg-[#f9fafb] cursor-pointer transition-colors" onClick={() => navigate(`/activities/${a.id}`)}>
+            {loading
+              ? Array.from({ length: 6 }).map((_, i) => (
+                  <tr key={i} className="border-b border-[#e4e8ed] animate-pulse">
+                    <td className="px-4 py-3.5"><div className="space-y-1.5"><div className="h-3 bg-[#e4e8ed] rounded w-28" /><div className="h-2.5 bg-[#e4e8ed] rounded w-20" /></div></td>
+                    <td className="px-4 py-3.5"><div className="h-3 bg-[#e4e8ed] rounded w-32" /></td>
+                    <td className="px-4 py-3.5"><div className="h-5 bg-[#e4e8ed] rounded-full w-16" /></td>
+                    <td className="px-4 py-3.5"><div className="h-3 bg-[#e4e8ed] rounded w-20" /></td>
+                    <td className="px-4 py-3.5"><div className="h-3 bg-[#e4e8ed] rounded w-16" /></td>
+                    <td className="px-4 py-3.5"><div className="h-5 bg-[#e4e8ed] rounded-full w-16" /></td>
+                    <td className="px-4 py-3.5"><div className="h-5 bg-[#e4e8ed] rounded-full w-16" /></td>
+                  </tr>
+                ))
+              : pagedActivities.map((a, i) => (
+              <tr key={a.id} className="border-b border-[#e4e8ed] last:border-0 hover:bg-[#f9fafb] cursor-pointer transition-colors animate-fade-in" style={{ animationDelay: `${i * 40}ms` }} onClick={() => navigate(`/activities/${a.id}`)}>
                 <td className="px-4 py-3.5">
                   <span className="font-semibold text-[13px] block">{a.title}</span>
                   <span className="text-[11px] text-[#6b7280]">{a.category_name || ''}</span>
@@ -202,7 +212,7 @@ export default function PendingApprovals() {
                 </td>
               </tr>
             ))}
-            {currentActivities.length === 0 && <tr><td colSpan="7" className="px-4 py-8 text-center text-[13px] text-[#6b7280]">No {activeTab} activities found</td></tr>}
+            {!loading && currentActivities.length === 0 && <tr><td colSpan="7" className="px-4 py-8 text-center text-[13px] text-[#6b7280]">No {activeTab} activities found</td></tr>}
           </tbody>
         </table>
         <Pagination currentPage={currentPage} totalItems={currentActivities.length} pageSize={PAGE_SIZE} onPageChange={setCurrentPage} />
