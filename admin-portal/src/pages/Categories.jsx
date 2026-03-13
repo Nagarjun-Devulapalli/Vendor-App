@@ -100,8 +100,6 @@ export default function Categories() {
     }
   }
 
-  if (loading) return <div className="flex items-center justify-center h-64 text-[#6b7280]">Loading...</div>
-
   return (
     <div className="space-y-5">
       <div className="flex justify-end">
@@ -111,8 +109,24 @@ export default function Categories() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {categories.map((c) => (
-          <div key={c.id} onClick={() => navigate(`/categories/${c.id}`)} className="bg-white rounded-xl border border-[#e4e8ed] shadow-sm p-5 hover:shadow-md transition-shadow cursor-pointer">
+        {loading
+          ? Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="bg-white rounded-xl border border-[#e4e8ed] shadow-sm p-5 animate-pulse">
+                <div className="w-8 h-8 bg-[#e4e8ed] rounded mb-2.5" />
+                <div className="h-4 bg-[#e4e8ed] rounded w-32 mb-2" />
+                <div className="h-3 bg-[#e4e8ed] rounded w-full mb-1.5" />
+                <div className="h-3 bg-[#e4e8ed] rounded w-3/4 mb-3.5" />
+                <div className="flex justify-between items-center">
+                  <div className="h-5 bg-[#e4e8ed] rounded-full w-16" />
+                  <div className="flex gap-1.5">
+                    <div className="w-[30px] h-[30px] bg-[#e4e8ed] rounded-lg" />
+                    <div className="w-[30px] h-[30px] bg-[#e4e8ed] rounded-lg" />
+                  </div>
+                </div>
+              </div>
+            ))
+          : categories.map((c, i) => (
+          <div key={c.id} onClick={() => navigate(`/categories/${c.id}`)} className="bg-white rounded-xl border border-[#e4e8ed] shadow-sm p-5 hover:shadow-md transition-shadow cursor-pointer animate-fade-in" style={{ animationDelay: `${i * 40}ms` }}>
             <div className="text-[28px] mb-2.5">{categoryIcons[c.name] || <InboxOutlined />}</div>
             <h4 className="font-serif text-base font-bold mb-1">{c.name}</h4>
             <p className="text-[13px] text-[#6b7280] mb-3.5 line-clamp-2">{c.description || 'No description'}</p>
@@ -127,7 +141,7 @@ export default function Categories() {
             </div>
           </div>
         ))}
-        {categories.length === 0 && (
+        {!loading && categories.length === 0 && (
           <div className="col-span-3 text-center py-12 text-[#6b7280]">No categories</div>
         )}
       </div>
