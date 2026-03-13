@@ -135,88 +135,42 @@ export default function Activities() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center gap-6">
-        <div className="min-w-[160px]">
-          <h3 className="font-serif text-lg font-bold">All Activities</h3>
-          <p className="text-[13px] text-[#6b7280] mt-0.5">{activities.length} activities across all vendors</p>
-        </div>
+      <div className="flex items-center gap-4">
         {user?.role === 'superadmin' && (
           <BranchFilter value={selectedBranch} onChange={(val) => { setSelectedBranch(val); setCurrentPage(1) }} />
         )}
 
-        {/* Search Bar with Suggestions */}
-        <div ref={searchRef} className="relative">
-          <div className="relative">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              onFocus={() => searchQuery.trim() && setShowSuggestions(true)}
-              placeholder="Search activities..."
-              className="w-full border-[1.5px] border-[#e4e8ed] rounded-lg pl-10 pr-10 py-2.5 text-sm focus:border-orchid focus:outline-none transition-colors"
-            />
-            <SearchOutlined className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6b7280]" />
-            {(searchQuery || selectedActivityId) && (
-              <button
-                onClick={clearFilter}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6b7280] hover:text-[#1a1f2e] text-lg font-bold"
-              >
-                ✕
-              </button>
-            )}
-          </div>
-
-          {/* Suggestions Dropdown */}
-          {showSuggestions && suggestions.length > 0 && (
-            <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-[#e4e8ed] rounded-lg shadow-lg z-50 overflow-hidden">
-              {suggestions.map((activity) => (
-                <button
-                  key={activity.id}
-                  onClick={() => handleSuggestionClick(activity)}
-                  className="w-full px-4 py-3 text-left hover:bg-[#f6f7f9] transition-colors border-b border-[#e4e8ed] last:border-0"
-                >
-                  <div className="font-semibold text-[13px] text-[#1a1f2e]">
-                    {activity.title}
-                  </div>
-                  <div className="text-[11px] text-[#6b7280] mt-0.5">
-                    {activity.vendor_name} · {activity.category_name}
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
+        {/* Large Search Bar */}
+        <div ref={searchRef} className="flex-1 relative">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            placeholder="Search activities..."
+            className="w-full border-[1.5px] border-[#e4e8ed] rounded-lg pl-10 pr-4 py-2.5 text-sm focus:border-orchid focus:outline-none transition-colors"
+          />
+          <SearchOutlined className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6b7280]" />
         </div>
 
-        <div className="flex gap-2.5">
-          <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="border-[1.5px] border-[#e4e8ed] rounded-lg px-3 py-2 text-[13px] focus:border-orchid focus:outline-none">
-            <option value="">All Types</option>
-            <option value="one_time">One-time</option>
-            <option value="long_term">Long-term</option>
-            <option value="recurring">Recurring</option>
-          </select>
-          <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="border-[1.5px] border-[#e4e8ed] rounded-lg px-3 py-2 text-[13px] focus:border-orchid focus:outline-none">
-            <option value="">All Status</option>
-            <option value="pending">Pending</option>
-            <option value="in_progress">In Progress</option>
-            <option value="completed">Completed</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
-          <button onClick={() => setShowModal(true)} className="inline-flex items-center gap-1.5 px-4 py-2 bg-orchid text-white rounded-lg text-[13px] font-semibold hover:bg-orchid-mid transition-colors">
-            + Create Activity
-          </button>
-        </div>
+        <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="border-[1.5px] border-[#e4e8ed] rounded-lg px-3 py-2 text-[13px] focus:border-orchid focus:outline-none whitespace-nowrap">
+          <option value="">All Types</option>
+          <option value="one_time">One-time</option>
+          <option value="long_term">Long-term</option>
+          <option value="recurring">Recurring</option>
+        </select>
+
+        <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="border-[1.5px] border-[#e4e8ed] rounded-lg px-3 py-2 text-[13px] focus:border-orchid focus:outline-none whitespace-nowrap">
+          <option value="">All Status</option>
+          <option value="pending">Pending</option>
+          <option value="in_progress">In Progress</option>
+          <option value="completed">Completed</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+
+        <button onClick={() => setShowModal(true)} className="inline-flex items-center gap-1.5 px-4 py-2 bg-orchid text-white rounded-lg text-[13px] font-semibold hover:bg-orchid-mid transition-colors whitespace-nowrap">
+          + Create Activity
+        </button>
       </div>
-
-      {/* Active filter indicator */}
-      {selectedActivityId && (
-        <div className="flex items-center gap-2 text-sm">
-          <span className="text-[#6b7280]">Showing:</span>
-          <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-orchid-light text-orchid rounded-lg font-medium">
-            {activities.find(a => a.id === selectedActivityId)?.title}
-            <button onClick={clearFilter} className="hover:text-orchid-dark">✕</button>
-          </span>
-        </div>
-      )}
 
       <div className="bg-white rounded-xl border border-[#e4e8ed] shadow-sm overflow-hidden">
         <table className="w-full">

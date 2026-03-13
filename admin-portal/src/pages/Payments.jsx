@@ -125,15 +125,12 @@ export default function Payments() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center gap-6">
-        <div>
-          <h3 className="font-serif text-lg font-bold">Payments</h3>
-          <p className="text-[13px] text-[#6b7280] mt-0.5">Track and manage vendor payments for your branch</p>
-        </div>
-        {user?.role === 'superadmin' && (
+      {user?.role === 'superadmin' && (
+        <div className="flex items-center gap-4">
+          <span className="text-[13px] font-medium text-[#6b7280]">Filter by Branch:</span>
           <BranchFilter value={selectedBranch} onChange={(val) => { setSelectedBranch(val); setCurrentPage(1) }} />
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Summary Cards */}
       <div className="bg-white rounded-xl border border-[#e4e8ed] shadow-sm overflow-hidden">
